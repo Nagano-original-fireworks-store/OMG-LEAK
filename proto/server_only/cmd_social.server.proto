@@ -1,0 +1,297 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_social.server.proto
+ * @author ran.li(ran.li@mihoyo.com)
+ * @date 2019/12/05 15:08:08
+ * @brief 社交相关的服务器协议[10801 - 10900]
+ **/
+
+syntax = "proto3";
+package proto;
+import "server_only/redis_data.proto";
+import "cmd/cmd_social.proto";
+import "define.proto";
+
+message AddAskFriendNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10801;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 source_id = 1;
+}
+
+message ServerFriendBriefData
+{
+    uint32 uid = 1;
+    Birthday birthday = 2;    // 生日
+    uint32 avatar_id = 3;     // 头像
+    string signature = 4;   // 个人签名
+    string nickname = 5;    // 昵称
+    uint32 level = 6;       // 冒险等级
+    uint32 world_level = 7;          // 等级锁定ID(换算大世界等级用)
+    PlayerStatusType online_state = 8; // 在线状态
+    uint32 param = 9;                   // 在线状态预留参数：未在线-离线时间(天)，在线-0填充
+}
+
+
+// 获取好友列表
+message ServerGetPlayerFriendListReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10802;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+}
+
+message ServerGetPlayerFriendListRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10803;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    repeated ServerFriendBriefData  friend_server_brief_data_list = 2;
+    repeated ServerFriendBriefData ask_add_friend_server_brief_data_list = 3;
+}
+
+message SyncBasicBriefNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10804;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    PlayerBasicBriefData basic_brief_data = 1;
+}
+
+message ServerGetSocialDetailReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10805;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 target_uid = 1;
+}
+
+message ServerGetSocialDetailRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10806;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    SocialDetail social_detail = 2;
+}
+
+message ServerAskAddFriendReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10807;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 target_uid = 1;
+}
+
+message ServerAskAddFriendRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10808;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 target_uid = 2;
+}
+
+message ServerDealAddFriendReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10809;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 target_uid = 1;
+    DealAddFriendResultType deal_add_friend_result = 2;     // 添加好友结果
+}
+
+message ServerDealAddFriendRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10810;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 target_uid = 2;
+    DealAddFriendResultType deal_add_friend_result = 3;
+    uint32 self_friend_num = 4;
+    uint32 target_friend_num = 5;
+}
+
+message ServerDeleteFriendReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10811;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 target_uid = 1;
+}
+
+message ServerDeleteFriendRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10812;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 target_uid = 2;
+    uint32 self_friend_num = 3;
+    uint32 target_friend_num = 4;
+}
+
+message ServerSetBirthdayReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10813;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    Birthday birthday = 1;
+}
+
+message ServerSetBirthdayRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10814;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+}
+
+message ServerSetSignatureReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10815;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    string signature = 1;
+}
+
+message ServerSetSignatureRsp
+{
+
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10816;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+}
+
+message ServerSetHeadImageReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10817;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 avatar_id = 1;
+}
+
+message ServerSetHeadImageRsp
+{
+
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10818;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+}

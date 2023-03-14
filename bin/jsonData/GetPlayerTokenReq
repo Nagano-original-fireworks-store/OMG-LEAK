@@ -1,0 +1,10 @@
+{
+  "account_type": 0, 
+  "uid": 0, 
+  "account_token": "", 
+  "account_ext": "", 
+  "platform_type": 0, 
+  "cloud_client_ip": 0, 
+  "is_guest": false, 
+  "account_uid": ""
+}

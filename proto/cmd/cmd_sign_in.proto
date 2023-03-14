@@ -1,0 +1,216 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2020 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_sign_in.proto
+ * @作者 yifan.fang(yifan.fang@mihoyo.com)
+ * @日期 2020/03/10 22:00:00
+ * @brief 签到相关协议[2501 - 2600]
+ **/
+
+syntax = "proto3";
+package proto;
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 签到活动
+
+// 签到排期信息
+message SignInInfo
+{
+    uint32 schedule_id = 1;         // 排期ID
+    uint32 config_id = 2;           // 排期用到的签到配置ID
+    uint32 begin_time = 3;          // 当前排期的开始时间
+    uint32 end_time = 4;            // 当前排期的结束时间
+    bool is_cond_satisfied = 10;    // 是否满足活动开启条件，一旦满足不再检查开启条件
+    uint32 sign_in_count = 11;      // 当前排期已累计签到几次
+    uint32 last_sign_in_time = 12;  // 上次签到时间
+    repeated uint32 reward_day_list = 13;   // 领过哪几天的奖励
+}
+
+// 登录时全量通知签到信息（S->C）
+message SignInAllDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2501;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated SignInInfo sign_in_info_list = 1;  // 当前正在进行的或下个未开始的签到信息，长度为0表示没有这样的签到排期
+}
+
+// 当前排期的某个签到活动的条件满足时的通知，用于显示红点（S->C）
+message SignInInfoOpenNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2502;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated uint32 schedule_id_list = 1;
+}
+
+// 打开签到界面时请求所有签到信息（C->S）
+message SignInInfoReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2503;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+// 请求所有签到信息的回复（S->C）
+message SignInInfoRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2504;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    repeated SignInInfo sign_in_info_list = 2;  // 当前正在进行的或下个未开始的签到信息，长度为0表示没有这样的签到排期
+}
+
+// 请求领取签到奖励（C->S）
+message GetSignInRewardReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2505;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 schedule_id = 1; // 排期ID
+    uint32 reward_day = 2;  // 第几天的奖励
+}
+
+// 领取签到奖励的回复（S->C）
+message GetSignInRewardRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2506;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    SignInInfo sign_in_info = 2;   // 如果签到成功，进度变化后的签到信息
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 送角色活动
+
+// bonus活动信息
+message BonusActivityInfo
+{
+    uint32 bonus_activity_id = 1;   // bonus活动配置ID
+    uint32 state = 2;   // 进度状态（取值范围：data::BonusActivityState）
+}
+
+// 登录时全量通知bonus活动信息（S->C）
+message BonusActivityAllDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2511;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated BonusActivityInfo bonus_activity_info_list = 1;  // 所有bonus活动的信息，包括未开始的和已结束的
+}
+
+// bonus状态变化时的通知
+message BonusActivityUpdateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2512;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated BonusActivityInfo bonus_activity_info_list = 1;  // 状态变化了的bonus活动的信息
+}
+
+// 请求bonus活动记录
+message BonusActivityInfoReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2513;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message BonusActivityInfoRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2514;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    repeated BonusActivityInfo bonus_activity_info_list = 2;  // 所有bonus活动的信息，包括未开始的和已结束的
+}
+
+// 领取bonus活动的奖励
+message GetBonusActivityRewardReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2515;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 bonus_activity_id = 1;   // bonus活动配置ID
+}
+
+message GetBonusActivityRewardRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2516;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    BonusActivityInfo bonus_activity_info_list = 2; // 领奖成功后bonus活动的信息
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

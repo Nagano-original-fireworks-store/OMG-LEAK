@@ -1,0 +1,833 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file item.proto
+ * @作者 jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @日期 2017/12/19 17:03:42
+ * @brief 道具协议[601 - 700]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 存储(背包或仓库)通知(S->C)
+message PlayerStoreNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 601;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    StoreType store_type = 1;           // 存储类型
+    repeated Item item_list = 2;        // 所有道具
+    uint32 weight_limit = 3;            // 重量上限(0为无限制)
+}
+
+// 背包重量上限通知(S->C)
+message StoreWeightLimitNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 602;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    StoreType store_type = 1;           // 存储类型
+    uint32 weight_limit = 3;            // 重量上限
+}
+
+// 存储(背包或仓库)中道具增加通知(S->C)
+message StoreItemChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 603;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    StoreType store_type = 1;           // 存储类型
+    repeated Item item_list = 2;        // 增加的道具
+}
+
+// 存储(背包或仓库)中道具删除通知(S->C)
+message StoreItemDelNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 604;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    StoreType store_type = 1;       // 存储类型
+    repeated uint64 guid_list = 2;  // 道具唯一ID
+}
+
+message ItemHint
+{
+    uint32 item_id = 1;
+    uint32 count = 2;
+    bool is_new = 3;
+}
+
+// 获得道具提示（只做展示）
+message ItemAddHintNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 605;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated ItemHint item_list = 1; //
+    Vector position = 2;             // 获取物品的场景位置
+    bool is_position_valid = 3;      // position是否有效
+    uint32 reason = 4;               // 获得道具原因 ItemAddReasonType
+    uint32 quest_id = 5;             // 任务ID
+}
+
+// 使用背包中的道具
+message UseItemReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 608;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 guid = 1;    // 唯一ID
+    uint32 count = 2;   // 使用个数(只针对可堆叠类道具)
+    uint64 target_guid = 3;     // 道具使用的目标角色
+    uint32 option_idx = 4;     // 从1开始的选项序号
+}
+
+message UseItemRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 609;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 guid = 2;        // 唯一ID
+    uint32 item_id = 3;     // 道具ID
+    uint64 target_guid = 4;     // 道具使用的目标角色
+    uint32 option_idx = 5;     // 从1开始的选项序号
+}
+
+// 丢弃道具
+message DropItemReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 610;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    StoreType store_type = 1;   // 存储类型
+    uint64 guid = 2;    // 唯一ID
+    uint32 count = 3;   // 数量
+    Vector pos = 4;     // 丢弃位置
+}
+
+message DropItemRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 611;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    StoreType store_type = 2;   // 存储类型
+    uint64 guid = 3;  // 唯一ID
+}
+
+// 请求穿上装备
+message WearEquipReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 614;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 avatar_guid = 1;     // 角色的唯一ID
+    uint64 equip_guid = 2;      // 装备唯一ID
+}
+
+message WearEquipRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 615;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 avatar_guid = 2;     // 角色的唯一ID
+    uint64 equip_guid = 3;      // 装备的唯一ID
+}
+
+// 请求脱下装备
+message TakeoffEquipReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 616;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 avatar_guid = 1;     // 角色的唯一ID
+    uint32 slot = 2;            // 装备的槽位(EquipSlotType)
+}
+
+message TakeoffEquipRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 617;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 avatar_guid = 2;     // 角色的唯一ID
+    uint32 slot = 3;            // 清空装备的槽位(EquipSlotType)
+}
+
+// 角色外观装备改变通知(S->C)
+message AvatarEquipChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 618;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 avatar_guid = 1;   // 角色的实体ID
+    uint32 equip_type = 2;  // 装备类型(EquipType)
+    uint32 item_id = 3;     // 装备的道具ID
+    uint64 equip_guid = 4;      // 装备的唯一ID
+    SceneWeaponInfo weapon = 5; // 如果更换的是武器，用这个同步武器entity的信息
+    SceneReliquaryInfo reliquary = 6;   // 如果更换的是圣遗物，用这个同步圣遗物的信息
+}
+
+// 装备升级
+message WeaponUpgradeReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 619;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 target_weapon_guid = 1;              // 要升级的武器guid
+    repeated uint64 food_weapon_guid_list = 2;  // 狗粮武器guid list
+    repeated ItemParam item_param_list = 3;     // 武器经验石列表
+}
+
+message WeaponUpgradeRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 620;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 target_weapon_guid = 2;             // 升级的武器guid
+    uint32 old_level = 3;
+    uint32 cur_level = 4;
+}
+
+// 装备突破
+message WeaponPromoteReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 621;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 target_weapon_guid = 1;              // 要突破的武器guid
+}
+
+message WeaponPromoteRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 622;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 target_weapon_guid = 2;             // 升级的武器guid
+    uint32 old_promote_level = 3;
+    uint32 cur_promote_level = 4;
+}
+
+// 圣遗物升级
+message ReliquaryUpgradeReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 623;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 target_reliquary_guid = 1;           // 要升级的圣遗物guid
+    repeated uint64 food_reliquary_guid_list = 2;  // 狗粮圣遗物guid list
+}
+
+message ReliquaryUpgradeRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 624;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 target_reliquary_guid = 2;             // 升级的圣遗物guid
+    uint32 old_level = 3;
+    uint32 cur_level = 4;
+    uint32 power_up_rate = 5;
+    repeated uint32 old_append_prop_list = 6;
+    repeated uint32 cur_append_prop_list = 7;
+}
+
+// 装备突破
+message ReliquaryPromoteReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 625;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 target_guid = 1;             // 要突破的圣遗物guid
+    uint64 item_guid = 2;               // 消耗材料guid
+}
+
+message ReliquaryPromoteRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 626;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 target_reliquary_guid = 2;             // 突破圣遗物guid
+    uint32 old_promote_level = 3;
+    uint32 cur_promote_level = 4;
+    repeated uint32 old_append_prop_list = 5;
+    repeated uint32 cur_append_prop_list = 6;
+}
+
+// 角色卡转换协议
+message AvatarCardChangeReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 627;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 avatar_guid = 1;           // 角色guid
+    uint32 item_id = 2;               // 角色卡ID
+    uint32 count = 3;                 // 转换数量
+}
+
+message AvatarCardChangeRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 628;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+}
+
+message GrantRewardNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 629;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    Reward reward = 1;
+}
+
+// 武器觉醒
+message WeaponAwakenReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 630;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 target_weapon_guid = 1;              // 要觉醒的武器guid
+    uint64 item_guid = 2;                       // 消耗武器guid
+    map<uint32, uint32> affix_level_map = 3;    // 要升级的词缀ID=>升级次数
+}
+
+message WeaponAwakenRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 631;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 target_weapon_guid = 2;              // 觉醒的武器guid
+    map<uint32, uint32> old_affix_level_map = 3;// 要升级词缀的旧的等级
+    map<uint32, uint32> cur_affix_level_map = 4;// 要升级词缀的新的等级
+    uint64 avatar_guid = 5;     // 所属角色的guid
+}
+
+// 道具CD组，登录或使用道具后通知（S-C）
+message ItemCdGroupTimeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 632;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    map<uint32, uint64> item_cd_map = 1;    // CdGroup => 道具使用冷却的结束时间
+}
+
+// 获得掉落道具提示（只做展示）
+message DropHintNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 633;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated uint32 item_id_list = 1;// 道具ID
+    Vector position = 2;             // 获取物品的场景位置
+}
+
+// 道具合成请求
+message CombineReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 634;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 combine_id = 1;                  // 合成ID
+    uint32 combine_count = 2;               // 合成几份
+    uint64 avatar_guid = 3;                 // 角色的唯一ID
+}
+
+message CombineRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 635;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 combine_id = 2;                      // 合成ID
+    uint32 combine_count = 3;                   // 合成几份
+    uint64 avatar_guid = 4;                     // 角色的唯一ID
+    repeated ItemParam cost_item_list = 5;      // 一份消耗的材料
+    repeated ItemParam result_item_list = 6;    // 一份的固定产物
+    repeated ItemParam total_random_item_list = 7;  // 总共的随机产物
+    repeated ItemParam total_return_item_list = 8;  // （得意技影响）总共返还的原材料
+    repeated ItemParam total_extra_item_list = 9;   // （得意技影响）总共的额外产物，包括概率多倍获得的产物和概率获得的额外产物
+}
+
+// 锻造队列数据（一个锻造队列一次只能处理一个锻造ID）
+message ForgeQueueData
+{
+    uint32 queue_id = 1;                // 锻造队列ID
+    uint32 forge_id = 2;                // 锻造ID
+    uint32 finish_count = 3;            // 几份可领取
+    uint32 unfinish_count = 4;          // 还剩几份未完成
+    uint32 next_finish_timestamp = 5;   // 下一份的完成时间戳
+    uint32 total_finish_timestamp = 6;  // 全部完成的时间戳
+    uint32 avatar_id = 7;               // 角色ID
+}
+
+// 锻造队列数据变化（开始锻造后/锻造部分或全部完成时/领取锻造产出后）发送
+message ForgeQueueDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 636;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    map<uint32, ForgeQueueData> forge_queue_map = 1;    // 新增或发生变化的锻造队列
+    repeated uint32 removed_forge_queue_list = 2;       // 删除的锻造队列
+}
+
+// 请求锻造数据
+message ForgeGetQueueDataReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 637;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message ForgeGetQueueDataRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 638;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 max_queue_num = 2;                           // 最大锻造队列数量
+    map<uint32, ForgeQueueData> forge_queue_map = 3;
+}
+
+// 请求开始锻造
+message ForgeStartReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 639;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 forge_id = 1;                // 锻造配方ID
+    uint32 forge_count = 2;             // 锻造数量
+    uint32 avatar_id = 3;               // 协助角色
+}
+
+message ForgeStartRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 640;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+enum ForgeQueueManipulateType
+{
+    FORGE_QUEUE_MANIPULATE_TYPE_RECEIVE_OUTPUT = 0;     // 领取锻造产出
+    FORGE_QUEUE_MANIPULATE_TYPE_STOP_FORGE = 1;         // 终止锻造
+}
+
+// 请求领取锻造产出或终止锻造
+message ForgeQueueManipulateReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 641;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 forge_queue_id = 1;  // 锻造队列ID
+    ForgeQueueManipulateType manipulate_type = 2;   // 操作类型
+}
+
+message ForgeQueueManipulateRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 642;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    ForgeQueueManipulateType manipulate_type = 2;   // 操作类型
+    repeated ItemParam output_item_list = 3;    // 主产出道具
+    repeated ItemParam return_item_list = 4;    // 返还的材料
+    repeated ItemParam extra_output_item_list = 5;    // 额外额外道具
+}
+
+// 树脂增加通知
+message ResinChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 643;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 cur_value = 1;   // 当前值
+    uint32 next_add_timestamp = 2; // 下一次增加时间戳
+    uint32 cur_buy_count = 3;       // 当日已购买次数
+}
+
+// 大世界体力改变通知
+message WorldResinChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 644;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 cur_value = 1;   // 当前值
+    uint32 next_add_timestamp = 2; // 下一次增加时间戳
+    uint32 cur_buy_count = 3;       // 当日已购买次数
+}
+
+// 购买大世界体力
+message BuyWorldResinReq
+{  
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 647;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message BuyWorldResinRsp
+{  
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 648;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 cur_value = 2;   // 当前体力值
+}
+
+// 购买树脂
+message BuyResinReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 649;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message BuyResinRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 650;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 cur_value = 2;   // 当前树脂
+}
+
+message MaterialDeleteReturnNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 651;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    map<uint32, uint32> delete_material_map = 1; // 删除材料: ID -> Num 映射
+    map<uint32, uint32> return_item_map = 2;     // 返还道具: ID -> Num 映射
+}
+
+message TakeMaterialDeleteReturnReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 652;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message TakeMaterialDeleteReturnRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 653;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+message MaterialDeleteUpdateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 654;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

@@ -1,0 +1,19 @@
+{
+  "language_type": 0, 
+  "account_type": 0, 
+  "login_rand": "0", 
+  "device_uuid": "", 
+  "gm_uid": 0, 
+  "target_uid": 0, 
+  "device_info": "", 
+  "cloud_client_ip": 0, 
+  "device_name": "", 
+  "is_editor": false, 
+  "token": "", 
+  "platform": "", 
+  "is_guest": false, 
+  "client_version": "", 
+  "system_version": "", 
+  "account_uid": "", 
+  "platform_type": 0
+}

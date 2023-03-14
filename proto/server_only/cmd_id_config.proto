@@ -1,0 +1,188 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file server_only/cmd_id_config.proto
+ * @作者 xiao.liu(xiao.liu@mihoyo.com)
+ * @日期 2018/06/14 20:09:25
+ * @brief 
+ *  定义每个文件中CMD_ID的取值范围
+ **/
+
+
+syntax = "proto3";
+package proto;
+
+enum CmdIdConfig
+{
+    /*
+     *  PART-1: 服务器、客户端通讯
+     */
+
+    // cmd_misc.proto, 杂项协议
+    CMD_MISC_BEGIN = 0;
+    CMD_MISC_END = 100;
+
+    // cmd_player.proto, 玩家协议
+    CMD_PLAYER_BEGIN = 101;
+    CMD_PLAYER_END = 200;
+
+    // cmd_scene.proto, 场景协议
+    CMD_SCENE_BEGIN_1 = 201;
+    CMD_SCENE_END_1 = 300;
+    CMD_SCENE_BEGIN_2 = 3001;
+    CMD_SCENE_END_2 = 3500;
+
+    // cmd_fight.proto, 战斗协议
+    CMD_FIGHT_BEGIN = 301;
+    CMD_FIGHT_END = 400;
+
+    // cmd_quest.proto, 任务协议
+    CMD_QUEST_BEGIN = 401;
+    CMD_QUEST_END = 500;
+
+    // cmd_npc.proto, NPC协议
+    CMD_NPC_BEGIN = 501;
+    CMD_NPC_END = 600;
+
+    // cmd_item.proto, 道具协议
+    CMD_ITEM_BEGIN = 601;
+    CMD_ITEM_END = 700;
+
+    // cmd_shop.proto, 商店协议
+    CMD_SHOP_BEGIN = 701;
+    CMD_SHOP_END = 800;
+
+    // cmd_gadget.proto, 物件协议
+    CMD_GADGET_BEGIN = 801;
+    CMD_GADGET_END = 900;
+
+    // cmd_dugeon.proto, 副本协议
+    CMD_DUNGEON_BEGIN = 901;
+    CMD_DUNGEON_END = 1000;
+
+    // cmd_skill.proto, 技能协议
+    CMD_SKILL_BEGIN = 1001;
+    CMD_SKILL_END = 1100;
+
+    // cmd_ability.proto, 技能协议
+    CMD_ABILITY_BEGIN = 1101;
+    CMD_ABILITY_END = 1200;
+
+    // cmd_property.proto, 属性协议
+    CMD_PROPERTY_BEGIN = 1201;
+    CMD_PROPERTY_END = 1300;
+
+    // cmd_monster.proto, 怪物协议
+    CMD_MONSTER_BEGIN = 1301;
+    CMD_MONSTER_END = 1400;
+
+    // cmd_mail.proto, 邮件协议
+    CMD_MAIL_BEGIN = 1401;
+    CMD_MAIL_END = 1500;
+
+    // cmd_gacha.proto, 扭蛋协议
+    CMD_GACHA_BEGIN = 1501;
+    CMD_GACHA_END = 1600;
+
+    // cmd_avatar.proto, 角色协议
+    CMD_AVATAR_BEGIN = 1601;
+    CMD_AVATAR_END = 1800;
+
+    // cmd_mp.proto, 联机流程交互用的协议
+    CMD_MP_BEGIN = 1801;
+    CMD_MP_END = 1850;
+
+    // cmd_investigation.proto, 调查系统用的协议
+    CMD_INVESTIGATION_BEGIN = 1901;
+    CMD_INVESTIGATION_END = 1930;
+
+    // cmd_activity.proto, 运营活动协议
+    CMD_ACTIVITY_BEGIN = 2001;
+    CMD_ACTIVITY_END = 2200;
+
+    // cmd_watcher.proto 观测者协议
+    CMD_WATCHER_BEGIN = 2201;
+    CMD_WATCHER_END = 2300;
+
+    // cmd_pathfinding.proto, 寻路服务协议
+    CMD_PATHFINDING_BEGIN = 2301;
+    CMD_PATHFINDING_END = 2400;
+
+    // cmd_tower.proto 爬塔协议
+    CMD_TOWER_BEGIN = 2401;
+    CMD_TOWER_END = 2500;
+
+    // cmd_sign_in.proto, 签到协议
+    CMD_SIGN_IN_BEGIN = 2501;
+    CMD_SIGN_IN_END = 2600;
+    
+    // cmd_battle_pass.proto battlepass系统协议
+    CMD_BATTLE_PASS_BEGIN = 2601;
+    CMD_BATTLE_PASS_END = 2650;
+
+    // cmd_blossom.proto 循环营地协议
+    CMD_BLOSSOM_BEGIN = 2701;
+    CMD_BLOSSOM_END = 2800;
+
+    // cmd_social.proto, 社交协议
+    CMD_SOCIAL_BEGIN = 4001;
+    CMD_SOCIAL_END = 4100;
+
+    // cmd_recharge.proto 充值相关协议
+    CMD_RECHARGE_BEGIN = 4101;
+    CMD_RECHARGE_END = 4150;
+
+    // cmd_shopmall.proto 商城协议(UI商城入口里面涉及的协议) TODO...后续兼并cmd_shop.proto
+    CMD_SHOPMALL_BEGIN = 4151;
+    CMD_SHOPMALL_END = 4200;
+
+    /*
+     *  PART-2: 服务器内部通讯
+     */
+
+    // cmd_misc.server.proto, 杂项协议
+    CMD_MISC_SERVER_BEGIN = 10001;
+    CMD_MISC_SERVER_END = 10100;
+
+    // cmd_player.server.proto, 玩家协议
+    CMD_PLAYER_SERVER_BEGIN = 10101;
+    CMD_PLAYER_SERVER_END = 10200;
+
+    // cmd_muip.server.proto, 平台协议
+    CMD_MUIP_SERVER_BEGIN = 10201;
+    CMD_MUIP_SERVER_END = 10300;
+
+    // cmd_mail.server.proto, 邮件协议
+    CMD_MAIL_SERVER_BEGIN = 10301;
+    CMD_MAIL_SERVER_END = 10400;
+
+    // cmd_mp.server.proto, 联机协议
+    CMD_MP_SERVER_BEGIN = 10401;
+    CMD_MP_SERVER_END = 10500;
+
+    // cmd_activity.server.proto 全服活动协议
+    CMD_ACTIVITY_SERVER_BEGIN = 10601;
+    CMD_ACTIVITY_SERVER_END = 10700;
+
+    // cmd_recharge.server.proto 充值相关协议
+    CMD_RECHARGE_SERVER_BEGIN = 10701;
+    CMD_RECHARGE_SERVER_END = 10750;
+
+    // cmd_social.server.proto 社交协议
+    CMD_SOCIAL_SERVER_BEGIN = 10801;
+    CMD_SOCIAL_SERVER_END = 10900;
+
+    /*
+     * PART-3: redis相关协议
+     */
+    CMD_REDIS_OP_BEGIN = 11001;
+    CMD_REDIS_OP_END = 12000;
+}
+
+
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

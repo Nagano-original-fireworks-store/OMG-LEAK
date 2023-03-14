@@ -1,0 +1,46 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+ /**
+ * @file player_head.proto
+ * @author zili.huang(zili.huang@mihoyo.com)
+ * @date 2018/11/01 17:12:42
+ * @brief 
+ *      定义玩家日志head
+ **/
+
+
+syntax = "proto3";
+package proto_log;
+
+// 玩家日志HEAD
+message PlayerLogHead
+{
+    // 日志基本属性
+    string time = 1;            // 日志时间，mysql格式字符串，例如2018-01-01 00:00:00
+    uint32 action_id = 2;       // 行为类型，例如登录、扭蛋等，对应ActionType中的value
+    string action_name = 3;     // 行为类型的字符串名称，仅仅用来方便人为阅读日志
+    uint32 sub_action_id = 4;   // 触发当前操作的行为类型，对应ActionType的value，例如action=获取水晶，那么sub_action=登录奖励、付费、任务奖励等
+    string sub_action_name = 5;
+	
+    // 游戏属性
+    string region_name = 6;     // 游戏分区名称，例如ios01, pp01等
+    string game_version = 7;    // 游戏版本号，以服务器版本为准，例如1.0.0
+	
+    // 玩家核心属性
+    uint32 uid = 8;             // 玩家UID
+    uint32 level = 9;           // 玩家等级
+    uint64 vip_point = 10;      // VIP点，即玩家付费总额，同时作为不同货币的汇率转换
+    uint32 vip_level = 11;      // VIP等级
+    uint32 account_type = 12;   // 账号类型
+    uint64 tag = 13;        // 玩家的标记，由运营手动标记，每一位表示一个不同的含义
+    string trans_no = 14;   //  事务流水号, 用来关联玩家同一次操作产生的不同日志, 涉及产出、消耗的行为必须赋值
+	
+    // 3个重要代币占位符，推荐更重要的代币放在前面
+    int64 coin_1 = 15;  // 代币1占位符
+    int64 coin_2 = 16;  //  代币2占位符
+    int64 coin_3 = 17;  //  代币占位符3
+}

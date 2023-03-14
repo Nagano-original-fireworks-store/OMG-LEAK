@@ -1,0 +1,1197 @@
+/**************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file bin.server.proto
+ * @作者 jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @日期 2017/12/05 19:44:02
+ * @brief 定义数据库中的二进制数据
+ **/
+
+syntax = "proto3";
+import "server_only/bin_common.server.proto";
+package proto;
+
+/*
+ * t_user_info.bin字段 BEGIN
+ * 
+ * 玩家数据的二进制字段结构，序列化到PlayerData的bin字段, 对应数据库t_user_info.bin
+ * 
+ * 注意！！！
+ *      该结构只能增加字段，不可修改、删除已有字段！！！
+ *
+ *      该结构所包含的子结构，同样必须遵循上述规则！ 
+ *
+ *      如果乱改！ 会导致玩家数据存档无法解析！
+ *
+ *      因此尽量避免直接使用define.proto中定义的数据结构，容易改变的结构应该在这里再定义一遍，否则改了C<->S的通信协议，很容易造成这里的数据被破坏！！！
+ *
+ *      为了容易识别这类消息，所有消息命名都以Bin结尾
+ * 
+ */
+
+// 玩家基本数据
+message PlayerBasicCompBin
+{
+    uint32 level = 1;   // 等级
+    uint32 exp = 2; // 经验
+    string nickname = 3;    // 昵称
+    uint32 total_game_time = 4;   // 总共的游戏时间
+    uint64 trans_no_count = 5;  // 流水号计数，用来生成独立唯一的流水号
+    bool is_weather_locked = 6; // 是否锁定天气
+    bool is_game_time_locked = 7; // 是否锁定时间
+    float persist_stamina_limit = 8; // 固定体力上限
+    float cur_persist_stamina = 9; // 当前固定体力
+    float cur_temporary_stamina = 10; // 当前临时体力
+    map<uint32, uint32> open_state_map = 11; // 开启状态
+    uint64 player_time_ms = 12;          // 玩家个人时间毫秒(可暂停)
+    uint32 last_login_time = 13;
+    uint32 register_time = 14;           // 账号注册时间即第一次登入时间
+    uint32 total_login_days = 15;        // 累积登入天数
+    uint32 update_login_days_time = 16;  // 上次更新登入天数的时间
+    repeated uint32 reward_taken_level_list = 17; // 已经领过奖的等级
+    // uint32 level_lock_id = 18; // 等级限制对应的配置
+    uint32 language_type = 19;    // 客户端语言类型
+    string client_app_version = 20;     //客户端版本
+    string client_device_info = 21;     // 客户端设备信息
+    string client_system_version = 22;  // 客户端系统版本
+    bool is_guest = 23;                 // 是否是游客
+    uint32 online_time = 24;            // 玩家累计在线时间秒，用于埋点日志
+    bool is_proficient_player = 25;     // 是否是老玩家，需要下载资源才能进游戏
+    uint32 last_refresh_day = 26;            // 上次日更的天数
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 角色
+
+// 角色技能数据
+message AvatarSkillBin
+{
+    uint32 pass_cd_time = 1;    // 已经过的CD时间(毫秒)
+    repeated uint32 full_cd_time_list = 2;    // 完整CD时间列表(毫秒)
+}
+
+// 角色Buff数据
+message AvatarBuffBin
+{
+    uint32 left_time = 1;   // 剩余的时间(毫秒)
+    uint32 buff_uid = 2;    // 唯一ID
+    uint32 buff_type = 3;   // buff类型
+}
+
+// 角色羁绊数据
+message AvatarFetterBin
+{
+    uint32  exp_number = 1;   //羁绊值
+    repeated uint32 open_id_list = 2; //开启的羁绊ID
+    uint32  pb_only_level = 3; // 当前等级 仅用于存储
+    uint32  pb_only_exp = 4; // 当前等级对应经验 仅用于存储
+}
+
+// 角色挂机探索数据
+message AvatarExpeditionBin
+{
+    uint32 state = 1; // 状态
+    uint32 exp_id = 2; // 探索的线路ID
+    uint32 hour_time = 3; // 探索选择的时长
+    uint32 start_time = 4; // 开始的时间
+    uint64 transaction =  5; // 流水号 用作埋点日志
+}
+
+// 角色技能库数据
+message AvatarSkillDepotBin
+{
+    repeated uint32 talent_id_list = 1;         // 已开启的天赋，不包括低等级的天赋（命之座的星命点）
+    uint32 core_proud_skill_level = 2;          // 核心得意技等级
+    repeated uint32 inherent_proud_skill_list = 3;  // 开启了的固有得意技
+    map<uint32, uint32> skill_level_map = 4;    // 主动技能等级(key:skill_id)
+}
+
+// 角色数据
+message AvatarBin
+{
+    uint32 avatar_id = 1;
+    uint64 guid = 2;        // 唯一ID
+    uint32 level = 3;       // 等级
+    uint32 life_state = 5;  // 生命状态(取值范围：LifeState)
+    float cur_hp = 7;       // 当前血量
+    float cur_elem_energy = 9;      // 当前元素能量
+    uint32 promote_level = 10;      // 突破等级
+    uint32 skill_depot_id = 11;     // 技能库ID
+    map<uint32, AvatarSkillBin> skill_map = 13;  // 技能数据
+    map<uint32, AvatarBuffBin> buff_map = 14;  // Buff数据
+    map<uint32, AvatarSkillDepotBin> depot_map = 16;    // 技能库数据
+    repeated ItemBin equip_list = 20;                   // 角色装备
+    uint32 avatar_type = 100;                           // 角色类型（proto::AvatarType）
+    oneof detail
+    {
+        FormalAvatarBin formal_avatar = 101;
+        TrialAvatarBin trial_avatar = 102;
+        MirrorAvatarBin mirror_avatar = 103;
+    }
+}
+
+// 试用角色发放记录
+message TrialAvatarGrantRecordBin
+{
+    enum GrantReason
+    {
+        INVALID = 0;
+        GRANT_BY_QUEST = 1;  // 任务系统发放
+    }
+    uint32 grant_reason = 1; // 发放理由
+    uint32 from_parent_quest_id = 2; // 来自的parent_quest_id;
+}
+
+// 正式角色数据
+message FormalAvatarBin
+{
+    uint32 exp = 1;                             // 经验
+    repeated uint64 equip_guid_list = 2;        // 装备列表
+    AvatarFetterBin fetter = 3;                 // 羁绊数据
+    AvatarExpeditionBin expedition_data = 4;    // 挂机探索数据
+    uint32 avatar_repeat_count = 5;             // 角色重复次数
+    bool is_focus = 6;                          // 是否关注了
+}
+
+// 试用角色数据
+message TrialAvatarBin
+{
+    uint32 trial_avatar_id = 1;     // 试用角色配置ID
+    TrialAvatarGrantRecordBin grant_record_bin = 2;  // 发放记录存档
+}
+
+// 镜像角色数据
+message MirrorAvatarBin
+{
+}
+
+// 角色队伍
+message AvatarTeamBin
+{
+    repeated uint64 avatar_guid_list = 1;
+    string team_name = 2;
+    uint64 last_cur_avatar_guid = 3;  // 使用这个队伍时上一个使用的当前角色
+}
+
+// 玩家角色数据
+message PlayerAvatarCompBin
+{
+    repeated AvatarBin avatar_list = 1; // 角色列表
+    uint64 cur_avatar_guid = 2;     // 当前的角色GUID
+    VectorBin pb_only_cur_pos = 4;             // 当前角色所在的位置 只用于存储
+    VectorBin pb_only_cur_rot = 5;             // 当前角色所在的朝向 只用于存储
+    map<uint32, AvatarTeamBin> team_map = 6;    // 队伍列表
+    uint32 cur_team_id = 7;         // 当前队伍ID
+    uint64 last_change_avatar_time = 8;     // 上一次切换角色时间
+    bool is_spring_auto_use = 9;    // 泉水是否自动使用
+    uint32 spring_auto_use_percent = 10;    // 泉水自动使用百分比
+    uint32 last_backgroud_avatar_recover_time = 11; // 上一次后台角色恢复时间
+    uint32 cur_spring_volume = 12;  // 当前泉水量
+    bool is_flyable = 13;           // 是否能够飞行
+    bool is_transferable = 14;      // 是否能够传送
+    uint32 last_avatar_guid = 16;   // 上一个非试用角色
+    uint64 choose_avatar_guid = 17; // 选择的初始角色
+    uint32 die_type = 18;    // 上一次角色死亡类型
+    repeated uint64 temp_avatar_guid_list = 20; // 临时上阵的角色guid列表 
+    map<uint32, AvatarBuffBin> avatar_team_buff_map = 21; // teambuff映射
+    uint32 last_server_buff_uid = 22;   // 用于生成server_buff_uid
+}
+
+// 区域数据
+message AreaBin
+{
+    repeated uint32 events_finished_list = 1;   // 已经触发的事件
+}
+
+message CityBin
+{
+    uint32 level = 1;
+    uint32 crystal_num = 2;                     // 已经充能的结晶数量
+}
+
+message ScenePlayerLocationBin
+{
+    VectorBin cur_pos = 1;                   // 场景主人的当前位置
+    VectorBin cur_rot = 2;                   // 场景主人的当前朝向
+    VectorBin last_valid_pos = 3;            // 场景主人的最后合法位置
+    VectorBin last_valid_rot = 4;            // 场景主人的最后合法朝向
+}
+
+message EnvZoneInfoBin
+{
+    uint32 last_refresh_time = 1;
+    uint32 animal_num = 2;
+}
+message SceneEnvAnimalCompBin
+{
+    map<uint32, EnvZoneInfoBin> zone_info_map = 1;
+}
+
+message SceneWeatherInfoBin
+{
+    uint32 height_area_id = 1;                  // 天气区域高度ID
+    // map<uint32, string> weather_value_map = 2;  // 不同原因造成的天气值
+    uint32 climate_type = 3;                    // 当前天气类型
+    uint64 next_climate_time = 4;               // 下一次天气变化的游戏内时间
+    repeated uint32 forcast_climate_list = 5;   // 用于天气预报的天气类型
+}
+
+message SceneAllWeatherInfoBin
+{
+    repeated SceneWeatherInfoBin weather_info_list = 1;    // 天气值
+    repeated uint32 closed_weather_area_list = 2;          // 被删除了的天气物件
+}
+
+message SceneBlockGroupCompBin
+{
+    repeated uint32 dead_group_list = 3;    // 被标记不在活跃的group
+}
+
+message SceneAreaCompBin
+{
+    repeated uint32 unlocked_area_list = 1;    // 已解锁的区域列表
+    map<uint32, AreaBin> area_map = 2;         // 一级区域
+    map<uint32, CityBin> city_map = 3;
+}
+
+message SceneFogCompBin
+{
+    repeated uint32 unlock_fog_level_1_list = 1;    // 解锁的迷雾一级区域
+    repeated uint32 unlock_fog_level_2_list = 2;    // 解锁的迷雾二级区域
+}
+
+message SceneEncounterCompBin
+{
+    repeated uint32 parent_quest_id_list = 1;
+}
+
+// 场景数据
+message SceneBin
+{
+    reserved 1, 2, 3, 5, 7, 8, 10, 11, 12, 13, 22, 23;
+    //map<uint32, BlockBin> block_map = 1;   // 块数据
+    //map<uint32, GroupBin> group_map = 2;   // 组数据
+    //map<uint32, GroupPermBin> group_perm_map = 3;   // 永久组数据
+    repeated uint32 unlocked_point_list = 4;   // 已解锁的传送点列表
+    repeated uint32 unlocked_force_list = 6;   // 已解锁的力场列表
+    repeated uint32 locked_point_list = 9;     // 已锁的点列表
+    //map<uint32, ScenePlayerLocationBin> player_location_map = 10;    // 场景玩家的位置
+    //map<uint32, google.protobuf.Any> comp_data_map = 11;   // 组件存储map
+    SceneAllWeatherInfoBin all_weather_info = 14;          // 天气相关数据
+	ScenePlayerLocationBin owner_player_location = 15;     // 场景主人的位置
+    SceneBlockGroupCompBin block_group_bin = 16;
+    SceneEnvAnimalCompBin env_animal_bin = 17;
+    SceneAreaCompBin area_comp_bin = 18;
+    SceneEncounterCompBin encounter_comp_bin = 19;
+    uint64 last_spring_recover_time_ms = 20; // 上次更新泉水时间
+    repeated uint32 group_unlimit_point_list = 21;     // group解锁的点列表
+    SceneFogCompBin fog_comp_bin = 24;                     // 场景迷雾组件
+}
+
+// 大世界数据
+message WorldBin
+{
+    map<uint32, SceneBin> scene_map = 1;    // 所有场景的数据
+    // uint32 level = 2;                       // 大世界等级
+}
+
+message GroupProductBin
+{
+	map<uint32, uint32> gadget_one_off_map = 1;
+	map<uint32, uint32> monster_one_off_map = 2;
+}
+
+// 场景的一次性实体记录
+message SceneProductBin
+{
+	map<uint32, GroupProductBin> group_product_map = 1;// 所有group上的一次性gadget	
+}
+
+// 地城的一次性实体记录
+message DungeonProductBin
+{
+	map<uint32, SceneProductBin> scene_product_map = 1;// 一般一个地城里只有一个场景
+}
+
+message MapMarkPointBin
+{
+    uint32 scene_id = 1; // 场景ID
+    string name = 2; // 标记名称
+    VectorBin pos = 3; // 标记坐标
+    uint32 point_type = 4; // 标记点图标类型
+    uint32 monster_id = 5; // monster配置Id对应FROM_TYPE_MONSTER类型使用
+    uint32 from_type = 6; // 标记来源类型
+    uint32 quest_id = 7; // monster配置Id对应FROM_TYPE_QUEST类型使用
+}
+
+// 世界boss宝箱的领取记录
+message GroupBossChestBin
+{
+    map<uint32, uint32> boss_chest_map = 1; // config_id --> take_num
+}
+message SceneBossChestBin
+{
+    map<uint32, GroupBossChestBin> group_boss_chest_map = 1;
+    uint32 take_time = 2;                   // 上次领取时间
+}
+
+// 分支掉落次数记录
+message SubfieldDropBin
+{
+    map<uint32, uint32> drop_num_map = 1;   // gadget_id/monster_id --> 掉落次数
+}
+
+// 玩家场景数据
+message PlayerSceneCompBin
+{
+    WorldBin world = 1;                     // 大世界的数据
+    uint32 cur_scene_owner_uid = 2;         // 当前场景的所属者
+    uint32 my_prev_scene_id = 3;            // 之前自己的场景
+    VectorBin my_prev_pos = 4;                 // 之前在自己场景的位置
+    VectorBin my_prev_rot = 5;                 // 之前在自己场景的朝向
+    uint32 my_cur_scene_id = 6;             // 当前所在自己大世界场景
+    repeated uint32 monster_seen_list = 7;  // 已经遇见过的monster怪物
+    repeated MapMarkPointBin mark_point_list = 8; // 所有的地图标记
+	map<uint32, SceneProductBin> world_product_map = 9; // 单独存储场景上的产出相关的敏感数据
+    uint32 trivial_entity_drop_num = 10;    // 灌木受击掉落(生成小动物)数量
+    uint32 trivial_entity_drop_time = 11;   // 灌木受击掉落时间
+    //map<uint32, GroupLimitDropBin> group_limit_drop_map = 12; // 大世界group里面有掉落限制的数据
+    map<uint32, SceneBossChestBin> scene_boss_chest_map = 13;   // 大世界里面boss宝箱领取记录
+    map<uint32, SubfieldDropBin> subfield_drop_map = 14;        // 分支掉落数量
+    uint32 subfield_drop_time = 15;         // 上次分支掉落的时间
+    uint32 my_cur_area_id = 16;             // 之前在自己大世界场景时的一级区域id
+    map<uint32,DungeonProductBin> dungeon_product_map = 17; //单独地城里的产出相关的敏感数据
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 任务
+
+// 任务内容信息
+message QuestContentBin
+{
+    uint32 type = 1;        // 内容类型(取值范围：QuestCondType)
+    uint32 param = 2;       // 内容参数
+    uint32 progress = 3;    // 进度
+}
+
+message QuestTalkRecordBin
+{
+    uint32 talk_id = 1;     // 对话id
+    uint32 talk_time = 2;   // 对话时间
+}
+
+// 任务数据
+message QuestBin
+{
+    reserved 8;
+    uint32 quest_id = 1;                        // 任务ID
+    uint32 state = 2;                           // 任务状态(取值范围：QuestState)
+    repeated uint32 finish_progress_list = 3;          // 各个完成条件的完成进度，按id索引
+    repeated uint32 fail_progress_list = 4;     // 各个完成条件的完成进度，按id索引
+    uint32 start_time = 5;                     // 开始时间
+    repeated QuestTalkRecordBin talk_history_list = 6;  // 对话历史
+    uint32 start_game_time = 7;                // 开始游戏时间
+    // repeated uint32 finished_talk_list = 8;     // 完成的对话
+    uint32 accept_time = 9;                     // 接取时间
+}
+
+// 玩家任务数据
+message PlayerQuestBin
+{
+    repeated QuestBin quest_list = 1;       // 任务列表
+}
+
+// 任务随机数据
+message ParentQuestRandomInfoBin
+{
+    uint32 entrance_id = 1;
+    uint32 template_id = 2;
+    repeated uint32 factor_list = 3;
+    map<uint32, uint32> quest_id_map = 4;
+}
+
+// 任务记录数据
+message ParentQuestBin
+{
+    uint32 parent_quest_id = 1;     // 父任务ID
+    uint32 total_finish_count = 2;  // 任务完成次数(需要记录时才记录)
+    uint32 today_finish_count = 3;  // 今天完成次数
+    uint32 last_finish_time = 4;    // 上次完成时间
+    map<uint32, uint32> child_quest_state_map = 5;  // 最近一次完成父任务时，子任务的状态
+    bool is_random = 6;             // 是否是随机任务
+    ParentQuestRandomInfoBin random_info = 7;  // 随机任务信息
+    uint32 accept_time = 9;         // 接受任务时间
+    repeated int32 quest_var = 10;    // 父任务全局变量
+    uint32 reward_index = 11;        // 父任务奖励索引，默认为0
+	uint32 state = 12; // 父任务当前状态（取值范围 ParentQuestState)
+}
+
+message PlayerParentQuestBin
+{
+    repeated ParentQuestBin parent_quest_list = 1;     // 父任务记录
+}
+message ChapterBin
+{
+    uint32 chapter_id = 1;    // 章节ID
+    uint32 chapter_state = 2; // 章节状态
+    bool is_notify_sent = 3;     // 已发送过通知
+
+}
+message PlayerChapterBin
+{
+    repeated ChapterBin chapter_list = 1; // 章节记录
+}
+
+// 玩家任务组件
+message PlayerQuestCompBin
+{
+    PlayerQuestBin quest_bin = 1;                 // 任务数据
+    PlayerParentQuestBin parent_quest_bin = 2;    // 任务记录数据
+    uint32 last_random_parent_quest_id = 3;
+    uint32 last_random_quest_id = 4;
+    map<uint32, uint32> last_dungeon_settle_map = 5;   // 副本结算记录（用于回溯任务）
+    PlayerChapterBin chapter_bin = 6; // 章节数据
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 装备
+
+// 圣遗物
+message ReliquaryBin
+{
+    uint32 level = 1;   // 装备的等级
+    uint32 exp = 2;     // 装备经验
+    uint32 main_prop_id = 4; // 主属性ID
+    repeated uint32 append_prop_id_list = 5; // 附加属性ID列表
+}
+
+// 武器
+message WeaponBin
+{
+    uint32 level = 1;       // 装备等级
+    uint32 exp = 2;         // 经验
+    uint32 promote_level = 3; // 突破等级
+    map<uint32, uint32> affix_map = 4;  // 词缀(affix_id->affix_level)
+}
+
+// 装备
+message EquipBin
+{
+    oneof detail
+    {
+        ReliquaryBin reliquary = 1; // 圣遗物
+        WeaponBin weapon = 2;       // 武器
+    }
+}
+
+// 材料删除相关的Bin 
+message MaterialDeleteBin
+{
+    map<uint32, uint32> delete_time_num_map = 1;
+}
+
+// 材料
+message MaterialBin
+{
+    uint32 count = 1;               // 数量
+    MaterialDeleteBin delete_bin = 2; // 删除存档
+}
+
+// 道具
+message ItemBin
+{
+    uint32 item_type = 1;           // 道具类型
+    uint32 item_id = 2;             // 道具ID
+    uint64 guid = 3;                // 唯一ID
+    oneof detail
+    {
+        MaterialBin material = 101;         // 材料
+		EquipBin equip = 102;               // 装备
+    }
+}
+
+// 背包、仓库容器
+message PackItemStoreBin
+{
+}
+message DepotItemStoreBin
+{
+}
+
+// 道具容器
+message ItemStoreBin
+{
+    // 基类字段
+    map<uint64, ItemBin> item_map = 1;  // 所有道具
+
+    // 派生类字段
+    oneof ext
+    {
+        PackItemStoreBin pack_store = 101;    // 背包
+        DepotItemStoreBin depot_store = 102;  // 仓库
+    }
+}
+
+message AutoRecoverItemBin
+{
+    uint32 value = 1;
+    uint32 bought_num = 3;
+    uint32 last_bought_time = 4;
+    uint32 next_refresh_time = 5;
+}
+
+// 道具的产出数量记录
+message ItemLimitCountRecordBin
+{
+    uint32 item_type = 1;   // 道具类型
+    uint32 index_value = 2; // 索引值（ItemID或RankLevel）
+    uint32 item_count = 3;  // 累计产出数量
+}
+
+// 各种产出类型的产出记录
+message ItemLimitRecordBin
+{
+    uint32 item_limit_type = 1;     // 产出类型
+    uint32 last_refresh_time = 2;   // 上次刷新时间
+    repeated ItemLimitCountRecordBin item_limit_count_record_list = 3; // 每种道具的产出数量记录
+}
+
+// 删除返还的道具记录
+message MaterialDeleteReturnRecordBin
+{
+    map<uint32, uint32> delete_material_map = 1;
+    map<uint32, uint32> return_item_map = 2;
+}
+
+// 产出次数记录
+message OutputControlRecordBin
+{
+    uint32 last_refresh_time = 1;   // 上次刷新时间，用于刷新每日产出次数
+    map<uint32, uint32> daily_count_map = 2;    // 每日产出次数
+    map<uint32, uint32> total_count_map = 3;    // 历史产出次数
+}
+
+// 针对刷新类型的累计产出次数
+message ItemLimitRefreshRecordBin
+{
+    uint32 item_limit_refresh_type = 1; // 刷新类型
+    uint32 last_refresh_time = 2;   // 上次刷新时间
+    repeated ItemLimitCountRecordBin item_limit_count_record_list = 3;  // 每种道具的产出数量记录
+}
+
+// 玩家道具数据
+message PlayerItemCompBin
+{
+    ItemStoreBin pack_store = 1; // 背包
+    ItemStoreBin depot_store = 2; // 仓库
+    repeated uint32 history_item_list = 3; // 历史物品
+    uint32 hcoin = 4;   // 水晶
+    uint32 scoin = 5;   // 金币
+    map<uint32, uint64> item_cd_map = 6;    // 道具CD组
+    AutoRecoverItemBin resin_record = 7; // 树脂
+    AutoRecoverItemBin world_resin_record = 8; // 大世界体力
+    repeated ItemLimitRecordBin item_limit_record_list = 9; // 道具产出记录
+    map<uint32, uint32> item_total_obtain_count_map = 10;   // 材料、武器的总产出数量
+    MaterialDeleteReturnRecordBin material_delete_return_record = 11; //删除返还的道具记录
+    map<uint32, OutputControlRecordBin> output_control_record_map = 13; // 产出控制系统用的产出次数记录
+    uint32 wait_sub_hcoin = 14;         // 扣到负数的原石
+    uint32 wait_sub_scoin = 15;         // 扣到负数的摩拉
+    repeated ItemLimitRefreshRecordBin item_limit_refresh_record_list = 16; // 针对刷新类型的道具产出记录
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 副本
+
+// 副本group记录数据
+message DungeonGroupRecordBin
+{
+    map<uint32, uint32> chest_open_map = 1;     // 宝箱开启次数
+}
+
+// 副本记录数据
+message DungeonRecordBin
+{
+    uint32 enter_count = 1;     // 进入次数
+    map<uint32, DungeonGroupRecordBin> group_map = 2;   // 各个group的记录
+    uint32 start_time = 3; //  如果是循环副本 是记录开始时间和结束时间
+    uint32 end_time = 4; //
+}
+
+// 循环地城一个随机组的记录
+message DungeonRandomRecordBin
+{
+	repeated uint32 dungeon_list = 1; // 该组随机到的副本id
+   // repeated uint32 last_dungeon_list = 2; // 去重随机模式的副本 记录上次刷新的id 避免随机的时候重复
+    uint32 refresh_time = 3; // 刷新的时间戳
+}
+
+message DungeonDurableRecordBin
+{
+    bool is_passed = 1;         // 是否通关过(单机)
+}
+
+// 玩家的副本记录数据
+message PlayerDungeonRecordBin
+{
+    map<uint32, DungeonRecordBin> dungeon_daily_map = 1;  // 副本的记录包含任务副本 日常 周常副本
+    map<uint32, DungeonDurableRecordBin> dungeon_durable_map = 2;
+    map<uint32, DungeonRandomRecordBin> dungeon_random_map = 3; // random_id -> 一个随机ID的记录
+}
+
+// 副本系列的boss宝箱领取记录
+message DungeonSerialBossChestBin
+{
+    uint32 take_num = 1;            // 一周内的领取数量
+    uint32 take_time = 2;           // 上次领取时间
+}
+
+// 玩家的副本数据
+message PlayerDungeonCompBin
+{
+    uint32 cur_dungeon_id = 1;      // 当前副本ID
+    uint32 last_enter_time = 2;     // 最后一次进入副本时间
+    uint32 quit_scene_id = 3;   // 退出的场景ID
+    uint32 quit_point_id = 4;   // 退出的点ID
+    PlayerDungeonRecordBin record_bin = 5;  // 副本记录数据
+    bool is_join_other_scene = 6;           // 通过JoinPlayerScene进入的副本
+	uint32 last_time_daily_item_add = 7;    // 上次日常地城印记发放时间
+	uint32 last_time_weekly_item_add = 8;   // 上次周常地城印记发放时间
+    //uint32 drop_subfield_num = 9;         // 分支掉落总数
+    //uint32 drop_subfield_time = 10;       // 分支掉落时间
+    uint32 last_unsettled_dungeon_id = 11;  // 上次尚未结算的副本id
+    map<uint32, DungeonSerialBossChestBin> serial_boss_chest_map = 12;  // 副本系列的boss宝箱领取记录
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 无聊度系统
+
+message PlayerBoredCompBin
+{
+    bool is_open = 1;               // 是否开放
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 联机系统
+
+message PlayerMpCompBin
+{
+    uint32 mp_setting_type = 2;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 烹饪, 合成 
+
+message CompoundOutputBin
+{
+    uint32 output_time = 1;
+}
+message CompoundQueueBin
+{
+    repeated CompoundOutputBin output_list = 1;
+}
+
+// 食谱数据
+message CookRecipeDataBin
+{
+    uint32 proficiency = 1;         // 熟练度
+}
+
+message PlayerCookCompBin
+{
+    uint32 grade = 1;               // 烹饪段位
+    map<uint32, CookRecipeDataBin> recipe_data_map = 2;     // 所有食谱数据
+    repeated uint32 unlock_compound_list = 3;
+    map<uint32, CompoundQueueBin> compound_que_bin_map = 4;
+}
+
+message PlayerLoginCompBin
+{
+    repeated uint32 taken_login_reward_config_list = 1;     // 已经领取的登入奖励配置id
+    uint32 last_login_refresh_time = 2;                     // 上次登入时检查登入奖励的时间
+}
+
+message OfflineMsgExeBin
+{
+    OfflineMsgBin msg = 1;
+    uint32 exe_times = 2;           // 已经执行的次数
+}
+message PlayerOfflineMsgCompBin
+{
+    uint32 index = 1;                                       // 已经处理的最大离线消息编号
+    repeated OfflineMsgExeBin next_offline_msg_list = 2;    // 需要再次执行的msg
+}
+
+message DailyTaskInfoBin
+{
+    uint32 daily_task_id = 1;
+    uint32 drop_id = 2;
+    uint32 progress = 3;
+    bool is_finished = 4;
+    uint32 preview_reward_id = 5;
+}
+
+message PlayerDailyTaskCompBin
+{
+    uint32 last_time = 1;           // 上次生成event的时间
+    repeated DailyTaskInfoBin task_list = 2;  // 当前生成的task列表
+    //repeated uint32 finished_task_list = 3;
+    uint32 score_player_level = 4;            // 玩家等级对应的积分奖励
+    bool is_taken_score_reward = 5;           // 是否领取了积分奖励
+    uint32 finished_num = 6;                  // 完成次数
+    repeated uint32 sure_pool_list = 7;       // 必定池里面的内容
+    repeated Uint32List possible_pools_list = 8;    // 可能池子里面的内容
+    map<uint32, Int32List> task_var_map = 9;        // 事件变量值
+    uint32 refresh_times = 10;                      // 刷新次数
+}
+
+message PlayerRandTaskCompBin
+{
+    uint32 last_reward_time = 1;    // 上次领取奖励的时间
+    uint32 reward_num = 2;          // 今天领取奖励的次数
+}
+
+message InvestigationBin
+{
+    uint32 investigation_id = 1;   // 调查ID
+    uint32 progress = 2;           // 进度
+    bool is_taken_reward = 3;      // 是否领奖
+}
+
+message PlayerInvestigationCompBin
+{
+    repeated InvestigationBin investigation_list = 1;      // 调查列表
+    repeated uint32 reward_taken_target_quest_id_list = 2; // 已经领过奖的调查任务列表
+}
+
+message SeaLampScheduleBin
+{
+    uint32 contribution = 1;        // 贡献值
+    repeated uint32 taken_contribution_reward_list = 2;     // 已经领取的贡献奖励id
+    repeated uint32 taken_phase_reward_list = 3;            // 已经领取的阶段奖励id
+    bool is_check_pos = 4;          // 海灯节开启时是否检查过危险位置
+    bool is_check_finish_pos = 5;   // 海灯节结束时是否检查过危险位置
+}
+message ActivityScheduleBin  // 每个Schedule对应的存档
+{
+	repeated uint32 meet_cond_list = 1; // 所有已经满足的条件，cond id列表
+    bool is_started = 3;                // 是否执行过start
+    bool is_finished = 4;               // 是否执行过finish
+    map<uint32, bool> cond_state_map = 5;  // 条件默认状态
+    bool is_play_open_anim = 6;         // 是否播放过开头效果
+    oneof detail
+    {
+        SeaLampScheduleBin sea_lamp_bin = 10;    // 海灯节的存档数据
+    }
+}
+
+message ActivityBin
+{
+	uint32 schedule_id = 1; // 当前生效的shedule id
+	map<uint32, ActivityScheduleBin> activity_schedule_bin_map = 2; //活动通用存档 schedule id -> bin
+}
+
+message PlayerActivityCompBin       // 运营活动数据
+{
+	map<uint32, ActivityBin> activity_bin_map = 1;
+    uint32 fly_sea_lamp_num = 2;
+    uint32 fly_sea_lamp_time = 3;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 邮件系统
+
+// PlayerBin上的邮件 已废弃
+message PlayerMailBin
+{
+    uint32 mail_id = 1;         // 邮件唯一ID（对玩家唯一）
+    MailBin mail_bin = 2;       // 邮件数据
+    bool is_read = 3;           // 是否已读
+    bool is_attachment_got = 4; // 是否已领取附件
+    uint32 source_type = 5;     // 邮件来源
+}
+
+// 玩家邮件数据
+message PlayerMailCompBin
+{
+    //uint32 mail_index = 1;                      // 已领取的最新一封邮件的mail_index
+    //repeated PlayerMailBin player_mail_bin_list = 2;// 所有邮件数据
+    //uint32 last_mail_id = 3;                    // 用来生成新邮件的mail_id
+    //repeated uint32 wait_del_index_list = 4;    //需要删除且没有删除的邮件索引(索引由multiserver生成)
+    reserved 1, 2, 3, 4;
+    repeated uint32 has_take_attachment_mail_id_list = 5;   //已领取附件，但还未收到mailservice回复
+    map<uint64, MailBin> wait_add_mail_map = 6;   // 未完成的内部邮件
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 商店
+
+// 每个商品的购买记录
+message ShopGoodsRecordBin
+{
+    uint32 goods_id = 1;                        // 商品ID
+    uint32 bought_num = 2;                      // 购买数量
+    uint32 last_buy_time = 3;                   // 上次购买时间
+}
+
+// 每个商店的购买记录
+message ShopRecordBin
+{
+    uint32 shop_type = 1;                               // 商店类型
+    repeated ShopGoodsRecordBin goods_record_list = 2;  // 商店商品购买记录列表
+}
+
+// 玩家商店数据
+message PlayerShopCompBin
+{
+    repeated ShopRecordBin shop_record_list = 1;    // 商店记录
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 扭蛋
+
+// 扭蛋物品类型数据
+message GachaItemTypeDataBin
+{
+    uint32 last_gacha_times = 1;
+}
+
+// 扭蛋物品父类型数据
+message GachaItemParentTypeDataBin
+{
+    uint32 last_gacha_times = 1;
+}
+
+// 扭蛋保底数据
+message GachaGuaranteeDataBin
+{
+    uint32 gacha_rule_id = 1;
+    uint32 last_gacha_guarantee_times = 2;
+    bool is_cur_schedule_triggered = 3;
+}
+
+// 扭蛋Up数据
+message GachaUpDataBin
+{
+    uint32 gacha_no_up_times = 1;   // 连续未抽到次数
+}
+
+message GachaRecordBin
+{
+    uint32 gacha_type = 1;
+    uint32 cur_schedule_id = 2;
+    uint32 total_gacha_times = 3;
+    map<uint32, GachaGuaranteeDataBin> gacha_guarantee_map = 4;
+    uint32 cur_schedule_total_gacha_times = 5;
+    map<uint32, GachaItemTypeDataBin> gacha_item_type_data_map = 6;
+    map<uint32, GachaItemParentTypeDataBin> gacha_item_parent_type_data_map = 7;
+    uint32 total_ten_gacha_times = 8;
+    map<uint32, GachaUpDataBin> gacha_up_data_map = 9;
+}
+
+// 玩家扭蛋数据
+message PlayerGachaCompBin
+{
+    map<uint32, GachaRecordBin> gacha_record_map = 1;
+    uint32 gacha_random = 2;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 道具交付
+
+// 交付记录
+message GivingRecordBin
+{
+    uint32 giving_id = 1;           // 交付ID
+    bool is_finished = 2;           // 是否完成
+    uint32 last_group_id = 3;       // （模糊交付）上次完成是交付道具属于哪组
+}
+
+// 玩家道具交付数据
+message PlayerGivingCompBin
+{
+    map<uint32, GivingRecordBin> giving_record_map = 1;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 锻造
+
+// 锻造队列记录
+message ForgeQueueBin
+{
+    uint32 transaction_no = 1;          // 用于埋点日志的流水号
+    uint32 queue_id = 2;                // 锻造队列ID（从1开始递增）
+    uint32 forge_id = 3;                // 锻造ID
+    uint32 forge_count = 4;             // 锻造几份
+    uint32 finish_count = 5;            // 总共完成了几份
+    uint32 taken_count = 6;             // 已经取走了几份
+    uint32 start_time = 7;              // 开始时间
+    uint32 single_time_cost = 8;        // 加工一份需要的时间（秒）
+    repeated uint32 proud_skill_id_list = 9;    // 锻造开始时生效的得意技
+    uint32 avatar_id = 10;              // 角色ID
+}
+
+// 玩家锻造相关数据
+message PlayerForgeCompBin
+{
+    uint32 last_transaction_no = 1;     // 用于埋点日志的流水号
+    map<uint32, ForgeQueueBin> forge_queue_map = 2;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 观察者（教学、成就）
+
+message WatcherBin
+{
+    uint32 watcher_id = 1;                     // 观察者ID
+    uint32 progress = 2;                       // 观察者进度
+}
+// 教学记录
+message PushTipsBin
+{
+    uint32 push_tips_id = 1;                    // 教学ID
+    uint32 state = 2;                           // proto::PushTipsState
+}
+
+// 玩家的观察者信息
+message PlayerWatcherCompBin
+{
+    map<uint32, uint32> global_watcher_progress_map = 1;        // 保存的上次未完成的全局观察者进度（key:观察者ID value:观察者进度）
+    repeated uint32 finished_global_watcher_list = 2;           // 已完成的全局观察者列表
+    repeated PushTipsBin push_tips_list = 3;    // 教学记录列表
+    repeated WatcherBin watcher_list = 4;       // 正在进行的watcher列表
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 爬塔
+
+// 队伍镜像
+message TowerTeamBin
+{
+    uint32 tower_team_id = 1;                   // 第几个爬塔队伍
+    repeated uint64 avatar_guid_list = 2;       // 队伍中的镜像队员，第一个角色就是上场角色
+}
+
+// 关卡记录
+message TowerLevelRecordBin
+{
+    uint32 level_id = 1;                        // 关卡ID
+    repeated uint32 satisfied_cond_list = 2;    // 完成了的星级条件序号
+}
+
+// 爬塔每月每层进度
+message TowerFloorRecordBin
+{
+    uint32 floor_id = 1;                        // 层ID
+    repeated TowerLevelRecordBin passed_level_record_list = 2; // 完成了的关卡的记录，也是首通奖励发过的关卡
+    uint32 floor_star_reward_progress = 3;      // 星级奖励领取进度
+}
+
+// 爬塔队员的当前属性，进入关卡前记录
+message TowerAvatarRecordBin
+{
+    map<uint32, float> cur_fight_prop_map = 1;  // 目前只有当前血量的当前能量要存
+}
+
+// 爬塔每日进度记录
+message TowerCurLevelRecordBin
+{
+    reserved 4;
+    uint32 cur_floor_index = 1;                 // 第几层
+    uint32 cur_level_index = 2;                 // 关卡组内序号，当前能打的关卡
+    repeated TowerTeamBin tower_team_list = 3;  // 队伍镜像
+    map<uint64, TowerAvatarRecordBin> avatar_record_map = 5;    // 最后一次进入关卡前每个角色的当前属性
+    map<uint32, uint32> tower_buff_map = 6;     // 本层生效的爬塔buff key:buff_uid, value:buff_id
+    bool is_floor_finished = 7;                 // 一层是否打完
+}
+
+// 爬塔每天每关随机出的buff（每天每关可选的buff固定）
+message TowerLevelBuffListBin
+{
+    repeated uint32 tower_buff_id_list = 1;     // 爬塔增益ID列表
+}
+
+// 玩家爬塔信息
+message PlayerTowerCompBin
+{
+    uint32 tower_schedule_id = 1;                               // 爬塔排期ID，每个月重置一次所有爬塔记录
+    repeated TowerFloorRecordBin tower_floor_record_list = 2;   // 爬塔每月每层进度（开放了哪些层）
+    uint32 last_daily_reward_time = 3;                          // 上次领取每日奖励的时间
+    uint32 daily_floor_index = 4;                               // 今日最好成绩到第几层
+    uint32 daily_level_index = 5;                               // 今日最好成绩到第几关
+    map<uint32, TowerLevelBuffListBin> daily_level_buff_map = 6;// 今日每层可选的buff
+    TowerCurLevelRecordBin cur_level_record = 7;                // 爬塔暂存信息
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 循环营地
+
+// 循环营地数据
+message BlossomCircleCampDataBin
+{
+    uint32 last_refresh_time = 1;                   // 上次刷新时间
+    uint32 circle_camp_id = 2;                      // 循环营地ID
+    uint32 drop_id = 3;                             // 掉落ID
+    uint32 preview_reward = 4;                      // 奖励预览
+    uint32 round = 5;                               // 第几轮
+    uint32 state = 6;                               // 状态
+    uint32 progress = 7;                            // 进度值
+}
+
+// 起始搜索区域数据
+message BlossomInitialSectionDataBin
+{
+    uint32 section_id = 1;  // 区域ID
+    uint32 timestamp = 2;   // 时间戳
+}
+
+// 玩家循环营地数据
+message PlayerBlossomCompBin
+{
+    map<uint32, BlossomCircleCampDataBin> circle_camp_map = 1;         // 当前循环营地数据。key: 刷新ID
+    map<uint32, uint32> recent_used_section_id_map = 2;                // 最近使用的区域ID。key: 区域ID, value: 时间戳
+    map<uint32, BlossomInitialSectionDataBin> initial_section_map = 3; // 每个城市起始搜索的区域信息，每天会重置。 key: 城市ID
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////
+// 签到
+
+// 单个签到排期的信息
+message SignInRecordBin
+{
+    uint32 schedule_id = 1;     // 排期ID
+    uint32 sign_in_count = 2;   // 累计签到多少天
+    uint32 last_sign_in_time = 3;   // 上次签到时间
+    bool is_cond_satisfied = 4; // 是否满足开启条件
+    repeated uint32 reward_day_list = 5;   // 领过哪几天的奖励
+}
+
+// 单个bonus活动的记录信息
+message BonusActivityRecordBin
+{
+    uint32 bonus_activity_id = 1;   // bonus活动配置ID
+    uint32 state = 2;   // 进度状态（取值范围：data::BonusActivityState）
+}
+
+// 玩家签到信息
+message PlayerSignInCompBin
+{
+    repeated SignInRecordBin sign_in_record_list = 2;       // 签到记录
+    repeated BonusActivityRecordBin bonus_activity_record_list = 3; // bonus活动记录
+}
+
+// 充值组件存档数据
+message HcoinProductBin
+{
+    uint32 last_buy_time = 1;       // 最近一次充值记录
+    uint32 buy_times = 2;           // 当期充值次数
+}
+// 月卡存档数据
+message CardProductBin
+{
+    uint32 last_daily_reward_time = 1;  // 上次发放奖励时间
+    uint32 first_buy_time = 2;          // 第一次购买时间
+    uint32 expire_time = 3;             // 过期时间
+}
+message PlayerRechargeCompBin
+{
+    map<uint32, uint32> finished_order_map = 1;             // 最近完成的订单历史
+    map<uint32, uint32> wait_mark_db_map = 2;               // 等待标记db完成的订单列表
+    map<string, HcoinProductBin> hcoin_product_map = 3;     // 原石充值记录
+    map<string, CardProductBin> card_product_map = 4;       // 月卡充值记录
+}
+
+message BattlePassRewardTagBin
+{
+    uint32 unlock_status = 1; // 解锁状态
+    uint32 level = 2; // 对应等级
+    uint32 reward_id = 3; // 对应奖励ID
+}
+
+message BattlePassScheduleBin
+{
+    uint32 schedule_id = 1;
+    uint32 level = 2; 
+    uint32 point = 3;
+    uint32 unlock_status = 4;
+    repeated BattlePassRewardTagBin reward_taken_list = 5;
+}
+
+message BattlePassMissionBin
+{
+    uint32 mission_id = 1;
+    uint32 mission_status = 2; // 任务状态
+}
+
+// 玩家战令相关信息
+message PlayerBattlePassCompBin
+{
+    repeated BattlePassScheduleBin schedule_bin_list = 1; // 排期存档列表, 先保留多期
+    repeated BattlePassMissionBin cur_battle_pass_mission_bin_list = 2; // 当前身上的battle pass 任务列表
+    uint32 cur_schedule_id = 3; // 当前排期ID
+    uint32 last_refresh_time = 4; // 上一次刷新时间
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+// bin字段结构
+message PlayerDataBin
+{
+    PlayerBasicCompBin basic_bin = 1; // 存储等级、经验等基本数据的组件
+    PlayerAvatarCompBin avatar_bin = 2; // 角色组件
+    PlayerQuestCompBin quest_bin = 4; // 任务组件
+    PlayerShopCompBin  shop_bin = 6; // 商店组件
+    PlayerItemCompBin item_bin = 7; // 道具组件
+    PlayerDungeonCompBin dungeon_bin = 8; // 副本组件
+    PlayerSceneCompBin scene_bin = 9; // 场景组件
+    PlayerBoredCompBin bored_bin = 11; // 消息分发组件
+    PlayerMpCompBin mp_bin = 12; // 联机组件 
+    PlayerCookCompBin cook_bin = 13; // 烹饪系统
+    PlayerMailCompBin mail_bin = 15; // 邮件系统
+    PlayerLoginCompBin login_bin = 16; // 登入活动相关
+    PlayerOfflineMsgCompBin offline_msg_bin = 17; // 离线消息系统
+    PlayerDailyTaskCompBin daily_task_bin = 18; // 固定事件系统
+    PlayerRandTaskCompBin rand_task_bin = 19; // 随机事件系统
+    PlayerGachaCompBin gacha_bin = 20; // 扭蛋
+    PlayerGivingCompBin giving_bin = 21; // 道具交付组件
+    PlayerForgeCompBin forge_bin = 22; // 锻造
+    PlayerInvestigationCompBin investigation_bin = 23; // 调查
+    PlayerActivityCompBin activity_bin = 24;    // 运营活动相关
+    PlayerWatcherCompBin watcher_bin = 25;      // 观测组件
+    PlayerTowerCompBin tower_bin = 26;          // 爬塔组件
+    PlayerSignInCompBin sign_in_bin = 27;       // 签到组件
+    PlayerBattlePassCompBin battle_pass_bin = 28; // 战令组件
+    PlayerBlossomCompBin blossom_bin = 29;  //  循环营地组件
+    PlayerRechargeCompBin recharge_bin = 30;    // 充值组件
+}
+
+// 数据库自定义的json数据，用于展示和快速获取玩家的某些数据
+message PlayerJsonData
+{
+    bool is_proficient_player = 1;  // 是否为老玩家，与额外包的下载有关系
+}
+
+// 玩家数据，登录、回写时使用
+message PlayerData
+{
+    uint32 uid = 1;
+    string nickname = 2;
+    uint32 last_login_time = 3;
+    bytes bin = 4;
+    uint32 data_version = 5;    // 数据版本号，每次回写自动+1, 用来防止因回写顺序引起的回档
+    uint32 level = 6;
+    uint32 exp = 7;
+    string json_data = 8;       // 自定义json_data
+}
+
+
+/*
+ * t_user_info.bin字段 END
+ */
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

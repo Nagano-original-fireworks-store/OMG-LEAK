@@ -1,0 +1,962 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file fight.proto
+ * @author jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @date 2017/10/23 18:47:22
+ * @brief 战斗协议[301 - 400]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 消息的转发类别
+enum ForwardType
+{
+    FORWARD_LOCAL = 0;                         // 只是本地
+    FORWARD_TO_ALL = 1;                // 发给所有的客户端
+    FORWARD_TO_ALL_EXCEPT_CUR = 2;     // 发给除了自己的客户端
+    FORWARD_TO_HOST = 3;               // 发给主机
+    FORWARD_TO_ALL_GUEST = 4;          // 发给所有的客机（除了主机）
+    FORWARD_TO_PEER = 5;               // 发给某个指定的peer，读取固定字段forward_peer
+    FORWARD_TO_PEERS = 6;              // 转发给指定的某些PeerId，读取固定字段forward_peer_list
+    FORWARD_ONLY_SERVER = 7;           // 只发送给服务器的，不用转发给其他机器
+    FORWARD_TO_ALL_EXIST_EXCEPT_CUR = 8;    // 转发给除了当前剩下的所有有给定entityid单位的客户端
+}
+
+enum HitColliderType
+{
+    HIT_COLLIDER_INVALID = 0;
+    HIT_COLLIDER_HIT_BOX = 1;
+    HIT_COLLIDER_WET_HIT_BOX = 2;
+    HIT_COLLIDER_HEAD_BOX = 3;
+}
+
+// Hitcollision
+message HitCollision
+{
+    HitColliderType hit_collider_type = 1;
+    int32 hit_box_index = 2;
+    Vector hit_point = 3;
+    Vector hit_dir = 4;
+}
+
+// AttackHitEffectResult
+message AttackHitEffectResult
+{
+    uint32 hit_eff_level = 1;                 // ConfigCombat.h data::HitLevel
+
+    float retreat_strength = 2;               //被击退的程度
+    float air_strength = 3;                   //被击飞的程度
+
+    float hit_halt_time = 4;
+    float hit_halt_time_scale = 5;
+}
+
+// 用来确定ability的，ability modifier和action的local id索引
+message AbilityIdentifier
+{
+    uint32 instanced_ability_id = 1;
+    uint32 ability_caster_id = 2;
+    int32 local_id = 3;
+    uint32 instanced_modifier_id = 4;
+    uint32 modifier_owner_id = 5;
+}
+
+// AttackResult，伤害的打包消息 之后Config中的东西会通过animeventid和技能的index来替换掉，减少流量消耗
+message AttackResult
+{
+    uint32 attacker_id = 1;
+    uint32 defense_id = 2;
+
+    string anim_event_id = 3;
+    AbilityIdentifier ability_identifier = 4;
+    string attack_tag = 5;
+
+    float damage = 6;
+    bool is_crit = 7;
+    
+    HitCollision hit_collision = 8;
+    uint32 hit_pos_type = 9;
+
+    uint32 endure_break = 10;
+    Vector resolved_dir = 11;
+    int32 hit_retreat_angle_compat = 12;
+
+    AttackHitEffectResult hit_eff_result = 13;
+
+    uint32 element_type = 14;
+    float damage_percentage = 15;
+    float damage_extra = 16;
+    float bonus_critical = 17;
+    float bonus_critical_hurt = 18;
+
+    bool use_gadget_damage_action = 19;     // 直接使用gadget trigger action damagebyattackvalue
+    uint32 gadget_damage_action_idx = 20;   // 使用的action索引
+    uint32 strike_type = 21;        // data::StrikeType
+
+    bool is_resist_text = 22;       //客户端纯表现用，是否被抵抗
+    float critical_rand = 23;       // 暴伤随机数
+    float element_amplify_rate = 24;    // 某些元素反应会放大本次的最终伤害
+
+    string attenuation_tag = 25; // 高频攻击衰减标记
+	float damage_shield = 26; //用来计算元素盾伤害，因为Damage很有可能被重置，导致元素盾不正确
+
+    bool mute_element_hurt = 27; // 是否元素免伤
+    bool true_damage = 28;  // 是否是真实伤害
+
+    string attenuation_group = 29; // 高频攻击衰减组
+}
+
+// 单位被击中的消息数据
+message EvtBeingHitInfo
+{
+    uint32 peer_id = 1;
+    AttackResult attack_result = 2;
+}
+
+// 单位被击中的消息，服务器负责转发到所有客户端(Server -> All Client, forward_type == FORWARD_TO_ALL)
+message EvtBeingHitNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 301;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    ForwardType forward_type = 1;
+    EvtBeingHitInfo being_hit_info = 2;
+}
+
+
+message EvtAnimatorParameterInfo
+{
+    
+    uint32 entity_id = 1;
+    int32 name_id = 2;      // 动画名称ID
+    bool is_server_cache = 3;   // 服务器帮忙缓存动画参数
+    AnimatorParameterValueInfo value = 4; // 动画值信息
+}
+
+// 动画的同步消息，服务器负责转发到除了当前客户端的其他客户端(Server -> All Client Except Cur, forward_type == FORWARD_TO_ALL_EXCEPT_CUR)
+message EvtAnimatorParameterNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 302;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+	ForwardType forward_type = 1;
+    EvtAnimatorParameterInfo animator_param_info = 2;
+}
+
+message AbilityArgument
+{
+    oneof arg
+    {
+        uint32 int_arg = 1;
+        float float_arg = 2;
+        string str_arg = 3;
+    }   
+}
+
+// 主机通知
+message HostPlayerNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 303;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 host_uid = 1;    // 主机UID
+    uint32 host_peer_id = 2;    // 主机PeerID
+}
+
+// 单位发起主动技能消息，服务器负责转发到所有客户端(Server -> All Client Except cur, forward_type == FORWARD_TO_ALL_EXCEPT_CUR)
+message EvtDoSkillSuccNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 304;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    uint32 caster_id = 2;
+    uint32 skill_id = 3;
+
+    // 攻击瞬间强制设置面向
+    Vector forward = 4;
+}
+
+// authority创建动态gaget的请求，服务器负责转发到其他客户端
+message EvtCreateGadgetNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 305;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    uint32 entity_id = 2;
+    uint32 config_id = 3;
+    uint32 camp_id = 4;
+    uint32 camp_type = 5;
+    Vector init_pos = 6;
+    Vector init_euler_angles = 7;
+    uint64 guid = 8;
+    uint32 owner_entity_id = 9;
+    uint32 target_entity_id = 10;
+    bool is_async_load = 11;
+    uint32 target_lock_point_index = 12;
+    uint32 room_id = 13;
+}
+
+// authority销毁动态gaget的请求
+message EvtDestroyGadgetNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 306;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    uint32 entity_id = 2;
+}
+
+// 强制转向指定单位
+message EvtFaceToEntityNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 307;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    uint32 entity_id = 2;
+    uint32 face_entity_id = 3;
+}
+
+// 强制转向指定方向
+message EvtFaceToDirInfo
+{
+    uint32 entity_id = 1;
+    Vector face_dir = 2;
+}
+
+// 强制转向指定方向
+message EvtFaceToDirNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 308;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    EvtFaceToDirInfo evt_face_to_dir_info = 2;
+}
+
+// authority扣体力的请求
+message EvtCostStaminaNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 309;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    float cost_stamina = 1;
+    uint32 skill_id = 2;
+}
+
+
+message EvtSetAttackTargetInfo
+{
+    uint32 entity_id = 1;
+    uint32 attack_target_id = 2;
+}
+// 同步切换目标
+message EvtSetAttackTargetNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 310;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    EvtSetAttackTargetInfo evt_set_attack_target_info = 2;
+}
+
+message EvtAnimatorStateChangedInfo
+{
+    uint32 entity_id = 1;
+
+    uint32 to_state_hash = 2;
+    uint32 normalized_time_compact = 3;
+    int32 face_angle_compact = 4;
+	Vector pos = 5;
+}
+
+
+// 动画的同步消息，服务器负责转发到除了当前客户端的其他客户端(Server -> All Client Except Cur, forward_type == FORWARD_TO_ALL_EXCEPT_CUR)
+message EvtAnimatorStateChangedNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 311;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    EvtAnimatorStateChangedInfo evt_animator_state_changed_info = 2;
+}
+
+message EvtRushMoveInfo
+{
+    uint32 entity_id = 1;
+
+    Vector velocity = 2;
+    float timeRange = 3;
+
+    int32 state_name_hash = 4;    // 为了校验本次rushmove
+
+    int32 face_angle_compact = 5;  // entity rush move start face angle
+    Vector pos = 6;     // entity rush move start pos
+    Vector rush_attack_target_pos = 7; // rush attack target pos
+    Vector rush_to_pos = 8;   // rush to point
+}
+
+// rushMove 同步消息
+message EvtRushMoveNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 312;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+	
+    ForwardType forward_type = 1;
+	EvtRushMoveInfo evt_rush_move_info = 2;
+}
+
+// 子弹独有的命中的消息
+message EvtBulletHitNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 313;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    uint32 forward_peer = 2;
+    uint32 entity_id = 3;
+    uint32 hit_entity_id = 4;
+
+    HitColliderType hit_collider_type = 5;
+    int32 hit_box_index = 6;
+    Vector hit_point = 7;
+    Vector hit_normal = 8;
+}
+
+// 子弹独有的隐藏的消息
+message EvtBulletDeactiveNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 314;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    uint32 entity_id = 2;
+    Vector disappear_pos = 3;
+}
+
+// entity开始dieend的消息，用来remote那边的startend和authority同步，否则会出现比如安伯的娃娃authority那边dieend，但是remote timer计时没到，就没有dieend，但是又做了技能的action了，看起来不同步
+message EvtEntityStartDieEndNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 315;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    uint32 entity_id = 2;
+    bool immediately = 3;
+    uint32 die_state_flag = 4;
+}
+
+// 子弹移动同步消息
+message EvtBulletMoveNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 322;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    uint32 entity_id = 2;
+    Vector cur_pos = 3;         // 当前位置
+}
+
+// 进入瞄准模式
+message EvtAvatarEnterFocusNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 323;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    uint32 entity_id = 2;
+    bool fast_focus = 3;
+    bool use_focus_sticky = 4;
+    bool use_auto_focus = 5;
+    bool use_gyro = 6;
+    bool can_move = 7;
+    bool show_cross_hair = 8;
+    Vector focus_forward = 9;
+    bool enter_normal_focus_shoot = 10;
+    bool enter_holding_focus_shoot = 11;
+}
+
+// 退出瞄准模式
+message EvtAvatarExitFocusNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 324;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    uint32 entity_id = 2;
+    Vector finish_forward = 3;
+}
+
+// 瞄准模式中定期更新瞄准信息，比如瞄准的单位，摇杆相关参数等
+message EvtAvatarUpdateFocusNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 325;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    uint32 entity_id = 2;
+    Vector focus_forward = 3;
+}
+
+// 实体的Authority切换通知(S->C)
+message EntityAuthorityChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 326;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 entity_id = 1;   // 实体ID
+    uint32 authority_peer_id = 2;    // 所属主机
+    AbilitySyncStateInfo ability_info = 3;   // 技能信息
+    EntityRendererChangedInfo renderer_changed_info = 4; // entity renderer的相关数据
+}
+
+// 服务器AvatarBuff添加通知
+message AvatarBuffAddNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 327;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 avatar_guid = 1;   // Avatar Guid
+    uint32 buff_id = 2;     // Buff ID
+}
+
+// 服务器AvatarBuff删除通知
+message AvatarBuffDelNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 328;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 avatar_guid = 1;   // Avatar Guid
+    uint32 buff_id = 2;     // Buff ID
+}
+
+// 角色进入或退出战斗状态上报服务器(C->S)
+// 怪物被杀死或角色离开场景时不用上报
+message MonsterAlertChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 329;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 avatar_entity_id = 2;    // 角色entity_id
+    uint32 is_alert = 3;            // 是否变为alert
+    repeated uint32 monster_entity_list = 4;   // 多个怪物同时入战
+}
+
+// 服务器脚本设置客户端怪物入战或脱战（S->C）
+// 客户端的怪物因为这个协议而改变状态的话也需要上报服务器
+message MonsterForceAlertNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 330;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 monster_entity_id = 1;   // 怪物的entity_id
+}
+
+// 角色进入元素视野上报服务器(C->S)
+message AvatarEnterElementViewNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 332;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 avatar_entity_id = 1;    // 角色entity_id
+    bool is_triggerd = 2;           // true:开启元素视野 false:关闭元素视野
+}
+
+// 创建Gadget到equippart上(S->C)
+message TriggerCreateGadgetToEquipPartNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 333;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 entity_id = 1;    // owner的entity_id
+    uint32 gadget_entity_id = 2; // gadget的entity_id
+    uint32 gadget_id = 3;    // equip的gadget_id
+    string equip_part = 4;    // owner的equip_part
+}
+
+// Entity的哪些部件(Transform)被隐藏，服务器负责转发到除了当前客户端的其他客户端(Server -> All Client Except Cur, forward_type == FORWARD_TO_ALL_EXCEPT_CUR)
+message EvtEntityRenderersChangedNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 334;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    uint32 entity_id = 2;
+    bool is_server_cache = 3;   // 服务器帮忙缓存 Entity Renderers
+
+    EntityRendererChangedInfo renderer_changed_info = 4;  //Entity Renderers的名称列表
+}
+
+// Animator的ForceSetAirMove通知，服务器负责转发到除了当前客户端的其他客户端(Server -> All Client Except Cur, forward_type == FORWARD_TO_ALL_EXCEPT_CUR)
+message AnimatorForceSetAirMoveNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 335;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    
+    ForwardType forward_type = 1;
+    uint32 entity_id = 2;
+    bool in_air_move = 3;
+}
+
+// AI的CD时间
+message AiSkillCdInfo
+{
+    map<uint32, uint32> skill_cd_map = 1;   // CD时间(key:skill_id)
+}
+
+// 同步AI的CD时间通知(C->S)
+message EvtAiSyncSkillCdNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 336;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    map<uint32, AiSkillCdInfo> ai_cd_map = 1;   // AI的CD时间(key:entity_id)
+}
+
+
+
+// EvtBegingHit合包，服务器负责转发到所有客户端(Server -> All Client, forward_type == FORWARD_TO_ALL)
+message EvtBeingHitsCombineNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 337;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    ForwardType forward_type = 1;
+    repeated EvtBeingHitInfo evt_being_hit_info_list = 2;
+}
+ 
+// 同步角色坐下
+message EvtAvatarSitDownNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 341;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 entity_id = 1;
+    Vector position = 2;
+}
+
+// 同步角色站起
+message EvtAvatarStandUpNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 342;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 entity_id = 1;
+    int32 direction = 2;
+    int32 performID = 3;
+}
+
+
+
+//客户端发起创建MassiveEntity的请求
+message CreateMassiveEntityReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 343;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated ClientMassiveEntity massive_entity_list = 1;
+}
+
+message CreateMassiveEntityRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 344;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+//服务器创建MassiveEntity转发给所有的客户端
+message CreateMassiveEntityNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 345;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated ServerMassiveEntity massive_entity_list = 1;
+}
+ 
+//删除MassiveEntity的通知，服务器
+message DestroyMassiveEntityNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 346;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated ClientMassiveEntity massive_entity_list = 1; 
+} 
+
+//MassiveEntity的元素反应状态变化同步，只在authority上做，同步给remote
+message MassiveEntityStateChangedNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 347;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated MassiveEntityState massive_entity_state_list = 1; 
+}
+
+message TeamEntityInfo
+{
+    uint32 team_entity_id = 1;
+    uint32 authority_peer_id = 2;
+    AbilitySyncStateInfo team_ability_info = 3;
+}
+
+// 全量更新
+message SyncTeamEntityNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 348;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 scene_id = 1;
+    repeated TeamEntityInfo team_entity_info_list = 2;
+}
+
+message DelTeamEntityNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 349;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 scene_id = 1;
+    repeated uint32 del_entity_id_list = 2;
+}
+
+enum CombatTypeArgument
+{
+	COMBAT_NONE = 0;
+	COMBAT_EVT_BEING_HIT = 1;
+	COMBAT_ANIMATOR_STATE_CHANGED = 2;
+	COMBAT_FACE_TO_DIR = 3; 
+	COMBAT_SET_ATTACK_TARGET = 4;
+	COMBAT_RUSH_MOVE = 5;
+	COMBAT_ANIMATOR_PARAMETER_CHANGED = 6;
+}
+
+message CombatInvokeEntry
+{
+	CombatTypeArgument argument_type = 1;
+	ForwardType forward_type = 2;
+	bytes combat_data = 3;
+}
+
+message CombatInvocationsNotify
+{
+	enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 350;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+		IS_ALLOW_CLIENT = 1;
+	}
+	repeated CombatInvokeEntry invoke_list = 1;
+}
+
+// ServerBuff增减通知
+message ServerBuffChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 351;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    enum ServerBuffChangeType
+    {
+        ADD_SERVER_BUFF = 0;
+        DEL_SERVER_BUFF = 1;
+    }
+    ServerBuffChangeType server_buff_change_type = 1;   // 增加还是删除
+    repeated uint64 avatar_guid_list = 2;   // 哪些avatar
+    repeated ServerBuff server_buff_list = 3;   // 哪些server_buff
+}
+
+// 客户端同步AI仇恨
+message AiThreatInfo
+{
+    map<uint32, uint32> ai_threat_map = 1;  // key:仇恨对象EntityID，value:仇恨值
+}
+
+message EvtAiSyncCombatThreatInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 352;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    map<uint32, AiThreatInfo> combat_threat_info_map = 1;   // key:AI的EntityID
+}
+
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

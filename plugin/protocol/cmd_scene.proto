@@ -1,0 +1,2228 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file scene.proto
+ * @author jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @date 2017/10/11 13:32:58
+ * @brief 场景相关协议[201 - 300], [3001 - 3500]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+enum EnterType
+{
+    ENTER_NONE = 0;
+    ENTER_SELF = 1;             // 进入自己的场景
+    ENTER_GOTO = 2;             // 跳点
+    ENTER_JUMP = 3;             // 跳场景(自己的场景)
+    ENTER_OTHER = 4;            // 进入别人的场景
+    ENTER_BACK = 5;             // 返回自己的场景
+    ENTER_DUNGEON = 6;          // 进入副本
+    ENTER_DUNGEON_REPLAY = 7;   // 在副本中选择重玩
+    ENTER_GOTO_BY_PORTAL = 8;   // 玩家在场景内通过传送门跳点(主要用于客户端)
+}
+
+enum VisionType
+{
+    VISION_NONE = 0;
+    VISION_MEET = 1;                // 出现(进入视野)
+    VISION_REBORN = 2;              // 重生
+    VISION_REPLACE = 3;             // 主动更换
+    VISION_WAYPOINT_REBORN = 4;     // 副本路点重生
+    VISION_MISS = 5;                // 消失(离开视野)
+    VISION_DIE = 6;                 // 死亡
+    VISION_GATHER_ESCAPE = 7;       // 目前只用于环境小动物采集时逃走
+    VISION_REFRESH = 8;             // group刷新导致物件消失(TODO...暂且不会发给客户端)
+    VISION_TRANSPORT = 9;           // 在同一个场景内传送
+    VISION_REPLACE_DIE = 10;        // 客户端需要区分死亡换人和主动换人
+}
+
+message PlayerEnterSceneNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 201;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 scene_id = 1;                // 场景ID
+    Vector pos = 2;                     // 位置
+    uint64 scene_begin_time = 3;        // 场景开始的时间(1970.1.1到现在的毫秒数)
+    EnterType type = 4;                 // 进入类型
+    uint32 target_uid = 6;              // 场景所属的玩家ID
+    uint32 prev_scene_id = 9;           // 进入之前的场景ID
+    Vector prev_pos = 10;               // 进入之前的位置
+    uint32 dungeon_id = 11;             // 进入大世界时为0
+    uint32 world_level = 12;            // 大世界等级, 如果是dungeon该字段无效
+    uint32 enter_scene_token = 13;      // 进场token，用于区分不同的进场流程
+}
+
+// 退出当前场景
+message LeaveSceneReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 202;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message LeaveSceneRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 203;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+}
+
+// C->S场景初始化完成
+message SceneInitFinishReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 204;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 enter_scene_token = 1; // 进场token
+}
+
+message SceneInitFinishRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 205;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    int32 retcode = 1;
+}
+
+// 地图上的实体出现通知
+message SceneEntityAppearNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 206;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated SceneEntityInfo entity_list = 1;  // 实体列表
+    VisionType appear_type = 2;                // 出现类型
+    uint32 param = 3;                          // 出现参数
+}
+
+// 地图上的实体消失通知
+message SceneEntityDisappearNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 207;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated uint32 entity_list = 1;   // 实体ID列表
+    VisionType disappear_type = 2;    // 消失类型
+}
+
+// 地图上的实体移动请求
+message SceneEntityMoveReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 208;
+        ENET_CHANNEL_ID = 1;
+        ENET_IS_RELIABLE = 0;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 entity_id = 1;       // 实体ID
+    MotionInfo motion_info = 2;   // 运动信息
+    uint32 scene_time = 3;      // 地图时间
+    uint32 reliable_seq = 4;    // 可靠包的序列号(对于不可靠包，则为上一个可靠包的序列号)
+}
+
+message SceneEntityMoveRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 209;
+        ENET_CHANNEL_ID = 1;
+        ENET_IS_RELIABLE = 0;
+    }
+    int32 retcode = 1;
+    uint32 entity_id = 2;       // 实体ID
+    MotionInfo fail_motion = 3;   // 失败时的运动信息
+    uint32 scene_time = 4;      // 失败时的地图时间
+    uint32 reliable_seq = 5;    // 失败时的序列号
+}
+
+// 地图上的角色消耗体力移动请求
+message SceneAvatarStaminaStepReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 210;
+        ENET_CHANNEL_ID = 1;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    bool use_client_rot = 1; // 是否使用客户端朝向
+    Vector rot = 2;
+}
+
+message SceneAvatarStaminaStepRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 211;
+        ENET_CHANNEL_ID = 1;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    bool use_client_rot = 2;
+    Vector rot = 3;
+}
+
+// 地图上的实体移动通知(S->C)
+message SceneEntityMoveNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 212;
+        ENET_CHANNEL_ID = 1;
+        ENET_IS_RELIABLE = 0;
+    }
+    uint32 entity_id = 1;   // 实体ID
+    MotionInfo motion_info = 2;   // 运动信息
+    uint32 scene_time = 3;  // 地图时间
+    uint32 reliable_seq = 4;    // 可靠包的序列号(对于不可靠包，则为上一个可靠包的序列号)
+}
+
+message ScenePlayerLocationNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 213;
+        ENET_CHANNEL_ID = 1;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 scene_id = 1;
+    repeated PlayerLocationInfo player_loc_list = 2;     // 所有玩家的位置信息
+}
+
+// 请求地图上的已经解锁的传送点、地下城入口信息，不包含默认解锁的
+message GetScenePointReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 214;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 scene_id = 1;    // 场景ID
+    uint32 belong_uid = 2;  // 所属的玩家ID
+}
+
+message CityInfo
+{
+    uint32 city_id = 1;
+    uint32 level = 2;
+    uint32 crystal_num = 3;
+}
+
+message GetScenePointRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 215;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 scene_id = 2;    // 场景ID
+    repeated uint32 unlocked_point_list = 3; // 所有已解锁传送点列表
+    uint32 belong_uid = 4;  // 所属的玩家ID
+    repeated uint32 unlock_area_list = 5;    // 已解锁的一级区域
+    repeated uint32 locked_point_list = 6;        // 已锁的传送点列表
+    repeated uint32 to_be_explore_dungeon_entry_list = 7;   // 待探索地城入口config ID列表
+    repeated uint32 not_explored_dungeon_entry_list = 8;    // 未被探索解锁的地城入口config ID列表
+    repeated uint32 group_unlimit_point_list = 9;           // group未解锁的点列表
+    repeated uint32 unlocked_fog_level_1_area_list = 10;    // 已解锁迷雾一级区域列表
+    repeated uint32 unlokced_fog_level_2_area_list = 11;    // 已解锁迷雾二级区域列表
+}
+
+// 进入传送点区域通知(C->S), 女神像传送点
+message EnterTransPointRegionNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 216;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 scene_id = 1;    // 地图ID
+    uint32 point_id = 2;    // 传送点ID
+}
+
+// 离开传送点区域通知(C->S), 女神像传送点
+message ExitTransPointRegionNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 217;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 scene_id = 1;    // 地图ID
+    uint32 point_id = 2;    // 传送点ID
+}
+
+// 解锁传送点、地下城入口通知(S->C，解锁传送点以此协议为准)
+message ScenePointUnlockNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 218;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 scene_id = 1;    // 地图ID
+    repeated uint32 point_list = 2;    // 新增的已解锁传送点列表
+    repeated uint32 locked_point_list = 3;// 新增的被关闭的传送点列表
+}
+
+// 传送到目的点
+message SceneTransToPointReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 219;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 scene_id = 1;    // 地图ID
+    uint32 point_id = 2;    // 目的传送点ID
+}
+
+message SceneTransToPointRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 220;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 scene_id = 2;    // 地图ID
+    uint32 point_id = 3;    // 目的传送点ID
+}
+
+// 地图上的实体跳点通知
+message EntityJumpNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 221;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    // 跳点类型
+    enum Type
+    {
+        NULL = 0;
+        ACTIVE = 1;     // 主动跳点
+        PASSIVE = 2;    // 被动跳点
+    }
+
+    uint32 entity_id = 1;
+    Type jump_type = 2;     // 跳点类型
+    Vector pos = 3;         // 目的位置
+    Vector rot = 4;         // 目的朝向
+}
+
+// 请求地图上的区域信息
+message GetSceneAreaReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 222;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 scene_id = 1;    // 地图ID
+    uint32 belong_uid = 2;  // 所属的玩家ID
+}
+
+message GetSceneAreaRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 223;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 scene_id = 2;    // 地图ID
+    repeated uint32 area_id_list = 3;  // 已解锁区域列表
+    repeated CityInfo city_info_list = 4;   // 城市信息
+}
+
+// 地图上的区域解锁通知(S->C)
+message SceneAreaUnlockNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 224;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 scene_id = 1;    // 地图ID
+    repeated uint32 area_list = 2;  // 新增的已解锁区域列表
+}
+
+// 地图上的实体淹死
+message SceneEntityDrownReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 225;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 entity_id = 1;   // 实体ID
+}
+
+message SceneEntityDrownRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 226;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 entity_id = 2;   // 实体ID
+}
+
+// 创建原因
+enum CreateReason
+{
+    CREATE_NONE = 0;
+    CREATE_QUEST = 1;
+    CREATE_ENERGY = 2;
+}
+
+// 在地图上创建实体
+message SceneCreateEntityReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 227;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    CreateEntityInfo entity = 1;
+    CreateReason reason = 2;    // 创建原因
+    bool is_destroy_when_disconnect = 3; // 是否断线时销毁
+}
+
+message SceneCreateEntityRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 228;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 entity_id = 2;   // 创建的实体ID
+    CreateEntityInfo entity = 3;
+}
+
+// 在地图上销毁实体
+message SceneDestroyEntityReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 229;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 entity_id = 1;   // 删除的实体ID
+}
+
+message SceneDestroyEntityRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 230;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 entity_id = 2;   // 删除的实体ID
+}
+
+// 地图上的力场解锁通知(S->C)
+message SceneForceUnlockNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 231;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated uint32 force_id_list = 1;  // 解锁的力场列表
+    bool is_add = 2;   // 是否为增加
+}
+
+// 地图上的力场锁住通知(S->C)
+message SceneForceLockNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 232;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated uint32 force_id_list = 1;  // 锁住的力场列表
+}
+
+// 进入区域请求
+message EnterWorldAreaReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 233;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 area_type = 1;  // 对应xml中的WorldAreaType
+    uint32 area_id = 2;    // 传送点ID
+}
+
+message EnterWorldAreaRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 234;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 area_type = 2;  // 对应xml中的WorldAreaType
+    uint32 area_id = 3;    // 传送点ID
+}
+
+// 强制同步实体的状态，任务使用
+message EntityForceSyncReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 235;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 entity_id = 1;       // 实体ID
+    MotionInfo motion_info = 2;   // 运动信息
+    uint32 scene_time = 3;      // 地图时间
+    uint32 room_id = 4;         // 房间编号
+}
+
+message EntityForceSyncRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 236;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 entity_id = 2;       // 实体ID
+    MotionInfo fail_motion = 3;   // 失败时的运动信息
+    uint32 scene_time = 4;      // 失败时的地图时间
+}
+
+message SceneAreaExploreNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 237;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 area_id = 1;         // 区域ID
+    float explore_percent = 2;  // 探索度
+    uint32 event_id = 3;
+}
+
+message SceneGetAreaExplorePercentReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 238;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 area_id = 1;         // 区域ID
+}
+
+message SceneGetAreaExplorePercentRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 239;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    float explore_percent = 2;  // 探索度
+    uint32 area_id = 3;         // 区域ID
+}
+
+// 传送原因
+enum TransmitReason
+{
+    TRANSMIT_NONE = 0;
+    TRANSMIT_QUEST = 1;     // 任务
+}
+
+// 客户端传送请求
+message ClientTransmitReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 240;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    Vector pos = 1;     // 位置
+    Vector rot = 2;     // 朝向
+    TransmitReason reason = 3;  // 原因
+    uint32 scene_id = 4;
+}
+
+message ClientTransmitRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 241;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    TransmitReason reason = 2;  // 原因
+}
+
+// 进入天气区域通知(C->S)
+message EnterSceneWeatherAreaNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 242;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 weather_gadget_id = 1;     // 天气区域物件ID
+}
+
+// 离开天气区域通知(C->S)
+message ExitSceneWeatherAreaNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 243;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 weather_gadget_id = 1;     // 天气区域物件ID
+}
+
+// 区域天气通知(S->C)
+message SceneAreaWeatherNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 244;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 weather_gadget_id = 1;     // 天气区域物件ID
+    map<uint32, string> weather_value_map = 2;       // 不同来源的天气值
+    uint32 weather_area_id = 3;     // 天气区域ID
+    uint32 climate_type = 4;        // 天气类型（data::ClimateType）
+}
+
+// 场景中玩家的信息
+message ScenePlayerInfo
+{
+    uint32 uid = 1;         // UID
+    uint32 peer_id = 2;     // PeerID
+    string name = 3;        // 名字
+    bool is_connected = 4;  // 是否离线
+    uint32 scene_id = 5;    // 场景id
+    OnlinePlayerInfo online_player_info = 6; // 玩家在线数据 
+}
+
+// 玩家切换Scene时的广播信息(S->C)
+message ScenePlayerInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 245;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated ScenePlayerInfo player_info_list = 1;
+}
+
+// 玩家的位置信息
+message PlayerLocationInfo
+{
+    uint32 uid = 1;     // UID
+    Vector pos = 2;     // 位置
+    Vector rot = 3;     // 朝向
+}
+
+// 大世界中玩家的位置通知(S->C)
+message WorldPlayerLocationNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 246;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated PlayerLocationInfo player_loc_list = 1;     // 所有玩家的位置信息
+}
+
+// 通知客户端镜头注目某个点
+message BeginCameraSceneLookNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 247;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    Vector look_pos = 1;                                // 需要注目的点
+    float duration = 2;                                 // 持续时间
+    bool is_force = 3;
+    bool is_recover_keep_current = 4;
+    bool is_allow_input = 5;
+}
+
+// 通知客户端结束镜头注目
+message EndCameraSceneLookNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 248;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+}
+
+// 服务端创建实体，通知客户端在小地图上标识出来
+message MarkEntityInMinMapNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 249;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 entity_id = 1;   // 创建的实体ID
+    Vector position = 2;
+    uint32 monster_id = 3;    // 怪物ID
+}
+
+// 取消小地图的怪物标记
+message UnmarkEntityInMinMapNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 250;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 entity_id = 1;   // 创建的实体ID
+}
+
+enum DropSubfieldType
+{
+    DROP_SUBFIELD_NONE = 0;
+    DROP_SUBFIELD_ONE = 1;
+}
+
+// 客户端请求服务端进行分支掉落
+message DropSubfieldReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 251;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    DropSubfieldType drop_type = 1;     // 掉落类型
+    uint32 drop_param = 2;  // 掉落参数
+    uint32 entity_id = 3;   // 触发分支掉落的entity
+    string subfield_name = 4;           // 分支名
+}
+
+message DropSubfieldRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 252;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 客户端请求触发SourceEntityId相关的group trigger, 服务端会限制频率
+message ExecuteGroupTriggerReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 253;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 source_entity_id = 1;    // 源实体ID, 这个entity必须存在
+    string source_name = 2;         // 源名称
+    uint32 target_entity_id = 3;    // 目标实体ID
+    int32 param1 = 4;               // 参数1
+    int32 param2 = 5;               // 参数2
+    int32 param3 = 6;               // 参数3
+}
+
+message ExecuteGroupTriggerRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 254;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 客户端请求升级城市--充能
+message LevelupCityReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 255;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 scene_id = 1;
+    uint32 area_id = 2;     // 通过哪个女神像
+    uint32 item_num = 3;    // 玩家充能使用的结晶
+}
+
+message LevelupCityRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 256;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 scene_id = 2;
+    uint32 area_id = 3;     // 通过哪个女神像
+    CityInfo city_info = 4;
+}
+
+// 路径点改变信息
+message RoutePointChangeInfo
+{
+    uint32 point_index = 1;    // 路径点索引
+    float target_velocity = 2;  // 目标速度
+    float wait_time = 3;    // 停留时间
+}
+
+// 移动路径改变信息
+message SceneRouteChangeInfo
+{
+    uint32 route_id = 1;    // 路径ID
+    uint32 type = 2;        // 路径类型(取值范围：TrailType)
+    bool is_forward = 3;    // 是否为正向
+    repeated RoutePointChangeInfo point_list = 4;   // 点改变信息
+}
+
+// 场景移动路径改变通知
+message SceneRouteChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 257;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 scene_id = 1;    // 场景ID
+    repeated SceneRouteChangeInfo route_list = 2;   // 路径改变信息
+    uint32 scene_time = 3;  // 场景时间(毫秒)
+}
+
+// 移动平台开始路径移动通知
+message PlatformStartRouteNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 258;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 entity_id = 1;   // 移动平台实体ID
+    PlatformInfo platform = 2;  // 移动平台信息
+    uint32 scene_time = 3;  // 场景时间(毫秒)
+}
+
+// 移动平台停止路径移动通知
+message PlatformStopRouteNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 259;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 entity_id = 1;   // 移动平台实体ID
+    uint32 scene_time = 2;  // 场景时间(毫秒)
+}
+
+// 移动平台改变路径通知
+message PlatformChangeRouteNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 260;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 entity_id = 1;   // 移动平台实体ID
+    PlatformInfo platform = 2;  // 移动平台信息
+}
+
+// 播放音效通知
+message ScenePlayerSoundNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 261;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    enum PlaySoundType
+    {
+        PLAY_SOUND_NONE = 0;
+        PLAY_SOUND_START = 1;
+        PLAY_SOUND_STOP = 2;
+    }
+
+    string sound_name = 1;      // 音效名字
+    Vector play_pos = 2;       // 播放位置     
+    PlaySoundType play_type = 3;// 播放类型
+}
+
+// 通过PersonalSceneJumpPoint在大世界、房间场景中切换场景
+message PersonalSceneJumpReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 262;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 point_id = 1;
+}
+
+message PersonalSceneJumpRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 263;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 dest_scene_id = 2;
+    Vector dest_pos = 3;
+}
+
+enum SealBattleType
+{
+    SEAL_BATTLE_KEEP_ALIVE = 0;
+    SEAL_BATTLE_KILL_MONSTER = 1;
+}
+
+// 封印战斗开始通知
+message SealBattleBeginNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 264;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 seal_entity_id = 1;          // SealGadget entity id
+    uint32 seal_radius = 2;             // 圈半径
+    uint32 seal_max_progress = 3;       // 最大进度
+    SealBattleType battle_type = 4;
+}
+
+// 封印战斗结束通知
+message SealBattleEndNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 265;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 seal_entity_id = 1;          // SealGadget entity id
+    bool is_win = 2;                    // 是否胜利
+}
+
+// 封印战斗进度同步
+message SealBattleProgressNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 266;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 seal_entity_id = 1;          // SealGadget entity id
+    uint32 progress = 2;                // 当前进度
+    uint32 max_progress = 3;            // 最大进度
+    uint32 end_time = 4;                // 结束时间
+    uint32 seal_radius = 5;             // 圈半径
+}
+
+// 客户端打开或关闭道具/角色等会暂停时间的界面时通知服务器
+message ClientPauseNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 267;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    bool is_open = 1;                   // 是否是打开界面
+}
+
+// 角色进入场景时的数据
+message AvatarEnterSceneInfo
+{
+    uint64 avatar_guid = 1;         // 角色的唯一ID
+    uint32 avatar_entity_id = 2;    // 角色的实体ID(本场景唯一)
+    AbilitySyncStateInfo avatar_ability_info = 3;  // 角色的技能信息
+    repeated uint32 buff_id_list = 4;    // Buff列表
+    uint64 weapon_guid = 5;         // 武器的唯一ID
+    uint32 weapon_entity_id = 6;    // 武器的实体ID(本场景唯一)
+    AbilitySyncStateInfo weapon_ability_info = 7;    // 武器的技能信息
+    repeated ServerBuff server_buff_list = 8;   // ServerBuff列表
+}
+
+// 队伍进入场景时的信息
+message TeamEnterSceneInfo
+{
+    uint32 team_entity_id = 1;    // 队伍实体ID
+    AbilitySyncStateInfo team_ability_info = 2;  // 队伍技能信息
+}
+
+message MPLevelEntityInfo
+{
+    uint32 entity_id = 1;         // 大Team entity_id
+    uint32 authority_peer_id = 2; // authrity peer id
+    AbilitySyncStateInfo ability_info = 3; // 技能信息
+}
+
+// 玩家进入场景的信息通知
+message PlayerEnterSceneInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 268;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 cur_avatar_entity_id = 1;    // 当前角色的实体ID
+    repeated AvatarEnterSceneInfo avatar_enter_info = 2;    // 角色进入场景的信息(场景跳点时不发)
+    TeamEnterSceneInfo team_enter_info = 3;  // 队伍进入场景的信息
+    MPLevelEntityInfo mp_level_entity_info = 4; // MP大team的信息
+}
+
+message JoinPlayerSceneReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 269;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 target_uid = 1;
+}
+
+message JoinPlayerSceneRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 270;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+message SceneKickPlayerReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 271;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 target_uid = 1;
+}
+
+message SceneKickPlayerRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 272;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 target_uid = 2;
+}
+
+message SceneKickPlayerNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 273;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 kicker_uid = 1;      // 踢人者
+    uint32 target_uid = 2;      // 被踢者
+}
+
+// 玩家攻击只有客户端才创建的entity(目前只支持灌木)
+message HitClientTrivialNotify
+{
+    enum CmdId
+    {    
+        option allow_alias = true;
+        NONE = 0; 
+        CMD_ID = 274; 
+        ENET_CHANNEL_ID = 0; 
+        ENET_IS_RELIABLE = 1; 
+        IS_ALLOW_CLIENT = 1; 
+    }    
+    Vector position = 1; 
+    uint32 owner_entity_id = 2;
+}
+
+// 回到我的大世界请求
+message BackMyWorldReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 275;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message BackMyWorldRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 276;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+message SeeMonsterReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 277;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 monster_id = 1;
+}
+
+message SeeMonsterRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 278;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+message AddSeenMonsterNotify
+{
+    enum CmdId
+    {    
+        option allow_alias = true;
+        NONE = 0; 
+        CMD_ID = 279; 
+        ENET_CHANNEL_ID = 0; 
+        ENET_IS_RELIABLE = 1; 
+        IS_ALLOW_CLIENT = 1; 
+    }    
+    repeated uint32 monster_id_list = 1;
+}
+
+message AllSeenMonsterNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0; 
+        CMD_ID = 280; 
+        ENET_CHANNEL_ID = 0; 
+        ENET_IS_RELIABLE = 1; 
+        IS_ALLOW_CLIENT = 1; 
+    }
+    repeated uint32 monster_id_list = 1;
+}
+
+// 场景时间同步
+message SceneTimeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 281;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 scene_id = 1;
+    bool is_paused = 2;
+    uint64 scene_time = 3; // 玩家个人时间
+}
+
+// 客户端通知服务器可以跳场景了
+message EnterSceneReadyReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 282;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 enter_scene_token = 1; // 进场token
+}
+
+// 跳场景准备相应，Req和Rsp之间会收到各种Disappear
+message EnterSceneReadyRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 283;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 在EnterSceneReadyReq和EnterSceneReadyRsp之间收到
+message EnterScenePeerNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 284;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 dest_scene_id = 1;   // 目标场景ID
+    uint32 peer_id = 2;         // 在目标场景中的peer_id
+    uint32 host_peer_id = 3;    // 目标场景的host_peer_id
+}
+
+// 客户端正式进入了场景
+message EnterSceneDoneReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 285;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 enter_scene_token = 1; // 进场token
+}
+
+// 正式进入场景响应，Req和Rsp之间会收到EntityAppear，触发任务完成等
+message EnterSceneDoneRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 286;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 大世界死亡确认通知
+message WorldPlayerDieNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 287;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    PlayerDieType die_type = 1;     // 最后一个avatar死亡类型
+    uint32 murderer_entity_id = 2;
+    oneof entity
+    {
+        uint32 monster_id = 3;  // 被怪物杀死
+        uint32 gadget_id = 4;   // 被机关弄死
+    }
+}
+
+// 大世界复活确认
+message WorldPlayerReviveReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 288;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+// 大世界复活确认响应
+message WorldPlayerReviveRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 289;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 进入别人的世界失败提示
+message JoinPlayerFailNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 290;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 设置区域天气状态（C->S）
+message SetSceneWeatherAreaReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 291;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 weather_gadget_id = 1;     // 天气区域物件ID
+    map<uint32, string> weather_value_map = 2;       // 不同来源的天气值
+}
+
+// 设置区域天气状态的返回（S->C）
+message SetSceneWeatherAreaRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 292;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 客户端请求触发GadgetLua对应的函数: onClientExecuteReq
+message ExecuteGadgetLuaReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 293;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 source_entity_id = 1;    // 源实体ID, 这个entity必须存在
+    int32 param1 = 2;               // 参数1
+    int32 param2 = 3;               // 参数2
+    int32 param3 = 4;               // 参数3
+}
+
+message ExecuteGadgetLuaRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 294;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 服务端通知客户端播放cutscene(S->C)
+message CutSceneBeginNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 295;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 cutscene_id = 1;
+    bool is_wait_others = 2;        // 是否需要等待其他玩家播放完成
+}
+
+// 客户端通知服务端CutScene播完(C->S), is_wait_others == true才需要发送
+message CutSceneFinishNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 296;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 cutscene_id = 1;
+}
+
+// 服务端通知客户端cutscene结束(S->C)
+message CutSceneEndNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 297;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;          // 所有客户端是否正常播放完cutscene
+    uint32 cutscene_id = 2;
+}
+
+// 客户端通知脚本事件发生(C->S)
+message ClientScriptEventNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 298;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+		IS_ALLOW_CLIENT = 1;
+    }
+    uint32 event_type = 1;		// 事件类型(取值范围：EventType)
+	uint32 source_entity_id = 2;	// 事件来源实体ID
+	uint32 target_entity_id = 3;	// 事件目标实体ID
+	repeated int32 param_list = 4;		// 参数列表
+}
+
+// Entity移动信息
+message EntityMoveInfo
+{
+	uint32 entity_id = 1;       // 实体ID
+    MotionInfo motion_info = 2; // 运动信息
+    uint32 scene_time = 3;      // 地图时间
+    uint32 reliable_seq = 4;    // 可靠包的序列号(对于不可靠包，则为上一个可靠包的序列号)
+}
+
+// 地图上的合包后的实体移动请求
+message SceneEntitiesMovesReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 299;
+        ENET_CHANNEL_ID = 1;
+        ENET_IS_RELIABLE = 0;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated EntityMoveInfo entity_move_info_list = 1;
+}
+
+// Entity移动失败信息
+message EntityMoveFailInfo
+{
+	int32 retcode = 1;
+    uint32 entity_id = 2;       // 实体ID
+    MotionInfo fail_motion = 3; // 失败时的运动信息
+    uint32 scene_time = 4;      // 失败时的地图时间
+    uint32 reliable_seq = 5;    // 失败时的序列号
+}
+
+// 地图上的合包后的实体移动回复(只回复失败的移动)
+message SceneEntitiesMovesRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 300;
+        ENET_CHANNEL_ID = 1;
+        ENET_IS_RELIABLE = 0;
+    }
+    repeated EntityMoveFailInfo entity_move_fail_info_list = 1;
+}
+
+// 地图上的合包后的实体移动通知(S->C)
+message SceneEntitiesMoveCombineNotify
+{
+	enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3001;
+        ENET_CHANNEL_ID = 1;
+        ENET_IS_RELIABLE = 0;
+    }
+	repeated EntityMoveInfo entity_move_info_list = 1;
+}
+
+// 客户端请求解锁二级传送点
+message UnlockTransPointReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3002;
+        ENET_CHANNEL_ID = 1;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 scene_id = 1;
+    uint32 point_id = 2;
+}
+
+message UnlockTransPointRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3003;
+        ENET_CHANNEL_ID = 1;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 移动平台测试使用协议 C -> S
+message PlatformRouteStateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3004;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 entity_id = 1;   // 移动平台实体ID
+    uint32 scene_time = 2;  // 场景时间
+    Vector pos = 3;         // 位置
+    Vector rot = 4;         // 朝向
+    uint32 route_id = 5;
+    bool is_started = 6;
+}
+
+// 天气预报请求（C->S）
+message SceneWeatherForcastReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3005;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 weather_area_id = 1;     // 天气区域ID
+}
+
+message SceneWeatherForcastRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3006;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint64 next_climate_time = 2;        // 下一次天气变化的游戏内时间
+    repeated uint32 forcast_climate_list = 3;   // 用于天气预报的天气类型，间隔为游戏内的2小时
+}
+
+// 标记地图请求
+message MarkMapReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3010;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    enum Operation
+    {
+        ADD = 0; // 添加
+        MOD = 1; // 修改
+        DEL = 2; // 删除
+        GET = 3; // 获取
+    }
+    Operation op = 1; // 操作类型
+    MapMarkPoint old = 2; // 要替换的旧标记（仅op==MOD时有效）
+    MapMarkPoint mark = 3; // 要添加/删除的标记（op==ADD||op==DEL） 替换后的新标记（op==MOD）
+}
+
+// 标记地图响应
+message MarkMapRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3011;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1; // 返回码
+    repeated MapMarkPoint mark_list = 2; // 所有的地图标记
+}
+
+// 推送所有地图标记数据
+message AllMarkPointNotify 
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0; 
+        CMD_ID = 3012; 
+        ENET_CHANNEL_ID = 0; 
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated MapMarkPoint mark_list = 1; // 所有的地图标记
+}
+
+message WorldDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0; 
+        CMD_ID = 3013;
+        ENET_CHANNEL_ID = 0; 
+        ENET_IS_RELIABLE = 1; 
+        IS_ALLOW_CLIENT = 1; 
+    }
+    enum DataType
+    {
+        DATA_NONE = 0;
+        WORLD_LEVEL = 1;
+    }
+    map<uint32, PropValue> world_prop_map = 1;
+}
+
+// 客户端通知服务端Entity的room_id有变化
+message EntityMoveRoomNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0; 
+        CMD_ID = 3014;
+        ENET_CHANNEL_ID = 0; 
+        ENET_IS_RELIABLE = 1; 
+        IS_ALLOW_CLIENT = 1; 
+    }
+    uint32 entity_id = 1;
+    uint32 dest_room_id = 2;
+}
+
+// 玩家进入退出大世界时的广播通知S->C
+message WorldPlayerInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0; 
+        CMD_ID = 3015;
+        ENET_CHANNEL_ID = 0; 
+        ENET_IS_RELIABLE = 1; 
+        IS_ALLOW_CLIENT = 1; 
+    }
+    repeated OnlinePlayerInfo player_info_list = 1; // 玩家在线数据 
+    repeated uint32 player_uid_list = 2;            // 玩家uid列表, 用于确定1p, 2p等, 为0表示为空
+}
+
+// 客户端进入场景后
+message PostEnterSceneReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3016;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 enter_scene_token = 1; // 进场token
+}
+
+// 客户端进入场景之后
+message PostEnterSceneRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3017;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 聊天内容
+message ChatInfo
+{
+    enum SystemHintType
+    {
+        CHAT_NONE = 0;
+        CHAT_ENTER_WORLD = 1;   // 玩家进入大世界
+        CHAT_LEAVE_WORLD = 2;   // 玩家退出大世界
+    }
+    message SystemHint
+    {
+        uint32 type = 1;        // 消息类型
+    }
+    uint32 time = 1;            
+    uint32 uid = 2;             // 玩家uid
+    oneof content
+    {
+        string text = 3;        // 玩家输入的聊天文本
+        uint32 icon = 4;        // 玩家输入的表情数据
+        SystemHint system_hint = 5; // 系统消息通知
+    }
+}
+
+// 玩家在当前世界中聊天
+message PlayerChatReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3018;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 channel_id = 1;
+    ChatInfo chat_info = 2;     // 聊天内容
+}
+
+message PlayerChatRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3019;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1; // 返回码
+}
+
+// 玩家聊天内容的广播协议
+message PlayerChatNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3020;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 channel_id = 1;
+    ChatInfo chat_info = 2;     // 聊天内容
+}
+
+// 聊天过快进入CD
+message PlayerChatCDNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3021;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 over_time = 1;       // 结束时间
+}
+
+message ChatHistoryNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3022;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 channel_id = 1;
+    repeated ChatInfo chat_info = 2;
+}
+
+message SceneDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3023;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated string level_config_name_list = 1;
+}
+
+message DungeonEntryToBeExploreNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3024;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 dungeon_entry_scene_point_id = 1;    // 地城入口ScenePoint ID
+    uint32 dungeon_entry_config_id = 2;         // 地城入口配置ID
+    uint32 scene_id = 3;
+}
+
+message GetDungeonEntryExploreConditionReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3035;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 dungeon_entry_scene_point_id = 1;    // 地城入口ScenePoint ID
+    uint32 dungeon_entry_config_id = 2;         // 地城入口配置ID
+    uint32 scene_id = 3;
+}
+
+enum DungeonEntryBlockReason 
+{
+    DUNGEON_ENTRY_REASON_NONE = 0;
+    DUNGEON_ENTRY_REASON_LEVEL = 1;
+    DUNGEON_ENTRY_REASON_QUEST = 2;
+    DUNGEON_ENTRY_REASON_MULIPLE = 3;
+}
+
+message DungeonEntryCond
+{
+    DungeonEntryBlockReason cond_reason = 1;
+    uint32 param1 = 2;
+}
+
+message GetDungeonEntryExploreConditionRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3036;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1; // 返回码
+    DungeonEntryCond dungeon_entry_cond = 2;
+}
+
+// 解谜地城
+message UnfreezeGroupLimitNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3037;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 point_id = 1;
+    uint32 scene_id = 2;
+}
+
+// 进入二级迷雾区域
+message EnterWorldFogAreaNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3038;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 scene_id = 1;
+    uint32 fog_area_id = 2;
+}
+
+// 解锁迷雾区域，需要客户端判断是一级区域还是二级区域
+message UnlockWorldFogAreaNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3039;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 scene_id = 1;
+    repeated uint32 unlocked_fog_level_1_area_list = 2;
+    repeated uint32 unlocked_fog_level_2_area_list = 3;
+}
+
+message LockWorldFogAreaNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3040;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 scene_id = 1;
+    repeated uint32 locked_fog_level_1_area_list = 2;
+    repeated uint32 locked_fog_level_2_area_list = 3;
+}
+
+// 客户端设置表现用的数据
+message SetEntityClientDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3041;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 entity_id = 1;
+    bytes entity_client_data = 2;   // 不能超过1KB
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

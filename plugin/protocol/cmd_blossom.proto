@@ -1,0 +1,124 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2020 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_blossom.proto
+ * @author yang.li03(yang.li03@mihoyo.com)
+ * @date 2020/03/19 15:55:03
+ * @brief 循环营地玩法 [2701 - 2800]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 循环营地简要信息
+message BlossomBriefInfo
+{
+    uint32 refresh_id = 1;          // 刷新ID
+    uint32 circle_camp_id = 2;      // 营地ID
+    uint32 city_id = 3;             // 城市ID
+    uint32 world_resin = 4;         // 开启地脉之花宝箱需要的大世界体力 
+    Vector pos = 5;                 // 坐标          
+    uint32 reward_id = 6;           // 用于客户端展示  
+    uint32 monster_level = 7;       // 怪物等级
+}
+
+message GetBlossomBriefInfoListReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2701;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated uint32 city_id_list = 1; // city_id列表 
+}
+
+message GetBlossomBriefInfoListRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2702;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    int32 retcode = 1;
+    repeated BlossomBriefInfo brief_info_list = 2;
+}
+
+message BlossomBriefInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2703;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    repeated BlossomBriefInfo brief_info_list = 1;
+}
+
+message WorldOwnerBlossomBriefInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2704;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    repeated BlossomBriefInfo brief_info_list = 1;
+}
+
+// 循环营地进度状态
+enum BlossomScheduleState
+{
+    BLOSSOM_SCHEDULE_NONE = 0;         // 机关未生成，临时状态
+    BLOSSOM_SCHEDULE_INIT = 1;         // 机关未开启
+    BLOSSOM_SCHEDULE_IN_PROGRESS = 2;  // 机关开启，玩法进行中
+    BLOSSOM_SCHEDULE_REWARD = 3;       // 玩法结束，领奖状态
+}
+
+// 循环营地进度信息
+message BlossomScheduleInfo
+{
+    uint32 refresh_id = 1;
+    uint32 circle_camp_id = 2;
+    uint32 round = 3;
+    uint32 state = 4;
+    uint32 progress = 5;
+    uint32 finish_progress = 6;
+}
+
+message WorldOwnerBlossomScheduleInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2705;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    BlossomScheduleInfo schedule_info = 1;
+}
+
+ /* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

@@ -1,0 +1,192 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2020 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd/cmd_battlepass.proto
+ * @作者 zhengdong.wang
+ * @日期 2020/03/18 17:08:34
+ * @brief battlepass系统
+ **/
+
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+enum BattlePassUnlockStatus
+{
+    BATTLE_PASS_UNLOCK_INVALID = 0; // 非法状态
+    BATTLE_PASS_UNLOCK_FREE = 1; // 普通免费版BattlePass
+    BATTLE_PASS_UNLOCK_PAID = 2; // 付费版BattlePass, 能领的奖励多一点
+}
+
+message BattlePassCycle
+{
+    uint32 cycle_idx = 1;  // 从1开始的周期序号
+    uint32 begin_time = 2; // 开始时间
+    uint32 end_time = 3;   // 结束时间
+}
+
+message BattlePassMission
+{
+    enum MissionStatus
+    {
+        MISSION_INVALID = 0; // 非法
+        MISSION_UNFINISHED = 1; // 未结束
+        MISSION_FINISHED = 2; // 已结束
+        MISSION_POINT_TAKEN = 3; // 点数已领取
+    }
+    uint32 mission_id = 1;     // mission_id, 即对应的watcher_id
+    uint32 cur_progress = 2;   // 当前进度
+    uint32 total_progress = 3; // 总进度
+    uint32 reward_battle_pass_point = 4; // 奖励BP点数
+    uint32 mission_type = 5;              // 每日/每周期/活动期间
+    MissionStatus mission_status = 6;     // 任务状态 
+}
+
+message BattlePassRewardTag
+{
+    BattlePassUnlockStatus unlock_status = 1; // 付费状态
+    uint32 level = 2;  // 对应等级
+    uint32 reward_id = 3; // 对应的reward_id
+}
+
+message BattlePassSchedule
+{
+    uint32 schedule_id = 1;
+    uint32 level = 2;
+    uint32 point = 3;
+    BattlePassUnlockStatus unlock_status = 4;
+    repeated BattlePassRewardTag reward_taken_list = 5;
+    uint32 begin_time = 6;
+    uint32 end_time = 7;
+    BattlePassCycle cur_cycle = 8;
+}
+
+// 全量通知所有信息
+message BattlePassAllDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2601;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    bool have_cur_schedule = 1; // 当前是否有排期
+    BattlePassSchedule cur_schedule = 2;
+    repeated BattlePassMission mission_list = 3;
+}
+
+// 添加/更新BattlePass任务
+message BattlePassMissionUpdateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2602;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated BattlePassMission mission_list = 1;
+}
+
+message BattlePassMissionDelNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2603;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated uint32 del_mission_id_list = 1;
+}
+
+// 当前排期相关信息(积分/等级/奖励)变动信息
+message BattlePassCurScheduleUpdateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2604;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    bool have_cur_schedule = 1; // 当前是否有排期
+    BattlePassSchedule cur_schedule = 2; // 当前排期的信息
+}
+
+message BattlePassRewardTakeOption
+{
+    BattlePassRewardTag tag = 1; // 领奖Tag 
+    bool has_option_idx = 2;  // 是否有选择项
+    uint32 option_idx = 3;    // 选项IDX 从1开始
+}
+
+message TakeBattlePassRewardReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2605;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated BattlePassRewardTakeOption take_option_list = 1; // 选择道具领奖的选项，用于reward中包含自选道具的情况
+}
+
+message TakeBattlePassRewardRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2606;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    repeated BattlePassRewardTakeOption take_option_list = 2; // 选择道具领奖的选项，用于reward中包含自选道具的情况
+    repeated ItemParam reward_item_list = 3; // 获得得道具总列表
+}
+
+message TakeBattlePassMissionPointReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2607;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 mission_id = 1;
+}
+
+message TakeBattlePassMissionPointRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2608;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 mission_id = 2;
+}
+
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

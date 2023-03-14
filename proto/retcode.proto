@@ -1,0 +1,405 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file player.proto
+ * @author jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @date 2018/01/04 15:44:59
+ * @brief 所有的错误码
+ **/
+
+syntax = "proto3";
+package proto;
+
+// 注意，增加枚举后，别忘记在TextMapData.xlsx中添加对应的字符串，用于UI显示
+enum Retcode
+{
+    RET_SUCC = 0; // 成功
+    RET_FAIL = -1; // 失败
+    RET_SVR_ERROR = 1;  // 服务器内部错误
+    RET_UNKNOWN_ERROR = 2;  // 未知错误
+    RET_FREQUENT = 3;   // 请求过于频繁
+    RET_NODE_FORWARD_ERROR = 4; // node转发失败
+    RET_NOT_FOUND_CONFIG = 5;   // 找不到对应配置表信息（通用）
+    RET_SYSTEM_BUSY = 6;        // 系统繁忙稍等重试
+    RET_GM_UID_BIND = 7;        // 账号被运营人员免密登入
+
+    ///////////////////////////////////////////////////////
+    // 登录错误码 10 -100
+    RET_STOP_REGISTER                   = 10; // 注册账号停止
+    RET_STOP_SERVER                     = 11; // 停服维护中
+    RET_ACCOUNT_VEIRFY_ERROR            = 12; // 账号验证失败
+    RET_ACCOUNT_FREEZE                  = 13; // 账号冻结
+    RET_REPEAT_LOGIN                    = 14; // 重复登陆
+    RET_CLIENT_VERSION_ERROR            = 15; // 客户端版本号错误
+    RET_TOKEN_ERROR                     = 16; // token错误
+    RET_ACCOUNT_NOT_EXIST               = 17; // 账号不存在(指定uid登录时)
+    RET_WAIT_OTHER_LOGIN                = 18; // 等待其他设备完成登入
+    RET_ANOTHER_LOGIN                   = 19; // 被其他登入流程打断
+    RET_CLIENT_FORCE_UPDATE             = 20; // 客户端版本太低需要强更
+    RET_BLACK_UID                       = 21; // uid在黑名单列表中
+    RET_LOGIN_DB_FAIL                   = 22; // 数据库读取失败
+    RET_LOGIN_INIT_FAIL                 = 23; // 初始化数据失败
+    RET_MYSQL_DUPLICATE                 = 24; // DB中重复的记录
+    RET_MAX_PLAYER                      = 25; // 达到同时在线上限
+
+    ///////////////////////////////////////////////////////
+    // Player错误码 101 - 200
+    RET_AVATAR_IN_CD = 101;     // 角色在CD中，不能更换
+    RET_AVATAR_NOT_ALIVE = 102;     // 角色不是活着状态
+    RET_AVATAR_NOT_ON_SCENE = 103;  // 角色不在场景上
+    RET_CAN_NOT_FIND_AVATAR = 104;  // 找不到角色
+    RET_CAN_NOT_DEL_CUR_AVATAR = 105;    // 不能删除当前的角色
+    RET_DUPLICATE_AVATAR = 106;     // 角色重复
+    RET_AVATAR_IS_SAME_ONE = 107;   // 目标角色与当前角色相同
+    RET_AVATAR_LEVEL_LESS_THAN = 108;   // 角色等级不够
+    RET_AVATAR_CAN_NOT_CHANGE_ELEMENT = 109;    // 角色不能改变元素类型
+    RET_AVATAR_BREAK_LEVEL_LESS_THAN = 110;     // 角色突破等级不够
+    RET_AVATAR_ON_MAX_BREAK_LEVEL = 111;    // 角色已经在最大突破等级
+    RET_AVATAR_ID_ALREADY_EXIST = 112;      // 相同ID的角色已存在
+    RET_AVATAR_NOT_DEAD = 113;      // 角色不是死亡状态
+    RET_AVATAR_IS_REVIVING = 114;   // 角色在复活中
+    RET_AVATAR_ID_ERROR = 115;    // 角色ID出错
+    RET_REPEAT_SET_PLAYER_BORN_DATA = 116;    // 重复设置玩家出生数据
+    RET_PLAYER_LEVEL_LESS_THAN = 117;       // 玩家等级不足
+    RET_AVATAR_LIMIT_LEVEL_ERROR = 118;     // 不满足avatar的等级要求(队伍中至少需要一名x级角色)
+    RET_CUR_AVATAR_NOT_ALIVE = 119; // 当前角色不是活着的状态，不能换上场
+
+    RET_CAN_NOT_FIND_TEAM = 120;    // 找不到队伍
+    RET_CAN_NOT_FIND_CUR_TEAM = 121;    // 找不到当前的队伍
+    RET_AVATAR_NOT_EXIST_IN_TEAM = 122; // 角色不在当前队伍中
+    RET_CAN_NOT_REMOVE_CUR_AVATAR_FROM_TEAM = 123;    // 不能将当前的角色从队伍中删除
+    RET_CAN_NOT_USE_REVIVE_ITEM_FOR_CUR_AVATAR = 124;   // 不能对出战角色使用复活道具
+    RET_TEAM_COST_EXCEED_LIMIT = 125;   // 队伍COST超过上限
+    RET_TEAM_AVATAR_IN_EXPEDITION = 126; // 角色在探索中
+    RET_TEAM_CAN_NOT_CHOSE_REPLACE_USE = 127; // 没有可以替换使用得角色 
+
+    RET_NICKNAME_UTF8_ERROR = 130;      // 昵称不是有效的utf8字符串
+    RET_NICKNAME_TOO_LONG = 131;        // 昵称太长
+    RET_NICKNAME_WORD_ILLEGAL = 132;    // 昵称含有非法单词
+
+    RET_PLAYER_NOT_ONLINE = 140;        // 玩家不在线
+    RET_OPEN_STATE_NOT_OPEN = 141;      // 功能暂未开放
+
+    RET_AVATAR_EXPEDITION_AVATAR_DIE = 152; // 角色死亡不能探索
+    RET_AVATAR_EXPEDITION_COUNT_LIMIT = 153; // 探索数量到达上限
+    RET_AVATAR_EXPEDITION_MAIN_FORBID = 154; // 探索主角禁止 
+    RET_AVATAR_EXPEDITION_TRIAL_FORBID = 155; // 探索试用角色禁止
+
+    RET_TEAM_NAME_ILLEGAL = 156; // 角色队伍名称不合法
+    RET_IS_NOT_IN_STANDBY = 157; // 不处于standby状态
+    RET_IS_IN_DUNGEON = 158; // 正处于地城中
+    RET_IS_IN_LOCK_AVATAR_QUEST = 159; // 正处于锁特定角色的任务中
+    RET_IS_USING_TRIAL_AVATAR = 160; // 正在使用试用角色
+    RET_IS_USING_TEMP_AVATAR = 161; // 正在使用临时角色
+
+    ///////////////////////////////////////////////////////
+    // 战斗错误码 201 - 300
+
+    ///////////////////////////////////////////////////////
+    // NPC错误码 301 - 400
+    RET_NPC_NOT_EXIST = 301;    // NPC不存在
+    RET_NPC_TOO_FAR = 302;      // NPC太远
+    RET_NOT_CURRENT_TALK = 303;     // 不是当前对话
+    RET_NPC_CREATE_FAIL = 304;  // NPC移动失败
+    RET_NPC_MOVE_FAIL = 305;    // NPC创建失败
+    
+    ///////////////////////////////////////////////////////
+    // 任务错误码 401 - 500
+    RET_QUEST_NOT_EXIST = 401;  // 任务不存在
+    RET_QUEST_IS_FAIL = 402;    // 任务已失败
+    RET_QUEST_CONTENT_ERROR = 403;  // 任务内容错误
+    RET_BARGAIN_NOT_ACTIVATED = 404; // 讲价没有被激活
+    RET_BARGAIN_FINISHED = 405;      // 讲价已结束
+
+    ///////////////////////////////////////////////////////
+    // 场景错误码 501 - 600
+    RET_POINT_NOT_UNLOCKED = 501;   // 传送点未解锁
+    RET_POINT_TOO_FAR = 502;        // 传送点太远
+    RET_POINT_ALREAY_UNLOCKED = 503;    // 传送点已解锁
+    RET_ENTITY_NOT_EXIST = 504;     // 场景上的实体不存在
+    RET_ENTER_SCENE_FAIL = 505;     // 进入场景失败
+    RET_PLAYER_IS_ENTER_SCENE = 506;    // 正在进入场景中
+    RET_CITY_MAX_LEVEL = 507;       // area已经到达最高等级
+    RET_AREA_LOCKED = 508;          // area尚未解锁
+    RET_JOIN_OTHER_WAIT = 509;      // 客户端等待加入别人的场景
+    RET_WEATHER_AREA_NOT_FOUND = 510;   // 找不到天气物件
+    RET_WEATHER_IS_LOCKED = 511;    // 天气状态被锁定
+    RET_NOT_IN_SELF_SCENE = 512;    // 不在自己的场景中
+    RET_GROUP_NOT_EXIST = 513;      // group不存在
+    RET_MARK_NAME_ILLEGAL = 514;    // 标记名称含有非法单词
+    RET_MARK_ALREADY_EXISTS = 515;  // 标记已经存在
+    RET_MARK_OVERFLOW = 516;        // 标记数量超出上限
+    RET_MARK_NOT_EXISTS = 517;      // 标记不存在
+    RET_MARK_UNKNOWN_TYPE = 518;    // 未知标记类型
+    RET_MARK_NAME_TOO_LONG = 519;   // 标记名太长
+    RET_DISTANCE_LONG = 520;        // 距离太远，无法完成操作
+    RET_ENTER_SCENE_TOKEN_INVALID = 521; // 进场token不匹配
+
+    ///////////////////////////////////////////////////////
+    // 道具错误码 601 - 700
+    RET_ITEM_NOT_EXIST = 601;           // 道具不存在
+    RET_PACK_EXCEED_MAX_WEIGHT = 602;   // 背包超出最大重量
+    RET_ITEM_NOT_DROPABLE = 603;        // 道具不可丢弃
+    RET_ITEM_NOT_USABLE = 604;          // 道具不可使用
+    RET_ITEM_INVALID_USE_COUNT = 605;   // 道具使用数量非法
+    RET_ITEM_INVALID_DROP_COUNT = 606;  // 道具丢弃数量非法
+    RET_ITEM_ALREADY_EXIST = 607;       // 道具已经存在
+    RET_ITEM_IN_COOLDOWN = 608;         // 道具在冷却中
+    RET_ITEM_COUNT_NOT_ENOUGH = 609;    // 道具数量不够
+    RET_ITEM_INVALID_TARGET = 610;      // 目标不合法
+    RET_RECIPE_NOT_EXIST = 611;         // 食谱不存在
+    RET_RECIPE_LOCKED = 612;            // 食谱尚未解锁
+    RET_RECIPE_UNLOCKED = 613;          // 食谱已经解锁
+    RET_COMPOUND_QUEUE_FULL = 614;      // 超出队列上限
+    RET_COMPOUND_NOT_FINISH = 615;      // 合成尚未完成
+    RET_MAIL_ITEM_NOT_GET = 616;        // 邮件附件未领取
+    RET_ITEM_EXCEED_LIMIT = 617;        // 道具数量超上限
+    RET_AVATAR_CAN_NOT_USE = 618;       // 该角色不能使用此道具
+    RET_ITEM_NEED_PLAYER_LEVEL = 619;   // 玩家等级不足不能使用
+    RET_RECIPE_NOT_AUTO_QTE = 620;      // 食谱还不能自动QTE，未达到熟练度上限
+    RET_COMPOUND_BUSY_QUEUE = 621;      // 合成系统没有空闲的生产线
+    RET_NEED_MORE_SCOIN = 622;          // 金币不足
+    RET_SKILL_DEPOT_NOT_FOUND = 623;    // 找不到技能库
+    RET_HCOIN_NOT_ENOUGH = 624;         // 原石不足
+    RET_SCOIN_NOT_ENOUGH = 625;         // 摩拉不足
+    RET_HCOIN_EXCEED_LIMIT = 626;       // 原石超过最大数量
+    RET_SCOIN_EXCEED_LIMIT = 627;       // 摩拉超过最大数量
+    RET_MAIL_EXPIRED = 628;             // 邮件已过期
+    RET_REWARD_HAS_TAKEN = 629;         // 奖励已经领取过
+    RET_COMBINE_COUNT_TOO_LARGE = 630;  // 合成次数太多
+    RET_GIVING_ITEM_WRONG = 631;        // 交付的道具不对
+    RET_GIVING_IS_FINISHED = 632;       // 交付已完成
+    RET_GIVING_NOT_ACTIVED = 633;       // 交付未激活
+    RET_FORGE_QUEUE_FULL = 634;         // 锻造队列已满
+    RET_FORGE_QUEUE_CAPACITY = 635;     // 超过锻造队列容量上限
+    RET_FORGE_QUEUE_NOT_FOUND = 636;    // 找不到锻造队列
+    RET_FORGE_QUEUE_EMPTY = 637;        // 锻造队列没有产出
+    RET_NOT_SUPPORT_ITEM = 638;         // 不支持该类物品
+    RET_ITEM_EMPTY = 639;               // 材料为空
+    RET_VIRTUAL_EXCEED_LIMIT = 640;     // 虚拟道具数量超过限制
+    RET_MATERIAL_EXCEED_LIMIT = 641;    // 材料数量超过限制
+    RET_EQUIP_EXCEED_LIMIT = 642;       // 装备数量超过限制
+    RET_ITEM_SHOULD_HAVE_NO_LEVEL = 643;            // 道具不应该有等级或突破等级
+    RET_WEAPON_PROMOTE_LEVEL_EXCEED_LIMIT = 644;    // 武器的突破等级超过了上限
+    RET_WEAPON_LEVEL_INVALID = 645;     // 武器等级和突破等级不一致
+    RET_UNKNOW_ITEM_TYPE = 646;         // 道具类型未知
+    RET_ITEM_COUNT_IS_ZERO = 647;       // 道具数量为0
+    RET_ITEM_IS_EXPIRED = 648;           // 道具已过期
+
+    RET_EQUIP_LEVEL_HIGHER = 650;   // 装备的等级比角色高
+    RET_EQUIP_CAN_NOT_WAKE_OFF_WEAPON = 651;    // 不能脱下武器
+    RET_EQUIP_HAS_BEEN_WEARED = 652;   // 装备已经被穿戴
+    RET_EQUIP_WEARED_CANNOT_DROP = 653; // 装备中无法丢弃
+    RET_AWAKEN_LEVEL_MAX = 654;         // 已到觉醒最大等级
+
+    RET_RESIN_NOT_ENOUGH = 660;       // 树脂不足
+    RET_RESIN_EXCEED_LIMIT = 661;     // 树脂超过最大数量 
+    RET_RESIN_OPENSTATE_OFF = 662;     // 树脂openstate关闭
+    RET_RESIN_BOUGHT_COUNT_EXCEEDED = 663;// 树脂达到每日购买上限
+    RET_WORLD_RESIN_NOT_ENOUGH = 664;       // 大世界体力不足
+    RET_WORLD_RESIN_EXCEED_LIMIT = 665;     // 大世界体力超过最大数量 
+    RET_WORLD_RESIN_OPENSTATE_OFF = 666;     // 大世界体力openstate关闭
+    RET_WORLD_RESIN_BOUGHT_COUNT_EXCEEDED = 667;    // 大世界体力达到每日购买上限
+
+    RET_AUTO_RECOVER_OPENSTATE_OFF = 668;
+    RET_AUTO_RECOVER_BOUGHT_COUNT_EXCEEDED = 669;
+    RET_RESIN_GAIN_FAILED = 670;            // 使用道具加树脂时失败
+    RET_WORLD_RESIN_GAIN_FAILED = 671;      // 使用道具加大世界体力时失败
+
+
+    ///////////////////////////////////////////////////////
+    // 商店错误码 701 - 800
+    RET_GOODS_NOT_EXIST = 701;              // 商品不存在
+    RET_GOODS_MATERIAL_NOT_ENOUGH = 702;    // 消耗材料不足
+    RET_GOODS_NOT_IN_TIME = 703;            // 商品不在购买时间内
+    RET_GOODS_BUY_NUM_NOT_ENOUGH = 704;     // 商品购买次数不足
+    RET_GOODS_BUY_NUM_ERROR = 705;          // 商品购买次数错误
+    RET_SHOP_NOT_OPEN = 706;                // 商店未开放
+
+    RET_CHAT_CD = 799;                      // 聊天处于冷却中
+    RET_CHAT_FREQUENTLY = 800;              // 聊天过于频繁
+
+    ///////////////////////////////////////////////////////
+    // 物件错误码 801 - 900
+    RET_GADGET_NOT_EXIST = 801;         // 物件不存在
+    RET_GADGET_NOT_INTERACTIVE = 802;   // 物件不可交互
+    RET_GADGET_NOT_GATHERABLE = 803;    // 物件不可采集
+    RET_CHEST_IS_LOCKED = 804;      // 宝箱被锁住
+    RET_GADGET_CREATE_FAIL = 805;   // 物件创建失败
+    RET_WORKTOP_OPTION_NOT_EXIST = 806; // 操作台选项不存在
+    RET_GADGET_STATUE_NOT_ACTIVE = 807; // 领奖台未激活
+    RET_GADGET_STATUE_OPENED = 808;     // 已经领取过了
+    RET_BOSS_CHEST_NO_QUALIFICATION = 809;   // 玩家无资格打开BOSS宝箱(大世界boss宝箱记录boss死亡时周边的玩家列表)
+    RET_BOSS_CHEST_LIFE_TIME_OVER = 810;     // boss宝箱生命期结束
+    RET_BOSS_CHEST_WEEK_NUM_LIMIT = 811;     // boss宝箱本周领取数量已达上限
+    RET_BOSS_CHEST_GUEST_WORLD_LEVEL = 812;  // boss宝箱客机大世界等级小于主机大世界等级
+    RET_BOSS_CHEST_HAS_TAKEN = 813;          // 已经领取过该宝箱
+    RET_BLOSSOM_CHEST_NO_QUALIFICATION = 814;   // 玩家无资格领取地脉之花宝箱
+    RET_BLOSSOM_CHEST_LIFE_TIME_OVER = 815;     // 地脉之花宝箱生命期结束
+    RET_BLOSSOM_CHEST_HAS_TAKEN = 816;          // 地脉之花宝箱已领取
+    RET_BLOSSOM_CHEST_GUEST_WORLD_LEVEL = 817;  // 地脉之花宝箱客机大世界等级小于主机大世界等级
+
+    ///////////////////////////////////////////////////////
+    // 活动错误码 860 - 900
+    RET_ACTIVITY_CLOSE = 860;           // 活动尚未开启
+    RET_ACTIVITY_ITEM_ERROR = 861;      // 材料和活动要求的不符合
+    RET_ACTIVITY_CONTRIBUTION_NOT_ENOUGH = 862; // 玩家贡献值不够
+    RET_SEA_LAMP_PHASE_NOT_FINISH = 863;        // 海灯节阶段尚未完成
+    RET_SEA_LAMP_FLY_NUM_LIMIT = 864;           // 海灯节放花灯太多超出今日上限
+    RET_SEA_LAMP_FLY_LAMP_WORD_ILLEGAL = 865;        // 放花灯敏感字
+
+    ///////////////////////////////////////////////////////
+    // 技能错误码 901 - 1000
+    RET_TALENT_ALREAY_UNLOCKED = 901;    // 天赋已解锁
+    RET_PREV_TALENT_NOT_UNLOCKED = 902;      // 前置天赋未解锁
+    RET_BIG_TALENT_POINT_NOT_ENOUGH = 903;      // 大天赋点不够
+    RET_SMALL_TALENT_POINT_NOT_ENOUGH = 904;    // 小天赋点不够
+    RET_PROUD_SKILL_ALREADY_GOT = 905;          // 得意技已获得
+    RET_PREV_PROUD_SKILL_NOT_GET = 906;         // 前置得意技未获得
+    RET_PROUD_SKILL_MAX_LEVEL = 907;            // 技能已到最大等级
+
+    RET_CANDIDATE_SKILL_DEPOT_ID_NOT_FIND = 910;     // 找不到候选技能库
+    RET_SKILL_DEPOT_IS_THE_SAME = 911;      // 技能库ID相同
+
+    ///////////////////////////////////////////////////////
+    // 怪物错误码 1001 - 1100
+    RET_MONSTER_NOT_EXIST = 1001;    // 怪物不存在
+    RET_MONSTER_CREATE_FAIL = 1002;  // 创建怪物失败
+
+    ///////////////////////////////////////////////////////
+    // 副本错误码 1101 - 1200
+    RET_DUNGEON_ENTER_FAIL = 1101;  // 副本进入失败
+    RET_DUNGEON_QUIT_FAIL = 1102;   // 副本退出失败
+    RET_DUNGEON_ENTER_EXCEED_DAY_COUNT = 1103;  // 副本进入次数超过当日最大次数
+    RET_DUNGEON_REVIVE_EXCEED_MAX_COUNT = 1104; // 副本复活次数超过最大次数
+    RET_DUNGEON_REVIVE_FAIL = 1105;     // 副本复活失败
+    RET_DUNGEON_NOT_SUCCEED = 1106;     // 副本未成功
+    RET_DUNGEON_CAN_NOT_CANCEL = 1107;  // 副本不可取消
+    RET_DEST_DUNGEON_SETTLED = 1108;    // 副本已经结算
+    RET_DUNGEON_CANDIDATE_TEAM_IS_FULL = 1109; // 队伍已满
+    RET_DUNGEON_CANDIDATE_TEAM_IS_DISMISS = 1110; // 队伍已解散
+    RET_DUNGEON_CANDIDATE_TEAM_NOT_ALL_READY = 1111; // 队伍有人未准备
+    RET_DUNGEON_CANDIDATE_TEAM_HAS_REPEAT_AVATAR = 1112; // 队伍有重复的角色
+    RET_DUNGEON_CANDIDATE_NOT_SINGEL_PASS = 1113; // 未单人通关
+    RET_DUNGEON_REPLAY_NEED_ALL_PLAYER_DIE = 1114; // 重新挑战需要所有玩家都死亡
+    RET_DUNGEON_REPLAY_HAS_REVIVE_COUNT = 1115; // 重新挑战仍然有复活次数
+    RET_DUNGEON_OTHERS_LEAVE = 1116;    // 副本中只剩下自己
+    RET_DUNGEON_ENTER_LEVEL_LIMIT = 1117;    // 冒险等级限制
+    RET_DUNGEON_CANNOT_ENTER_PLOT_IN_MP = 1118;    // 联机模式不能进入剧情本
+    RET_DUNGEON_DROP_SUBFIELD_LIMIT = 1119;         // 副本中分支掉落到了上限
+
+    ///////////////////////////////////////////////////////
+    // 联机错误码 1201 - 1300
+    RET_MP_NOT_IN_MY_WORLD = 1201;     // 身处他人世界，无法进行该操作
+    RET_MP_IN_MP_MODE = 1202;          // 联机模式中，无法进行该操作
+    RET_MP_SCENE_IS_FULL = 1203;       // 场景已经满员
+    RET_MP_MODE_NOT_AVAILABLE = 1204;  // 目标不能进入联机状态
+    RET_MP_PLAYER_NOT_ENTERABLE = 1205;// 玩家不允许加入了
+    RET_MP_QUEST_BLOCK_MP = 1206;      // 特定任务未完成，不能进入他人世界
+    RET_MP_IN_ROOM_SCENE = 1207;       // 身处房间中，不能进入他人世界
+    RET_MP_WORLD_IS_FULL = 1208;       // 大世界已满人
+    RET_MP_PLAYER_NOT_ALLOW_ENTER = 1209; // 玩家不允许进入
+    RET_MP_PLAYER_DISCONNECTED = 1210; // 主机已经掉线
+    RET_MP_NOT_IN_MP_MODE = 1211;      // 不在联机模式中
+    RET_MP_OWNER_NOT_ENTER = 1212;     // 主机尚未进入大世界
+    RET_MP_ALLOW_ENTER_PLAYER_FULL = 1213; // 允许进入大世界的玩家已满
+    RET_MP_TARGET_PLAYER_IN_TRANSFER = 1214; // 目标玩家在切换场景(传送或进入副本)
+    RET_MP_TARGET_ENTERING_OTHER = 1215;    // 目标玩家正在进入别人的世界
+    RET_MP_OTHER_ENTERING = 1216;           // 有其他玩家增加进入自己的大世界
+    RET_MP_ENTER_MAIN_PLAYER_IN_PLOT = 1217;    // 主机在剧情本不能进入
+
+    ///////////////////////////////////////////////////////
+    // 邮件错误码 1301 - 1400
+    RET_MAIL_PARA_ERR = 1301;               // 邮件请求格式错误
+    RET_MAIL_MAX_NUM = 1302;                // 邮件数量已满
+    RET_MAIL_ITEM_NUM_EXCEED = 1303;        // 邮件附件数量过多
+    RET_MAIL_TITLE_LEN_EXCEED = 1304;       // 邮件标题长度超出限制
+    RET_MAIL_CONTENT_LEN_EXCEED = 1305;     // 邮件正文长度超出限制
+    RET_MAIL_SENDER_LEN_EXCEED = 1306;      // 邮件发件人长度超出限制
+    RET_MAIL_PARSE_PACKET_FAIL = 1307;      // 邮件消息解析错误
+    RET_OFFLINE_MSG_MAX_NUM = 1308;         // 缓存的离线消息太多
+    RET_OFFLINE_MSG_SAME_TICKET = 1309;     // ticket关联的消息已经发送
+    RET_MAIL_EXCEL_MAIL_TYPE_ERROR = 1310;  // 找不到excel邮件类型（平台发邮件回复）
+
+    RET_DAILY_TASK_NOT_FINISH = 1330;       // 固定事件尚未完成
+    RET_DAILY_TAKS_HAS_TAKEN = 1331;        // 已经领取了
+
+    ////////////////////////////////////////////////////////
+    // 扭蛋错误码 1401 - 1500
+    RET_GACHA_INAVAILABLE = 1401;           // 当前无扭蛋
+    RET_GACHA_RANDOM_NOT_MATCH = 1402;      // GACHA_RANDOM不匹配
+    RET_GACHA_SCHEDULE_NOT_MATCH = 1403;    // GACHA排期不一致
+    RET_GACHA_INVALID_TIMES = 1404;         // GACHA次数不合法
+    RET_GACHA_COST_ITEM_NOT_ENOUGH = 1405;  // GACHA代币不足
+    RET_GACHA_TIMES_LIMIT = 1406;           // GACHA次数不足
+
+    ///////////////////////////////////////////////////////
+    // 调查错误码 1501 - 1520
+    RET_INVESTIGAITON_NOT_IN_PROGRESS = 1501; // 调查不在进行中
+    RET_INVESTIGAITON_UNCOMPLETE = 1502;      // 调查未完成
+    RET_INVESTIGAITON_REWARD_TAKEN = 1503;    // 调查奖励已领取
+    RET_INVESTIGAITON_TARGET_STATE_ERROR = 1504; // 调查目标任务状态错误
+
+    RET_PUSH_TIPS_NOT_FOUND = 1505;         // 找不到推送消息
+    RET_SIGN_IN_RECORD_NOT_FOUND = 1506;    // 找不到签到记录
+    RET_ALREADY_HAVE_SIGNED_IN = 1507;      // 今日已签到过
+    RET_SIGN_IN_COND_NOT_SATISFIED = 1508;  // 未达成签到开启条件
+    RET_BONUS_ACTIVITY_NOT_UNREWARDED = 1509;   // 送角色活动奖励未满足条件或已领取
+    RET_SIGN_IN_REWARDED = 1510;            // 签到重复领奖
+
+    ///////////////////////////////////////////////////////
+    // 爬塔错误码 1521 - 1540
+    RET_TOWER_NOT_OPEN = 1521;              // 不在爬塔开放时间
+    RET_TOWER_HAVE_DAILY_RECORD = 1522;     // 在暂离状态
+    RET_TOWER_NOT_RECORD = 1523;            // 不在暂离状态，需要先选队伍
+    RET_TOWER_HAVE_RECORD = 1524;           // 在暂离状态，需要先放弃进度
+    RET_TOWER_TEAM_NUM_ERROR = 1525;        // 爬塔队伍数量不对
+    RET_TOWER_FLOOR_NOT_OPEN = 1526;        // 爬塔层未开放
+    RET_TOWER_NO_FLOOR_STAR_RECORD = 1527;  // 没有星级奖励可以领取
+    RET_ALREADY_HAS_TOWER_BUFF = 1528;      // 已经选择了关卡增益
+    RET_DUPLICATE_ENTER_LEVEL = 1529;       // 重复进入关卡
+    RET_NOT_IN_TOWER_LEVEL = 1530;          // 不在爬塔关卡内
+    RET_IN_TOWER_LEVEL = 1531;              // 爬塔关卡内不能换人或使用道具
+    RET_TOWER_PREV_FLOOR_NOT_FINISH = 1532; // 上一层还没打完
+    RET_TOWER_STAR_NOT_ENOUGH = 1533;       // 星数不足不能进下一层
+
+    ///////////////////////////////////////////////////////
+    // 内部服务错误码 2001 - 2100
+    RET_UID_NOT_EXIST = 2001;               // uid不存在
+    RET_PARSE_BIN_ERROR = 2002;             // 玩家信息解析失败
+    RET_ACCOUNT_INFO_NOT_EXIST = 2003;      // 账号信息不存在
+    RET_ORDER_INFO_NOT_EXIST = 2004;        // 订单信息不存在
+    RET_SNAPSHOT_INDEX_ERROR = 2005;        // 获取msql快照分页失败
+    RET_MAIL_HAS_BEEN_SENT = 2006;          // 邮件请勿重复发送
+    RET_PRODUCT_NOT_EXIST = 2007;           // 产品配置不存在
+    RET_UNFINISH_ORDER = 2008;              // 存在未完成的订单
+    RET_ID_NOT_EXIST = 2009;                // 通用id不存在
+    RET_ORDER_TRADE_EARLY = 2010;           // 订单交易时间过于久远
+
+    ///////////////////////////////////////////////////////
+    // redis错误码 5001 - 5100
+    RET_REDIS_MODIFIED = 5001;          // watch过程有key被修改了
+
+    ///////////////////////////////////////////////////////
+    // pathfinding错误码 6001 - 6100
+    RET_PATHFINDING_DATA_NOT_EXIST = 6001;          //地图配置不存在
+    RET_PATHFINDING_DESTINATION_NOT_EXIST = 6002;   //目标点不合法
+    RET_PATHFINDING_ERROR_SCENE = 6003;             //错误的场景id
+
+    ///////////////////////////////////////////////////////
+    // 社交错误码 7001 - 7100
+    RET_FRIEND_COUNT_EXCEEDED = 7001;           // 好友已满
+    RET_PLAYER_NOT_EXIST = 7002;                // 搜索uid不存在
+    RET_ALREADY_SENT_ADD_REQUEST = 7003;        // 已向该用户申请添加好友
+    RET_ASK_FRIEND_LIST_FULL = 7004;            // 未处理好友申请已达上限
+    RET_PLAYER_ALREADY_IS_FRIEND = 7005;        // 玩家已是好友
+    RET_PLAYER_NOT_ASK_FRIEND = 7006;           // 玩家不存在于请求好友列表 
+    RET_TARGET_FRIEND_COUNT_EXCEED = 7007;      // 对方好友已达上限
+    RET_NOT_FRIEND = 7008;                      // 不是好友关系
+    RET_BIRTHDAY_CANNOT_BE_SET_TWICE = 7009;      // 生日不能重复设置
+    RET_CANNOT_ADD_SELF_FRIEND = 7010;          // 不能加自己好友
+}

@@ -1,0 +1,8 @@
+{
+  "entity_id": 0, 
+  "hit_entity_id": 0, 
+  "hit_box_index": 0, 
+  "hit_collider_type": "HIT_COLLIDER_INVALID", 
+  "forward_peer": 0, 
+  "forward_type": "FORWARD_LOCAL"
+}

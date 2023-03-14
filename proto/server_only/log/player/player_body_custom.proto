@@ -1,0 +1,1626 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file player_body_custom.proto
+ * @作者 yifan.fang(yifan.fang@mihoyo.com)
+ * @日期 2019/01/28 16:08:31
+ * @brief 
+ **/
+
+syntax = "proto3";
+package proto_log;
+
+// 玩家当前在线，用来统计活跃 PLAYER_ACTION_ONLINE 
+message PlayerLogBodyOnline
+{
+}
+
+// 玩家位置日志 PLAYER_ACTION_USER_LOCATION
+message PlayerLogBodyUserLocation
+{
+}
+
+// 玩家断线 PLAYER_ACTION_PLAYER_DISCONNECT
+message PlayerLogBodyPlayerDisconnect
+{
+}
+
+message ClientStatData
+{
+    int32 x = 1;
+    int32 y = 2;
+    int32 z = 3;
+    uint32 fps = 4;
+    uint32 memory = 5;
+}
+
+// 客户端是否进入卡顿状态 PLAYER_ACTION_CLIENT_FPS_STATUS
+message PlayerLogBodyClientFpsStatus
+{
+    uint32 is_low_fps = 1;          // 1:进入卡顿状态 0:离开卡顿状态
+    repeated float fps = 2;
+    repeated ClientStatData stat_list = 3;
+}
+
+// 邮件来源类型
+enum MailSourceType
+{
+    MAIL_SOURCE_NONE = 0;
+    MAIL_SOURCE_PLATFORM = 1;        // 运营平台
+    MAIL_SOURCE_LOGIN_REWARD = 2;    // 登录奖励
+    MAIL_SOURCE_TOWER = 3;           // 爬塔
+    MAIL_SOURCE_BAG_OVERFLOW = 4;    // 背包溢出
+    MAIL_SOURCE_CARD_PRODUCT = 5;    // 月卡发送奖励
+}
+
+// 邮件附件定义
+message MailItem
+{
+    uint32 item_id = 1;             // 道具ID
+    uint32 item_count = 2;          // 道具数量   
+    uint32 level = 3;               // 道具是武器或圣遗物时表示初始等级
+    uint32 promote_level = 4;       // 道具是武器或圣遗物时表示初始突破等级
+}
+
+// 邮件操作类型
+enum MailOpType
+{
+    MAIL_OP_NONE = 0;
+    MAIL_OP_ADD = 1;                // 发邮件
+    MAIL_OP_DEL = 2;                // 删邮件
+    MAIL_OP_READ = 3;               // 读邮件
+    MAIL_OP_TAKE_ATTACHMENT = 4;    // 领取邮件附件
+}
+
+// 邮件操作原因
+enum MailOpReason
+{
+    MAIL_REASON_NONE = 0;
+    MAIL_REASON_BY_GAME = 1;            // gameserver操作
+    MAIL_REASON_BY_MUIP = 2;            // muipserver操作
+    MAIL_REASON_BY_CLIENT = 3;          // 玩家操作
+    MAIL_REASON_FULL = 4;               // 邮箱满了
+}
+
+// 邮件：邮件日志 PLAYER_ACTION_MAIL
+message PlayerLogBodyMail
+{
+    uint32 mail_id = 1;             // 邮件ID，同一个玩家的邮件不会重复
+    uint32 from = 2;                // 邮件来源 MailSourceType
+    uint32 send_time = 3;           // 邮件发送时间
+    string mail_title = 4;          // 邮件标题
+    string mail_content = 5;        // 邮件正文，只有在OP=1时有效
+    string mail_sender = 6;         // 发件人，只有在OP=1时有效
+    repeated MailItem material_list = 7;    // 附件列表，只有在OP=1时有效
+    uint32 mail_op = 8;             // 邮件操作类型 MailOpType
+    uint32 mail_reason = 9;         // 领取/删除原因 MailOpReason，只在OP=1或4时有效
+    uint32 config_id = 10;          // Excel配置的邮件id
+    repeated string argument_list = 11; // Excel邮件展示用的参数
+}
+
+enum EnterReason
+{
+    ENTER_REASON_NONE = 0;
+    ENTER_REASON_LOGIN = 1;	// 登录时进入场景
+    ENTER_REASON_DUNGEON_REPLAY = 11;	            // 重玩当前副本
+    ENTER_REASON_DUNGEON_REVIVE_ON_WAYPOINT = 12;	// 地城中从最近路点复活
+    ENTER_REASON_DUNGEON_ENTER = 13;	            // 进入地城
+    ENTER_REASON_DUNGEON_QUIT = 14;	                // 离开地城
+    ENTER_REASON_GM = 21;				// GM指令
+    ENTER_REASON_QUEST_ROLLBACK = 31;	// 任务回滚
+    ENTER_REASON_REVIVAL = 32;			// 复活
+    ENTER_REASON_PERSONAL_SCENE = 41;	// 大世界、房间切换
+    ENTER_REASON_TRANS_POINT = 42;		// 地图传送点
+    ENTER_REASON_CLIENT_TRANSMIT = 43;	// 客户端发起的传送
+    ENTER_REASON_TEAM_KICK = 51;		// 联机被踢出其他人的世界
+    ENTER_REASON_TEAM_JOIN = 52;		// 联机进入其他人的世界
+    ENTER_REASON_TEAM_BACK = 53;		// 联机回到自己的世界
+    ENTER_REASON_MUIP = 54;             // 来自muip的命令
+    ENTER_REASON_DUNGEON_INVITE_ACCEPT = 55;             // 地城邀请接受
+    ENTER_REASON_LUA = 56;              // 来自lua的调用
+    ENTER_REASON_ACTIVITY_LOAD_TERRAIN = 57;        // 活动开启需要切换地形
+}
+
+// 玩家开始进场景时记录 PLAYER_ACTION_START_ENTER_SCENE
+message PlayerLogBodyStartEnterScene
+{
+    uint32 enter_type = 1;          // proto::EnterType cmd_scene.proto
+    uint32 target_scene_id = 2;     // 目标场景ID
+    uint32 target_world_owner_uid = 3;     // 目标世界的所有者UID
+    int32 x_coordinate = 4;         // 目标X坐标
+    int32 y_coordinate = 5;         // 目标Y坐标
+    int32 z_coordinate = 6;         // 目标Z坐标
+    uint32 vision_type = 7;         // proto::VisionType cmd_scene.proto
+    uint32 enter_reason = 8;        // proto_log::EnterReason
+}
+
+// 玩家进场景加载完毕时记录 PLAYER_ACTION_FINISH_ENTER_SCENE
+message PlayerLogBodyFinishEnterScene
+{
+    uint32 target_scene_id = 1;     // 目标场景ID
+    uint32 target_world_owner_uid = 2;     // 目标世界的所有者UID
+}
+
+enum ChangeSceneTeamReason
+{
+   CHANGE_SCENE_TEAM_REASON_NONE = 0;
+   CHANGE_SCENE_TEAM_REASON_ENTER_SCENE = 1; //进入场景
+   CHANGE_SCENE_TEAM_REASON_SET_UP_AVATAR_TEAM = 2; // 更换队伍角色
+   CHANGE_SCENE_TEAM_REASON_CHOOSE_CUR_TEAM = 3;    // 整队更换角色
+   CHANGE_SCENE_TEAM_REASON_SCENE_SPECIFIC = 4;     // 场景特定
+   CHANGE_SCENE_TEAM_REASON_MP_CHANGE = 5;          // 联机更换
+   CHANGE_SCENE_TEAM_REASON_TEMP_TEAM_CHANGE = 6;   // 临时阵容(试用角色)的变化
+   CHANGE_SCENE_TEAM_REASON_MP_PLAYER_LEAVE = 7;    // 联机时玩家离开
+   CHANGE_SCENE_TEAM_REASON_ENTER_SINGLE_DUNGEON = 8;    // 进入单机地城
+   CHANGE_SCENE_TEAM_REASON_ENTER_MULTIPLE_DUNGEON = 9;    // 进入联机地城
+   CHANGE_SCENE_TEAM_REASON_GM = 10;                       // Gm更改
+   CHANGE_SCENE_TEAM_REASON_QUEST = 11;                    // 任务强制锁定阵容
+   CHANGE_SCENE_TEAM_REASON_TOWER = 12;                    // 爬塔强制设置阵容
+   CHANGE_SCENE_TEAM_REASON_DEL_AVATAR = 13;               // 删除试用导致阵容变化
+}
+
+message TeamAvatarLog
+{
+    uint32 avatar_type = 1; // 角色类型，定义在define.proto的AvatarType
+    uint32 avatar_id = 2;   // 角色ID
+}
+
+// 改变场景队伍 PLAYER_ACTION_CHANGE_SCENE_TEAM
+message PlayerLogBodyChangeSceneTeam
+{
+    repeated TeamAvatarLog removed_avatar_list = 1; // 移除的队伍成员
+    repeated TeamAvatarLog added_avatar_list = 2;   // 新上场的角色
+    repeated TeamAvatarLog cur_avatar_list = 3;     // 当前角色
+    uint32 level1_area_id = 4;                      // 引起改变玩家的一级区域id
+    uint32 level2_area_id = 5;                      // 引起改变玩家的二级区域id
+    bool is_in_mp = 6;                              // 是否在联机中
+    uint32 change_reason = 7;                       // 改变的原因 proto_log::ChangeSceneTeamReason
+}
+
+// 设置保存的队伍成员 PLAYER_ACTION_SET_UP_AVATAR_TEAM
+message PlayerLogBodySetUpAvatarTeam
+{
+    uint32 team_id = 1;  // team_id
+    repeated uint64 before_avatar_id_list = 2;
+    repeated uint64 cur_avatar_id_list = 3;
+}
+
+// 选择当前队伍 PLAYER_ACTION_CHOOSE_CUR_AVATAR_TEAM
+message PlayerLogBodyChooseCurAvatarTeam
+{
+    uint32 before_team_id = 1;
+    repeated uint64 before_avatar_id_list = 2;
+    uint32 cur_team_id = 3; 
+    repeated uint64 cur_avatar_id_list = 4;
+}
+
+// 更换当前角色 PLAYER_ACTION_CHANGE_AVATAR
+message PlayerLogBodyChangeAvatar
+{
+    AvatarLog old_avatar = 1;           // 被换下的角色
+    AvatarLog new_avatar = 2;           // 换上的角色
+    uint64 last_change_avatar_time_ms = 3;  // 上次切换角色时间（毫秒）
+    uint32 is_by_death = 4;             // 1表示是因为角色死亡更换；0表示主动更换
+}
+
+enum MotionType
+{
+    MOTION_TYPE_NONE = 0;               // 其他状态
+    MOTION_TYPE_CLIMB = 1;              // 攀岩
+    MOTION_TYPE_SWIM = 2;               // 游泳
+    MOTION_TYPE_FLY = 3;                // 飞行
+}
+
+// 角色移动状态改变 PLAYER_ACTION_AVATAR_MOTION_CHANGE
+message PlayerLogBodyAvatarMotionChange
+{
+    uint32 old_motion_type = 1;        // 旧的移动状态类型 MotionType
+    uint32 motion_type = 2;            // 新的移动状态类型 MotionType
+}
+
+// 部分角色移动状态发生 PLAYER_ACTION_AVATAR_MOTION
+message PlayerLogBodyAvatarMotion
+{
+    uint32 motion_state = 1;            // proto::MotionState
+}
+
+// 任务类型
+enum PlayerLogMissionType
+{
+    PLAYER_LOG_MISSION_NONE = 0;
+    PLAYER_LOG_MISSION_MAIN_QUEST = 1;  // 父任务
+    PLAYER_LOG_MISSION_QUEST = 2;       // 子任务
+    PLAYER_LOG_MISSION_RANDOM_QUEST = 3;// 随机任务
+}
+
+// 删除任务的情况
+enum PlayerLogMissionRemoveType
+{
+    PLAYER_LOG_MISSION_REMOVE_NONE = 0;
+    PLAYER_LOG_MISSION_REMOVE_FINISH_PARENT = 1;
+    PLAYER_LOG_MISSION_REMOVE_ROLLBACK = 2;
+    PLAYER_LOG_MISSION_REMOVE_GM = 3;
+    PLAYER_LOG_MISSION_REMOVE_RESET_PARENT = 4;
+    PLAYER_LOG_MISSION_REMOVE_NPC_CONFLICT = 5;
+	PLAYER_LOG_MISSION_REMOVE_FAIL_PARENT = 6;
+	PLAYER_LOG_MISSION_REMOVE_CANCEL_PARENT = 7;
+}
+
+// 任务：玩家任务删除日志 PLAYER_ACTION_MISSION_REMOVE
+message PlayerLogBodyMissionRemove
+{
+    uint32 mission_remove_type = 1;     // 删除类型
+    uint32 mission_type = 2;            // 任务类型
+    uint32 mission_id = 3;              // 任务id
+    uint32 start_time = 4;             // 任务开始时间
+}
+
+// 任务：角色血量变化 PLAYER_ACTION_AVATAR_HP_CHANGE
+message PlayerLogBodyAvatarHpChange
+{
+    uint32 avatar_level = 1;
+    uint64 hp_total = 2;
+    int64 hp_add = 3;
+    uint64 hp_left = 4;
+    uint32 reason = 5;                  // define.proto proto::ChangeHpReason
+    uint32 avatar_id = 6;               // 角色的AvatarId
+    uint32 is_auto_use_spring = 7;      // 是否是自动使用泉水（神像），reason=CHANGE_HP_ADD_STATUE时有效
+    string ability_name = 8;            // 治疗来源的ability，reason=CHANGE_HP_ADD_ABILITY时有效
+}
+
+// 任务：对话开始 PLAYER_ACTION_TALK_START
+message PlayerLogBodyTalkStart
+{
+    uint32 talk_id = 1;             // 对话ID
+}
+
+// 任务：对话结束 PLAYER_ACTION_TALK_FINISH
+message PlayerLogBodyTalkFinish
+{
+    uint32 talk_id = 1;             // 对话ID
+}
+
+// 任务：Cutscene开始 PLAYER_ACTION_CUTSCENE_START
+message PlayerLogBodyCutsceneStart
+{
+    string cutscene_name = 1;       // Cutscene标识
+}
+
+// 任务：Cutscene结束 PLAYER_ACTION_CUTSCENE_FINISH
+message PlayerLogBodyCutsceneFinish
+{
+    string cutscene_name = 1;       // Cutscene标识
+    uint32 is_skip = 2;             // 是否是跳过
+}
+
+// 角色死亡/复活原因
+enum AvatarDeathRevivalType
+{
+    AVATAR_DEATH_REVIVAL_NONE = 0;
+    PLAYER_DIE_KILL_BY_MONSTER = 1; // 被怪物杀死
+    PLAYER_DIE_KILL_BY_GEAR = 2;    // 被机关杀死
+    PLAYER_DIE_FALL = 3;   // 摔死
+    PLAYER_DIE_DRAWN = 4;  // 淹死
+    PLAYER_DIE_ABYSS = 5;  // 摔入深渊
+    PLAYER_DIE_GM = 6;     // GM
+    REVIVAL_PENALTY = 101;           // 进入场景时因为团灭而扣血惩罚的复活
+    REVIVAL_ALL_DIE = 102;           // 进入场景时血量都为0就都复活
+    REVIVAL_ITEM = 103;              // 使用道具复活
+    REVIVAL_CAN_REVIVE = 104;        // 当前角色有复活BUFF
+    REVIVAL_REPLACE_REBORN = 105;    // 传送过程中角色死亡导致复活换人
+    REVIVAL_REFRESH = 106;           // 刷新后台角色导致的复活
+    REVIVAL_TRANS_POINT = 107;       // 在一级传送点时复活
+    REVIVAL_SETUP_TRIAL = 108;       // 使用试用角色前复活要使用的角色
+    REVIVAL_TO_SCENE = 109;          // 进场景时换下试用角色，复活非试用角色
+    REVIVAL_GM = 110;                // GM
+}
+
+// 道具数据
+message ItemLog
+{
+    uint32 item_id = 1;             // 道具ID 
+    uint32 count = 2;               // 道具数量
+}
+
+// 词缀数据
+message AffixLog
+{
+    uint32 affix_id = 1;            // 词缀ID
+    uint32 affix_level = 2;         // 词缀等级
+}
+
+// 武器数据
+message WeaponLog
+{
+    uint64 guid = 1;                        // 武器唯一ID
+    uint32 weapon_id = 2;                   // 武器ID
+    uint32 speciality = 3;                  // 武器类型
+    uint32 level = 5;                       // 武器等级
+    uint32 promote_level = 6;               // 武器突破等级
+    repeated AffixLog affix_list = 7;       // 武器词缀列表
+}
+
+// 圣遗物数据
+message RelicLog
+{
+    uint64 guid = 1;                        // 圣遗物唯一ID
+    uint32 relic_id = 2;                    // 圣遗物ID
+    uint32 part = 3;                        // 圣遗物类型
+    uint32 rank_level = 5;                  // 圣遗物阶数
+    uint32 level = 6;                       // 圣遗物等级
+    uint32 promote_level = 7;               // 圣遗物突破等级
+    uint32 main_prop_id = 8;                // 圣遗物主属性ID
+    repeated uint32 append_prop_id_list = 9;// 圣遗物追加属性ID列表
+}
+
+// 角色数据
+message AvatarLog
+{
+    uint32 avatar_id = 1;
+    uint32 level = 2;
+    uint32 promote_level = 3;
+    WeaponLog weapon = 4;                           // 装备的武器
+    RelicLog relic_bracer = 5;                      // 装备的圣遗物：生之花
+    RelicLog relic_dress = 6;                       // 装备的圣遗物：理之冠
+    RelicLog relic_shoes = 7;                       // 装备的圣遗物：时之沙
+    RelicLog relic_ring = 8;                        // 装备的圣遗物：空之杯
+    RelicLog relic_necklace = 9;                    // 装备的圣遗物：死之羽
+    repeated AffixLog relic_set_affix_list = 10;    // 圣遗物套装词缀效果
+    uint32 life_state = 11;                         // 生命状态(取值范围：LifeState)
+    uint32 hp_percent = 12;                         // 血量百分比
+    uint32 avatar_combat_force = 13;                // 角色战斗力
+    uint32 skill_depot_id = 14;                     // 技能库ID
+    uint32 owner_uid = 15;                          // 拥有者的uid
+    bool is_trial = 16;                             // 是否是非正式角色
+}
+
+// 角色死亡/复活日志 PLAYER_ACTION_AVATAR_DEATH_REVIVAL
+message PlayerLogBodyAvatarDeathRevival
+{
+    AvatarLog avatar = 1;                           // 角色信息
+    uint32 reason = 2;                              // 死亡原因 AvatarDeathRevivalType
+    string combat_transaction = 3;                  // 战斗流水号，可能为空
+    string dungeon_transaction = 4;                 // 地城流水号，可能为空
+}
+
+// 角色使用技能的日志 PLAYER_ACTION_AVATAR_DO_SKILL
+message PlayerLogBodyAvatarDoSkill
+{
+    uint32 skill_id = 1;                    // 技能ID
+    string combat_transaction = 2;          // 战斗流水号，可能为空
+}
+
+// 区分实体
+message EntityLog
+{
+    uint32 entity_type = 1; // 实体的data::entity_type，定义在Json/Configs/ComponentDefines/ConfigEntityType.xml
+    uint32 id = 2;          // 根据entity_type不同代表不同含义，可能是avatar_id、monster_id、gadget_id或0
+    uint32 group_id = 3;    // entity是monster或gadget时有效
+    uint32 config_id = 4;   // entity是monster或gadget时有效
+    int32 x_coordinate = 5; // 当前X坐标
+    int32 y_coordinate = 6; // 当前Y坐标
+    int32 z_coordinate = 7; // 当前Z坐标
+    repeated uint32 level = 8;       // entity的等级 配表等级,修正等级,最终等级
+}
+
+// 攻击用的实体日志，不需要坐标
+message AttackEntityLog
+{
+    uint32 entity_type = 1; // 实体的data::entity_type，定义在Json/Configs/ComponentDefines/ConfigEntityType.xml
+    uint32 id = 2;          // 根据entity_type不同代表不同含义，可能是avatar_id、monster_id、gadget_id或0
+    uint32 group_id = 3;    // entity是monster或gadget时有效
+    uint32 config_id = 4;   // entity是monster或gadget时有效
+    repeated uint32 level = 5;       // entity的等级 配表等级,修正等级,最终等级
+}
+
+// 战斗：攻击日志 PLAYER_ACTION_ATTACK
+message PlayerLogBodyAttack
+{
+    string combat_transaction = 1;              // 战斗流水号，可能为空
+
+    AttackEntityLog attacker = 2;               // 攻击者
+    AttackEntityLog attacker_owner_avatar = 3;  // 攻击者的所有者是角色时记录该角色
+    AttackEntityLog defenser = 4;               // 被攻击者
+    string ability_name = 5;                    // Ability名称
+    string modifier_name = 6;                   // Modifier名称
+    string attack_tag = 7;                      // 找不到攻击者时用来区分伤害原因
+    string anim_event_id = 8;                   // 找攻击来源
+
+    uint32 old_hp = 9;                           // 被攻击前的HP
+    uint32 cur_hp = 10;                          // 被攻击后的HP
+    uint32 attack_count = 11;                    // 攻击次数
+    uint64 total_damage = 12;                    // 总伤害
+    uint64 total_reduce_hp = 13;                 // 实际总伤害
+}
+
+// 战斗：进入战斗 PLAYER_ACTION_COMBAT_START
+message PlayerLogBodyCombatStart
+{
+    string combat_transaction = 1;          // 战斗流水号，不为空
+    repeated AvatarLog avatar_list = 2;     // 入战角色的信息
+    EntityLog monster_log = 3;              // 哪个怪物导致入战
+    uint32 player_combat_force = 4;         // 玩家战斗力
+}
+
+// 战斗：离开战斗 PLAYER_ACTION_COMBAT_END
+message PlayerLogBodyCombatEnd
+{
+    // 战斗结束的原因
+    enum CombatEndReason
+    {
+        COMBAT_END_NONE = 0;
+        COMBAT_END_MONSTER_DIE = 1;         // 怪物死亡
+        COMBAT_END_MONSTER_ALERT_CHANGE = 2;// 怪物仇恨消失
+        COMBAT_END_AVATAR_DISAPPEAR = 3;    // 角色离开场景
+        COMBAT_END_ALL_AVATAR_DEAD = 4;     // 队伍中的角色全部死亡
+    }
+
+    string combat_transaction = 1;          // 战斗流水号，不为空
+    uint32 is_changed_equip = 2;            // 战斗中是否换过装备
+    uint32 combat_end_reason = 3;           // CombatEndReason
+}
+
+// 战斗：AbilityState改变，用于记录元素反应，只记角色和小动物之外的怪物的AbilityState的改变 PLAYER_ACTION_ABILITY_STATE_CHANGE
+message PlayerLogBodyAbilityStateChange
+{
+    string combat_transaction = 1;          // 战斗流水号，可能为空
+    // EntityLog source_entity = 2;            // Modifier的来源
+    EntityLog target_entity = 3;            // AbilityState改变者
+    uint32 ability_state = 4;               // AbilityState
+    uint32 old_count = 5;                   // 旧层数
+    uint32 cur_count = 6;                   // 新层数
+}
+
+// 战斗：对盾造成伤害 PLAYER_ACTION_ATTACK_SHIELD
+message PlayerLogBodyAttackShield
+{
+    string combat_transaction = 1;          // 战斗流水号，可能为空
+    EntityLog source_entity = 2;            // ability来源
+    EntityLog target_entity = 3;            // 目标
+    string ability_name = 4;                // Ability名称
+    string modifier_name = 5;               // Modifier名称
+    string action_name = 6;                 // AbilityAction名称
+    string mixin_name = 7;                  // AbilityMixin名称
+    uint32 shield_type = 8;         // 1.EliteShield 2.ElementShield 3.GlobalShield
+    uint32 sub_shield = 9;          // 盾受到的伤害
+    uint32 absorb_type = 10;        // 1.普通 2.元素
+}
+
+// 战斗：元素反应 PLAYER_ACTION_ELEMENT_REACTION
+message PlayerLogBodyElementReaction
+{
+    uint32 source_entity_config_id = 1;     // ability来源
+    uint32 target_entity_config_id = 2;     // 目标
+    string ability_name = 3;                // Ability名称
+    string modifier_name = 4;               // Modifier名称
+    string anim_event_id = 5;               // 
+    string attack_tag = 6;                  // 攻击标签
+    uint32 reaction_type = 7;               // 反应类型
+    uint32 count = 8;                       // 反应次数
+    uint32 source_lv = 9;                   // 来源等级
+    uint32 target_lv = 10;                  // 目标等级
+    repeated int32 pos = 11;                // 反应发生的位置
+    uint32 time = 12;                       // 反应发生的时间戳，单位是秒
+}
+
+// 地城：离开地城的原因
+enum DungeonQuitReason
+{
+    DUNGEON_QUIT_NONE = 0;
+    DUNGEON_QUIT_REASON_TRANSFER = 1;           // 通关中途主动传送离开（玩家存活状态）
+    DUNGEON_QUIT_REASON_SUCC_POINT = 2;         // 通关成功，主动从离开点离开
+    DUNGEON_QUIT_REASON_SUCC_TRANSFER = 3;      // 通关成功，直接地图传送离开（已作废）
+    DUNGEON_QUIT_REASON_SUCC_TIMEOUT = 4;       // 通关成功，倒计时结束踢出
+    DUNGEON_QUIT_REASON_LOGOUT = 5;             // 断线超过一定时长，副本销毁、结算失败
+    DUNGEON_QUIT_REASON_DIE_OPTION = 6;         // 死亡选项选择放弃离开
+    DUNGEON_QUIT_REASON_GM = 7;                 // GM
+    DUNGEON_QUIT_REASON_TIMEOUT = 8;            // 副本结算后超时
+    DUNGEON_QUIT_REASON_ALL_DIED = 9;           // 副本结算后死完
+    DUNGEON_QUIT_REASON_CLIENT_TRANSMIT = 10;   // 客户端请求传送
+    DUNGEON_QUIT_REASON_PLAYER_EXIT = 11;       // 地城结算未结算客户端主动离开(离开按钮)
+    DUNGEON_QUIT_REASON_PLAYER_EXIT_SUCC = 12;  // 地城结算成功后客户端主动离开(离开按钮)
+    DUNGEON_QUIT_REASON_PLAYER_EXIT_FAIL = 13;  // 地城结算失败后客户端主动离开(离开按钮)
+}
+
+// 地城：进入地城 PLAYER_ACTION_DUNGEON_ENTER
+message PlayerLogBodyDungeonEnter
+{
+	string transaction = 1;          // 地城流水号，可能为空
+    uint32 dungeon_id = 2;                  // 地城ID
+	uint32 dungeon_type = 3;                // 地城类型（定义在DungeonExcelConfig.xml，包括了爬塔等各种用到地城的玩法）
+	uint32 dungeon_mp = 4;                  // 地城联机类型
+	repeated AvatarLog avatar_list = 5;     // 队伍成员
+	repeated uint32 level_config_id_list = 6;   // 挑战因子组合ID列表（DungeonLevelEntityData.txt的挑战组合ID字段）
+}
+
+// 地城：离开地城 PLAYER_ACTION_DUNGEON_QUIT
+message PlayerLogBodyDungeonQuit
+{
+	string transaction = 1;					// 地城流水号，可能为空
+    uint32 dungeon_id = 2;                  // 地城ID
+	uint32 dungeon_type = 3;                // 地城类型
+	uint32 dungeon_mp = 4;                  // 地城联机类型
+	repeated AvatarLog avatar_list = 5;     // 队伍成员
+    uint32 reason = 6;                      // 离开原因 DungeonQuitReason
+}
+
+// 地城：地城结算 PLAYER_ACTION_DUNGEON_SETTLE
+message PlayerLogBodyDungeonSettle
+{
+	string transaction = 1;					// 地城流水号，可能为空
+    uint32 dungeon_id = 2;                  // 地城ID
+	uint32 dungeon_type = 3;                // 地城类型
+	uint32 dungeon_mp = 4;                  // 地城联机类型
+	repeated AvatarLog avatar_list = 5;     // 队伍成员
+    uint32 use_time = 6;                    // 从进副本到结算的世界（秒）
+    uint32 dungeon_settle_type = 7;         // 1.成功；2.失败；3.取消
+}
+
+// 地城：死亡选项 PLAYER_ACTION_DUNGEON_DIE_OPTION
+message PlayerLogBodyDungeonDieOption
+{
+	string transaction = 1;					// 地城流水号，可能为空
+    uint32 dungeon_id = 2;                  // 地城ID
+    uint32 die_option = 3;                  // 选项：1.重新挑战地城 2.放弃离开 3.就近复活
+}
+
+// 世界交互：采集 PLAYER_ACTION_COLLECT_GATHER
+message PlayerLogBodyCollectGather
+{
+    uint32 gadget_id = 1;           // 采集物的物件ID
+    repeated ItemLog item_vec = 2;  // 获得的道具列表
+}
+
+// 世界交互：开宝箱 PLAYER_ACTION_OPEN_CHEST
+message PlayerLogBodyOpenChest
+{
+    uint32 gadget_id = 1;           // 宝箱的物件ID
+    repeated ItemLog item_vec = 2;  // 掉落的道具列表
+    uint32 state = 3;               // 宝箱的初始状态
+    EntityLog entity_log = 4;       // 宝箱配置
+}
+
+// 开boss宝箱
+message PlayerLogBodyOpenBossChest
+{
+    uint32 gadget_id = 1;           // 宝箱的物件ID
+    repeated ItemLog item_vec = 2;  // 掉落的道具列表
+    uint32 state = 3;               // 宝箱的初始状态
+    EntityLog entity_log = 4;       // 宝箱配置
+    uint32 world_resin = 5;         // 销毁的大世界体力值
+    uint32 dungeon_id = 6;          // 如果在地城中
+}
+
+// 开地脉之花宝箱
+message PlayerLogBodyOpenBlossomChest
+{
+    uint32 gadget_id = 1;           // 宝箱的物件ID
+    repeated ItemLog item_vec = 2;  // 掉落的道具列表
+    uint32 state = 3;               // 宝箱的初始状态
+    EntityLog entity_log = 4;       // 宝箱配置
+    uint32 world_resin = 5;         // 销毁的大世界体力值
+}
+
+// 世界交互：使用操作台 PLAYER_ACTION_USE_WORKTOP
+message PlayerLogBodyUseWorktop
+{
+    uint32 gadget_id = 1;           // 操作台的物件ID
+    uint32 option_id = 2;           // 选项ID
+}
+
+// 世界交互：场景点
+message ScenePointLog
+{
+    uint32 scene_id = 1;            // 场景ID
+    uint32 point_id = 2;            // 点ID
+    uint32 type = 3;                // Json/Configs/ConfigScene.xml的点类型ScenePointType
+    string dollar_type = 4;         // 另一个点类型
+    int32 x_coordinate = 5;         // X坐标
+    int32 y_coordinate = 6;         // Y坐标
+    int32 z_coordinate = 7;         // Z坐标
+}
+
+// 世界交互：传送到传送点 PLAYER_ACTION_TRANSPORT
+message PlayerLogBodyTransport
+{
+    ScenePointLog to_point_log = 1; // 目标点日志
+}
+
+// 解锁点 PLAYER_ACTION_UNLOCK_POINT
+message PlayerLogBodyUnlockPoint
+{
+    ScenePointLog point_log = 1;    // 点日志
+}
+
+// 世界交互：封印战斗 PLAYER_ACTION_SEAL_BATTLE_START
+message PlayerLogBodySealBattleStart
+{
+    uint32 gadget_id = 1;               // 封印战斗的物件ID
+}
+
+// 世界交互：封印战斗 PLAYER_ACTION_SEAL_BATTLE_END
+message PlayerLogBodySealBattleEnd
+{
+    uint32 gadget_id = 1;               // 封印战斗的物件ID
+    uint32 is_battle_win = 2;           // 战斗是否胜利（0表示失败，1表示胜利）
+}
+
+// 世界交互：使用移动平台 PLAYER_ACTION_USE_PLATFORM
+message PlayerLogBodyUsePlatform
+{
+    uint32 gadget_id = 1;               // 移动平台的物件ID
+    uint32 is_start_platform = 2;       // 是否是启动移动平台（0表示停止，1表示启动）
+}
+
+// 世界交互：破坏物件 PLAYER_ACTION_GADGET_DIE
+message PlayerLogBodyGadgetDie
+{
+    uint32 gadget_id = 1;               // 被破坏对象的物件ID
+    uint32 change_hp_reason = 2;        // 被攻击对象的掉血类型 define.proto proto::ChangeHpReason
+    uint32 attacker_entity_type = 3;    // 攻击者的类型 data::EntityType
+}
+
+// 世界交互：解锁地图 PLAYER_ACTION_UNLOCK_AREA
+message PlayerLogBodyUnlockArea
+{
+    uint32 scene_id = 1;            // 场景ID
+    uint32 area_id = 2;             // 解锁区域的区域ID
+    uint32 level1_area_id = 3;      // 当前所在区域的一级区域ID
+    uint32 level2_area_id = 4;      // 当前所在区域的二级区域ID
+}
+
+// 世界交互: 升级城市 PLAYER_ACTION_LEVELUP_CITY
+message PlayerLogBodyLevelupCity
+{
+    uint32 scene_id = 1;            // 场景ID
+    uint32 city_id = 2;             // 城市ID
+    uint32 level1_area_id = 3;      // 一级区域ID
+    uint32 level2_area_id = 4;      // 二级区域ID
+    uint32 old_level = 5;           // 升级前等级
+    uint32 cur_level = 6;           // 升级后等级
+}
+
+// 世界交互：怪物死亡 PLAYER_ACTION_MONSTER_DIE
+message PlayerLogBodyMonsterDie
+{
+    uint32 scene_id = 1;            // 场景ID
+    EntityLog monster_log = 2;      // 怪物日志
+    uint32 reason = 3;              // 死亡原因 define.proto proto::ChangHpReason
+    string combat_transaction = 4;  // 战斗流水号
+}
+
+// 世界交互：区域探索度增加 PLAYER_ACTION_AREA_EXPLORATION
+message PlayerLogBodyAreaExploration
+{
+    uint32 level1_area_id = 1;      // 一级区域ID
+    uint32 level2_area_id = 2;      // 二级区域ID
+    uint32 type = 3;                // 本次增加探索度的行为类型 data::ExploreEventType
+    uint32 add_weight = 4;          // 探索度增量
+    uint32 cur_weight = 5;          // 增加后的探索度值
+    uint32 total_weight = 6;        // 探索度总量
+}
+
+// 世界交互：开启元素视野 PLAYER_ACTION_ENTER_ELEMENT_VIEW
+message PlayerLogBodyEnterElementView
+{
+    uint32 avatar_id = 1;           // 进入元素视野的当前角色
+    uint32 is_triggerd = 2;			// 1:开启元素视野 0:关闭元素视野
+}
+
+// 世界交互：进入瞄准状态 PLAYER_ACTION_ENTER_FOCUS
+message PlayerLogBodyEnterFocus
+{
+    uint32 avatar_id = 1;           // 进入瞄准状态的当前角色
+    uint32 fast_focus = 3;
+    uint32 use_focus_sticky = 4;
+    uint32 use_auto_focus = 5;
+    uint32 use_gyro = 6;
+    uint32 can_move = 7;
+    uint32 show_cross_hair = 8;
+    uint32 enter_normal_focus_shoot = 10;   // true 表示点瞄准按钮进入瞄准
+    uint32 enter_holding_focus_shoot = 11;  // true 表示长按攻击键进入瞄准
+                                            // 都为false时可能是一些其他技能进入了瞄准状态（比如qin的风压剑）
+}
+
+// 世界交互：进入1级或2级区域 PLAYER_ACTION_ENTER_AREA
+message PlayerLogBodyEnterArea
+{
+    uint32 city_id = 1;             // 城市ID
+    uint32 area_type = 2;           // 对应WorldAreaExcelConfig.xml中的WorldAreaType
+    uint32 level1_area_id = 3;      // 一级区域ID
+    uint32 level2_area_id = 4;      // 二级区域ID
+}
+
+// 世界交互：天气变化 PLAYER_ACTION_WEATHER_CHANGE
+message PlayerLogBodyWeatherChange
+{
+    // 天气变化原因
+    enum RefreshWeatherReason
+    {
+        REFRESH_WEATHER_NONE = 0;
+        REFRESH_WEATHER_HOUR = 1;   // 时间变化
+        REFRESH_WEATHER_ENTER = 2;  // 进入天气区域
+    }
+
+    uint32 weather_type = 1;        // 天气类型，0表示没有天气
+    uint32 weather_area_id = 2;     // 天气区域ID，0表示不在任何天气区域内
+    uint32 reason = 3;              // 天气变化原因 RefreshWeatherReason
+}
+
+// 世界交互：玩法日志 PLAYER_ACTION_MARK_PLAYER_ACTION
+message PlayerLogBodyMarkPlayerAction
+{
+    uint32 group_id = 1;
+    uint32 param1 = 2;              // 玩法id
+    uint32 param2 = 3;              // 阶段id（1-开始，2-有进度，3-成功，4-失败）
+    uint32 param3 = 4;              // 进度值（若有），进度不适用的场合默认值为1
+}
+
+// 进入大世界
+message PlayerLogBodyEnterWorld
+{
+    uint32 owner_uid = 1;
+    uint32 dest_scene_id = 2;
+    string transaction = 3;         // 进入大世界流水号
+}
+
+// 退出大世界
+message PlayerLogBodyLeaveWorld
+{
+    uint32 owner_uid = 1;           // 当前大世界的主机
+    uint32 scene_id = 2;            // 当前scene_id
+    uint32 dest_owner_uid = 3;      // 目的大世界的主机
+    uint32 dest_scene_id = 4;       // 目标scene_id
+    string transaction = 5;         // 进入大世界流水号
+}
+
+enum AddAvatarReason
+{
+    ADD_AVATAR_REASON_NONE = 0;
+    ADD_AVATAR_REASON_BORN = 1;     // 初始数据
+    ADD_AVATAR_REASON_TRIAL = 2;    // 发放试用角色
+    ADD_AVATAR_REASON_GM = 3;       // GM指令
+    ADD_AVATAR_REASON_ITEM = 4;     // 使用道具（角色卡）
+}
+
+// 角色相关：增加角色 PLAYER_ACTION_ADD_AVATAR
+message PlayerLogBodyAddAvatar
+{
+    uint32 avatar_id = 1;           // 角色ID
+    uint32 avatar_quality = 2;      // 角色品质
+    uint32 add_avatar_reason = 3;   // 加角色原因 AddAvatarReason
+}
+
+// 角色相关：角色突破 PLAYER_ACTION_AVATAR_LEVELUP
+message PlayerLogBodyAvatarLevelup
+{
+    uint32 avatar_id = 1;           // 角色ID
+    uint32 avatar_quality = 2;      // 角色品质
+    uint32 promote_level_before = 3;// 升级前突破等级
+    uint32 promote_level_after = 4; // 升级后突破等级
+}
+
+// 角色相关：角色经验变化 PLAYER_ACTION_AVATAR_ADD_EXP
+message PlayerLogBodyAvatarAddExp
+{
+    uint32 avatar_id = 1;           // 角色ID
+    uint32 avatar_quality = 2;      // 角色品质
+    uint32 level_before = 3;        // 升级前等级
+    uint32 level_after = 4;         // 升级后等级
+    uint32 exp_add = 5;             // 经验增量
+    uint32 exp_value = 6;           // 变动后经验值
+    uint32 exp_percent = 7;         // 变动后经验百分比
+    uint32 use_material_id = 8;     // 升级所用材料ID
+    uint32 use_material_num = 9;    // 升级所用材料数量
+    uint32 reason = 10;             // 原因 ActionReason
+}
+
+// 角色相关：角色升级（用于记录升级时的当前队伍中的角色） PLAYER_ACTION_AVATAR_UPGRADE
+message PlayerLogBodyAvatarUpgrade
+{
+    uint32 avatar_id = 1;           // 角色ID
+    uint32 avatar_quality = 2;      // 角色品质
+    uint32 level_before = 3;        // 升级前等级
+    uint32 level_after = 4;         // 升级后等级
+    AvatarLog avatar_log = 5;       // 角色详细信息
+}
+
+// 角色相关：升级或解锁得意技 PLAYER_ACTION_AVATAR_UPGRADE_PROUD_SKILL
+message PlayerLogBodyAvatarUpgradeProudSkill
+{
+    uint32 avatar_id = 1;           // 角色ID
+    uint32 avatar_level = 2;        // 角色等级
+    uint32 element_type = 3;        // 角色元素类型
+    uint32 proud_skill_type = 4;    // 得意技类型
+    uint32 proud_skill_group_id = 5;// 得意技组ID
+    uint32 proud_skill_level = 6;   // 升级后等级
+}
+
+// 角色相关：升级主动技能 PLAYER_ACTION_AVATAR_UPGRADE_ACTIVE_SKILL
+message PlayerLogBodyAvatarUpgradeActiveSkill
+{
+    uint32 avatar_id = 1;           // 角色ID
+    uint32 avatar_level = 2;        // 角色等级
+    uint32 element_type = 3;        // 角色元素类型
+    uint32 skill_id = 4;            // 技能ID
+    uint32 skill_level = 5;         // 升级后技能等级
+}
+
+// 角色相关：激活命之座 PLAYER_ACTION_AVATAR_ACTIVE_TALENT
+message PlayerLogBodyAvatarActiveTalent
+{
+    uint32 avatar_id = 1;           // 角色ID
+    uint32 avatar_level = 2;        // 角色等级
+    uint32 element_type = 3;        // 角色元素类型
+    uint32 talent_id = 4;           // 命之座ID
+    uint32 cost_item_id = 5;        // 本次升级消耗的材料id
+    uint32 cost_item_count = 6;     // 本次升级消耗的材料数量
+}
+
+// 装备：武器增减 PLAYER_ACTION_WEAPON_ADD
+message PlayerLogBodyWeaponAdd
+{
+    WeaponLog weapon = 1;           // 武器日志
+    int32 weapon_add = 2;           // 武器变动数量
+    uint32 weapon_num = 3;          // 武器变动后存量
+    uint32 reason_type = 4;         // ActionReason
+    uint32 item_limit_type = 5;     // 产出来源类型 ItemLimitData.xml ItemLimitType
+}
+
+// 装备：武器升级/突破 PLAYER_ACTION_WEAPON_LEVELUP
+message PlayerLogBodyWeaponLevelup
+{
+    WeaponLog weapon = 1;               // 升级后的武器日志
+    uint32 weapon_level_before = 2;     // 升级前武器等级
+    uint32 promote_level_before = 3;    // 升级前武器突破等级
+    uint32 op = 4;              // 1:升级 2:突破
+}
+
+// 装备：圣遗物增减 PLAYER_ACTION_RELIC_ADD
+message PlayerLogBodyRelicAdd
+{
+    RelicLog relic = 1;         // 圣遗物日志
+    int32 relic_add = 2;        // 圣遗物变动数量
+    uint32 relic_num = 3;       // 圣遗物变动后存量
+    uint32 reason_type = 4;     // ActionReason
+    uint32 item_limit_type = 5; // 产出来源类型 ItemLimitData.xml ItemLimitType
+}
+
+// 装备：圣遗物升级/突破 PLAYER_ACTION_RELIC_LEVELUP
+message PlayerLogBodyRelicLevelup
+{
+    RelicLog relic = 1;         // 升级后的圣遗物
+    uint32 relic_level_before = 2;  // 升级前圣遗物等级
+    uint32 promote_level_before = 3;    // 升级前圣遗物突破等级
+    uint32 op = 4;              // 1:升级 2:突破
+}
+
+// 穿戴类型
+enum PlayerWearEquipOpType
+{
+    PLAYER_WEAR_EQUIP_OP_NONE = 0;
+    PLAYER_WEAR_EQUIP_OP_WEAR = 1;      // 穿上
+    PLAYER_WEAR_EQUIP_OP_UNLOAD = 2;    // 卸下
+    PLAYER_WEAR_EQUIP_OP_CHANGE = 3;    // 替换
+}
+
+// 装备：穿戴武器 PLAYER_ACTION_WEAR_WEAPON
+message PlayerLogBodyWearWeapon
+{
+    uint32 op = 1;              // 穿戴类型 PlayerWearEquipOpType
+    uint32 avatar_id = 2;       // 角色ID
+    WeaponLog weapon_log = 3;   // 武器日志
+}
+
+// 装备：穿戴圣遗物 PLAYER_ACTION_WEAR_RELIC
+message PlayerLogBodyWearRelic
+{
+    uint32 op = 1;              // 穿戴类型 PlayerWearEquipOpType
+    uint32 avatar_id = 2;       // 角色ID
+    RelicLog relic_log = 3;     // 圣遗物日志
+}
+
+// 装备：武器觉醒 PLAYER_ACTION_WEAR_WEAPON_AWAKEN
+message PlayerLogBodyWeaponAwaken
+{
+    WeaponLog weapon_log = 1;               // 觉醒前的武器信息
+    repeated AffixLog cur_affix_list = 2;   // 觉醒后的词缀列表
+}
+
+enum PlayerTeamOpType
+{
+    PLAYER_TEAM_OP_NONE = 0;
+    PLAYER_TEAM_OP_ENTER = 1;   // 进入对方世界
+    PLAYER_TEAM_OP_EXIT = 2;    // 从对方世界退出
+    PLAYER_TEAM_OP_KICK = 3;    // 被对方踢出
+    PLAYER_TEAM_OP_SYSTEM_KICK = 4; // 被系统踢出
+}
+
+// 联机组队：加入组队/退出组队 PLAYER_ACTION_TEAM
+message PlayerLogBodyTeam
+{
+    uint32 target_uid = 1;      // 目标玩家的UID
+    uint32 op = 2;              // PlayerTeamOpType
+    uint32 dungeon_id = 3;      // 0：不是地城；其他：地城ID
+    uint32 duration = 4;        // 0：进入；其他：停留时间
+}
+
+// 联机组队：设置组队开关 PLAYER_ACTION_TEAM_SWITCH
+message PlayerLogBodyTeamSwitch
+{
+    uint32 before_op = 1;           // 操作前的状态：0表示不允许进入，1表示随意进入，2表示申请后进入
+    uint32 op = 2;                  // 操作后的状态
+}
+
+// 客机申请加入的结果
+message PlayerLogBodyApplyResult
+{
+    uint32 target_uid = 1;
+    uint32 is_agreed = 2;
+    uint32 reason = 3;              // 0表示玩家的决定，1表示系统判定场景不能进入, 2. 玩家无法进入联机
+                                    // 3. 系统自动判定，4. 允许进入的玩家槽位满了
+                                    // 等同于 PlayerApplyEnterMpResultNotify::Reason
+}
+
+// 主机处理申请
+message PlayerLogBodyDealWithApply
+{
+    uint32 source_uid = 1;          // 客机uid
+    uint32 is_agreed = 2;
+    uint32 reason = 3;              // 同上
+}
+
+// 主机进入联机状态
+message PlayerLogBodyHostEnterMp
+{
+    string transaction = 1;         // 和EnterWorld同一个流水号
+}
+
+// 主机退出联机状态
+message PlayerLogBodyHostLeaveMp
+{
+    string transaction = 1;         // 和EnterWorld同一个流水号
+}
+
+// 玩家聊天内容
+message PlayerLogBodyChat
+{
+    uint32 host_uid = 1;            // 主机id
+    uint32 scene_id = 2;            // 当前scene_id
+    string content = 3;             // 聊天文本
+}
+
+// 烹饪：烹饪日志 PLAYER_ACTION_COOK
+message PlayerLogBodyCook
+{
+    uint32 recipe_id = 1;       // 食谱ID
+    repeated ItemLog item_list = 2; // 烹饪使用的材料
+    uint32 type = 3;            // 1：普通；2：乱炖
+    ItemLog food = 4;           // 产出的料理
+    uint32 help_avatar_id = 5;  // 帮助烹饪的角色ID
+    uint32 help_addition = 6;   // 帮助烹饪的特殊加成 data::CookBonusType
+    uint32 add_point = 7;       // 本次增加的熟练度
+    uint32 recipe_point_after = 8;  // 增加之后的熟练度
+    uint32 can_auto_qte = 9;    // 之前是否达到了自动烹饪的要求（1为有；0为没有）
+    uint32 is_auto_qte = 10;    // 本次是否是自动烹饪（1为是；0为否）
+    repeated uint32 proud_skill_id_list = 11;    // 参与烹饪的角色能够提供加成的得意技
+}
+
+// 烹饪：加工食材 PLAYER_ACTION_PROCESS_INGREDIENTS
+message PlayerLogBodyProcessIngredients
+{
+    repeated ItemLog material_input = 1;        // 所用材料
+    repeated ItemLog material_output = 2;       // 目标产出
+    uint32 cost_time = 3;       // 加工所需时间
+    uint32 compound_id = 4;     // 合成ID
+    uint32 count = 5;           // 数量
+}
+
+// 烹饪：解锁食谱 PLAYER_ACTION_UNLOCK_RECIPE
+message PlayerLogBodyUnlockRecipe
+{
+    uint32 recipe_id = 1;       // 食谱ID
+}
+
+// 合成额外产物
+message ComposeExtraItemLog
+{
+    uint32 item_id = 1; // 道具ID
+    uint32 count = 2;   // 道具数量
+    uint32 reason = 3;  // 1代表角色得意技附加；2代表合成配方附加
+}
+
+// 养成：合成 PLAYER_ACTION_COMPOSE_START
+message PlayerLogBodyComposeStart
+{
+    uint32 avatar_id = 1;                       // 参与合成的角色id
+    repeated uint32 proud_skill_id_list = 2;    // 参与合成的角色能够提供加成的得意技
+    uint32 compo_id = 3;                        // 合成公式id
+    uint32 compo_preset_num = 4;                // 投入合成时的预设合成数量
+    uint32 target_item_type = 5;                // 合成类型
+    repeated ItemLog input_item = 6;            // 投入合成的材料
+    repeated ItemLog main_output_item = 7;      // 合成产物
+    repeated ComposeExtraItemLog sub_output_item = 8;   // 副产物
+    uint32 currency_cost = 9;                   // 本次合成花费的摩拉
+}
+
+// 养成：开始进行锻造 PLAYER_ACTION_FORGE_START
+message PlayerLogBodyForgeStart
+{
+    uint32 avatar_id = 1;                       // 参与锻造的角色id
+    repeated uint32 proud_skill_id_list = 2;    // 参与锻造的角色本次加成的得意技（得意技可生效的时候记录，没有为空）
+    uint32 forge_id = 3;                        // 锻造配方的id
+    repeated ItemLog input_item = 4;            // 投入锻造的材料（一份）
+    repeated ItemLog output_item = 5;           // 目标产出的材料（一份）
+    uint32 target_type = 6;                     // 1代表武器狗粮、2代表通用制作材料、3代表短时武器强化、4代表3星以上武器（根据策划配置表来）
+    uint32 target_time = 7;                     // 预计此次合成应该用的时间
+    uint32 transaction_no = 8;                  // 锻造流水号
+    repeated ItemLog target_item = 9;           // 锻造目标产物数量（所有）
+}
+
+message ForgeOutputItem
+{
+    uint32 item_id = 1;
+    uint32 item_get_num = 2;    // 本次收获的产出道具数量
+    uint32 item_left_num = 3;   // 还剩余锻造中的产出道具数量
+}
+
+// 养成：锻造完成 PLAYER_ACTION_FORGE_GET_OUTPUT
+message PlayerLogBodyForgeGetOutput
+{
+    uint32 transaction_no = 1;                  // 锻造流水号（方便关联需求1）
+    uint32 currency_cost = 2;                   // 锻造消耗的摩拉
+    repeated ForgeOutputItem main_output_item = 3;  // 产出道具
+    repeated ItemLog sub_output_item = 4;       // 产出副产品
+    repeated ItemLog random_output_item = 5;    // 主随机产物
+}
+
+// 养成：锻造终止 PLAYER_ACTION_FORGE_FINISH
+message PlayerLogBodyForgeFinish
+{
+    uint32 transaction_no = 1;                  // 锻造流水号（方便关联需求1）
+    uint32 reason = 2;                          // 终止的原因（1为玩家主动终止；2为锻造到时间结束）
+    uint32 use_time = 3;                        // 本次锻造的实际用时（考虑到可能有角色得意技加成缩减时间）
+    uint32 finish_time = 4;                     // 锻造实际应该终止的时间
+    uint32 left_num = 5;                        // 终止时还剩余的目标产品数量（锻造数量*目标产出道具数量）
+    repeated ItemLog sub_output_item = 6;       // 返还材料（reason为1的时候记录）
+}
+
+// 挑战玩法：挑战开始 PLAYER_ACTION_CHALLENGE_BEGIN
+message PlayerLogBodyChallengeBegin
+{
+    uint32 group_id = 1;        // GroupID
+    string trigger_name = 2;    // Trigger名称
+    string tlog_tag = 3;        // 日志用的tag
+    string tag = 4;             // 脚本用的tag
+    uint32 challenge_id = 5;    // DungeonData.xlsx的ChallengeDungeonData.txt中的配置
+    uint32 challenge_type = 6;  // 挑战类型 data::ChallengeType
+    uint32 challenge_index = 7;     // 从lua脚本传来的挑战索引
+    repeated uint32 param_list = 8; // 从lua脚本传来的参数列表
+}
+
+message ChallengeCondLog
+{
+    uint32 condition_type = 1;  // 挑战条件类型 data::ChallengeCondType
+    uint32 progress = 2;        // 挑战类型的进度
+}
+
+// 挑战玩法：挑战结束 PLAYER_ACTION_CHALLENGE_FINISH
+message PlayerLogBodyChallengeFinish
+{
+    uint32 group_id = 1;        // GroupID
+    string trigger_name = 2;    // Trigger名称
+    string tlog_tag = 3;        // 日志用的tag
+    string tag = 4;             // 脚本用的tag
+    uint32 challenge_id = 5;    // DungeonData.xlsx的ChallengeDungeonData.txt中的配置
+    uint32 challenge_type = 6;  // 挑战类型 data::ChallengeType
+    uint32 challenge_index = 7;     // 从lua脚本传来的挑战索引
+    uint32 use_time = 9;        // 消耗的时间
+    uint32 is_success = 10;     // 1：成功；0：失败
+    repeated ChallengeCondLog cond_list = 11;       // 各个条件的进度
+}
+
+// 固定事件系统
+message PlayerLogBodyDailyTaskGen
+{
+    uint32 city_id = 1;
+    uint32 pool_id = 2;
+    uint32 daily_task_id = 3;
+    uint32 type = 4;            // 事件类型
+    uint32 rarity = 5;          // 稀有度
+    uint32 finish_type = 6;     // 完成条件类型
+}
+
+message PlayerLogBodyDailyTaskProgress
+{
+    uint32 daily_task_id = 1;
+    uint32 progress = 2;
+    bool is_finished = 3;       // 是否完成
+}
+
+message PlayerLogBodyDailyTaskScoreReward
+{
+    uint32 drop_id = 1;       // 领取的积分奖励掉落
+}
+
+// 玩家领取固定事件完成产生的奖励
+message PlayerLogBodyDailyTaskReward
+{
+    uint32 owner_uid = 1;       // 主机的uid
+    uint32 daily_task_id = 2;   // 事件id
+    uint32 drop_id = 3;       
+}
+
+// 随机事件系统
+message PlayerLogBodyRandTaskGen
+{
+    uint32 rand_task_id = 1;    // 随机事件id
+    uint32 parent_quest_id = 2; // 随机任务id
+    uint32 quest_template_id = 3;   // 随机任务模板id
+    uint32 task_content_type = 4;   // 随机事件内容类型
+    uint32 enter_uid = 5;           // 触发事件的uid
+}
+
+message PlayerLogBodyRandTaskFinish
+{
+    uint32 rand_task_id = 1;
+    uint32 quest_template_id = 2;
+    uint32 pattern_id = 3;      // 随机任务创建的pattern_id
+    bool is_succ = 4;           // 是否成功
+    uint32 reason = 5;          // 1: clear(gm或是logout), 2: 远距离销毁 3. 任务完成或是失败
+    uint32 enter_uid = 6;           // 触发事件的uid
+}
+
+// 玩家领取随机事件完成产生的奖励
+message PlayerLogBodyRandTaskReward
+{
+    uint32 owner_uid = 1;       // 主机的uid
+    uint32 rand_task_id = 2;    // 随机事件id
+    uint32 drop_id = 3;
+    uint32 zone_level = 4;
+    uint32 quest_template_id = 5;   // 随机任务对应的模板id
+}
+
+message PlayerLogBodyWorldLevelAdd
+{
+    uint32 world_level_before = 1;
+    uint32 world_level_after = 2;
+    uint32 level = 3;           // 冒险等级
+    uint32 exp = 4;             // 冒险经验值
+}
+
+message EquipLog
+{
+    uint32 item_id = 1;
+    uint32 item_num = 2;
+    uint32 item_level = 3;
+    uint32 promote_level = 4;
+}
+
+message RewardLog
+{
+    uint32 reward_id = 1;
+    repeated EquipLog add_equip_list = 2;
+}
+
+// 领取玩家冒险等阶奖励 PLAYER_ACTION_TAKE_PLAYER_LEVEL_REWARD = 1006;             
+message PlayerLogBodyTakePlayerLevelReward
+{
+    uint32 take_level = 1;
+    uint32 cur_level = 2;
+    uint32 cur_exp = 3;
+    RewardLog reward_log = 4; 
+}
+
+// 道具删除返还 PLAYER_ACTION_MATERIAL_DELETE_RETURN
+message PlayerLogBodyMaterialDeleteReturn
+{
+    repeated LogItemParam delete_material_list = 1;
+    repeated LogItemParam return_item_list = 2;
+}
+
+// 玩家标记地图日志
+message PlayerLogBodyMarkMap
+{
+    string mark_name = 1; // 标记名
+    int32 mark_op = 2; // 标记操作(ADD=0, MOD=1, DEL=2, GET=3)
+    int32 point_type = 3; // 标记点图标类型
+    int32 mark_x = 4; // 标记坐标x
+    int32 mark_y = 5; // 标记坐标y
+    uint32 scene_id = 6; // 场景ID
+    uint32 from_type = 7; // 标记来源类型
+    uint32 monster_id = 8; // 怪物配置ID 配合from_type=MONSTER使用
+    uint32 quest_id = 9; // 任务配置ID 配合from_type=QUEST使用
+    int32 mark_z = 10; // 标记坐标z
+}
+
+// 扭蛋
+message GachaGuaranteeData
+{
+    uint32 guarantee_rule_id = 1; // 保底规则ID
+    uint32 last_gacha_guarantee_times = 2; // 上一次触发该规则的累计次数
+}
+
+message GachaItemLog
+{
+    ItemLog award_item = 1;               // 产出
+    repeated ItemLog transfer_item = 2;   // 转换
+    repeated ItemLog token_item_list = 3; // token产出
+}
+
+message GachaItemTypeTimes
+{
+    uint32 gacha_item_type = 1;     // 物品子类型
+    uint32 last_gacha_times = 2;    // 上次扭中该物品子类型的次数
+}
+
+message GachaItemTypeWeight
+{
+    uint32 gacha_item_type = 1;     // 物品子类型
+    uint32 weight = 2;              // 权重
+}
+
+message GachaItemParentTypeTimes
+{
+    uint32 gacha_item_parent_type = 1;      // 物品父类型
+    uint32 last_gacha_times = 2;            // 上次扭中该物品父类型的次数
+}
+
+message GachaItemParentTypeWeight
+{
+    uint32 gacha_item_parent_type = 1;     // 物品子类型
+    uint32 weight = 2;                     // 权重
+}
+
+message PlayerLogBodyDoGacha
+{
+    uint32 gacha_type = 1; // 扭蛋类型    
+    uint32 schedule_id = 2; // 活动ID
+    uint32 gacha_times = 3; // 扭蛋次数(单抽或者10连)
+    ItemLog cost_item = 4;  // 消耗物品
+    uint32 total_gacha_times = 5; // 累计该扭蛋抽取次数
+    uint32 cur_schedule_total_gacha_times = 6; // 累计该活动ID抽取次数
+    uint32 guarantee_rule_id = 7; // 本次触发保底规则ID
+    repeated GachaGuaranteeData guarantee_data_list = 8; // 上一次保底数据
+    GachaItemLog gacha_award = 9; // 扭蛋产出
+    bool is_item_up = 10; // 是否是up物品
+    bool is_flash_card = 11; // 是否是闪卡
+    uint32 gacha_item_type = 12; // 当前命中子模块
+    uint32 gacha_item_parent_type = 13; // 当前命中父模块
+    repeated GachaItemParentTypeWeight gacha_item_parent_type_weight_list = 14; // 各个父模块的权重
+    repeated GachaItemParentTypeTimes gacha_item_parent_type_times_list = 15;   // 各个父模块上次抽中的次数
+    bool is_gacha_up_triggered = 16;    // 是否命中UP
+    uint32 gacha_up_prob = 17;          // up的实际概率
+    uint32 gacha_no_up_times = 18;      // 连续未命中UP的次数
+    repeated GachaItemTypeWeight gacha_item_type_weight_list = 19;  // 命中父模块各个子模块的权重
+    repeated GachaItemTypeTimes gacha_item_type_times_list = 20;    // 命中父模块各个子模块上次抽中的次数
+}
+
+// 羁绊值变化
+message PlayerLogBodyAvatarFetterChangeExp
+{
+    uint32 avatar_id = 1; // 角色ID
+    uint32 change_point = 2; // 添加了多少点经验
+    uint32 level_before = 3; // 添加之前的等级
+    uint32 level_after = 4; // 添加之后的等级
+    uint32 reason = 5;  // 来源 ActionReason
+    uint32 all_point = 6; // 历史总经验
+    uint32 level_point = 7; // 当前等级剩余经验
+}
+
+//PLAYER_ACTION_AVATAR_EXPEDITION_REWARD = 1612;  
+// 挂机探索奖励
+message AvatarExpeditionReward
+{
+    uint32 item_id = 1;
+    uint32 item_count = 2;
+}
+
+//PLAYER_ACTION_AVATAR_EXPEDITION_START = 1613;
+// 挂机探索开始
+message PlayerLogBodyAvatarExpeditionStart
+{
+    uint32 avatar_id = 1; // 角色配置ID
+    uint32 is_leave_team = 2; // 是否离开了队伍(1,0)
+    uint32 city_id = 3; // 城市id
+    uint32 config_id = 4; // 配置线路ID
+    uint32 expedition_limit_count = 5; // 同时探索角色上限
+    uint32 expedition_hour_time = 6; // 探索选择时间(小时)
+    uint64 expedition_no = 7; // 探索流水号(玩家内部唯一)
+}
+
+//PLAYER_ACTION_AVATAR_EXPEDITION_TAKE_REWARD = 1614;
+// 挂机探索完成
+message PlayerLogBodyAvatarExpeditionTakeReward
+{
+    uint64 expedition_no = 1; // 探索流水号(玩家内部唯一)
+    uint32 scoin_count = 2; // 摩拉数量
+    repeated AvatarExpeditionReward reward = 3; // 奖励
+}
+
+// 探索结束原因
+enum ExpeditionFinishReason
+{
+    EXPDITION_FINISH_REASON_NONE = 0; 
+    EXPDITION_FINISH_REASON_INTERRUPT = 1; // 自己在探索界面主动中断
+    EXPDITION_FINISH_REASON_NORMAL = 2; // 时间到了自动完成 
+}
+//PLAYER_ACTION_AVATAR_EXPEDITION_FINISH = 1615;
+// 挂机探索结束
+message PlayerLogBodyAvatarExpeditionFinish
+{
+    uint64 expedition_no = 1; // 探索流水号(玩家内部唯一)
+    uint32 left_time_sec = 2; // 剩余时间(秒)
+    uint32 reason = 3; // 完成原因 ExpeditionFinishReason
+    string normal_finish_time = 4; // 正常结束的时间
+}
+
+message PlayerLogBodyTakeInvestigationReward
+{
+    uint32 city_id = 1;
+    uint32 investigation_id = 2;
+    RewardLog reward_log = 3;
+}
+
+message PlayerLogBodyTakeInvestigationTargetReward
+{
+    uint32 city_id = 1;
+    uint32 investigation_id = 2;
+    uint32 investigation_target_id = 3;
+    uint32 after_progress = 4;
+    uint32 total_progress = 5;
+    RewardLog reward_log = 6;
+}
+
+// 离线MSG处理(MUIP)
+//PLAYER_ACTION_MUIP_OFFLINE_MSG_RESULT = 2300;               // MUIP 
+message PlayerLogBodyMuipOfflineMsgResult
+{
+    string ticket = 1;      // ticket
+    uint32 msg_type = 2;    // msg 类型(对应redis_data.proto:OfflinMsg)
+                            // 4(删除物品),5(goto跳转),6(重置父任务),7(刷新group),8(设置场景中点的解锁状态)
+                            // 9(设置昵称),10(刷新商店),11(解锁talent),12(脱下装备),13(删除邮件),14(完成每日事件)
+                            // 15(解锁区域),16(删除物品),17(删除装备),18(添加物品)
+    int32 result = 3;      // 处理结果 -1(延后执行),0(成功),-1(失败)
+    string msg_str = 4;     // msg内容 因为对应不同类型格式不一样所以使用string
+}
+
+// 玩家客户端上报作弊日志
+message PlayerLogBodyClientReport
+{
+    string report_type = 1;   // 上报类型
+    string report_value = 2;  // 上报数据
+}
+
+message LogItemParam
+{
+    uint32 item_id = 1;
+    uint32 count = 2;
+}
+message PlayerLogBodySeaLampContributeItem
+{
+    repeated LogItemParam item_list = 1;    // 贡献的材料列表
+    uint32 add_contribution = 2;            // 本次上交材料获取的贡献值
+    uint32 contribution = 3;                // 上交后当前玩家的贡献值
+}
+
+message PlayerLogBodySeaLampTakeContributionReward
+{
+    uint32 config_id = 1;                   // 领取的配置id
+    uint32 reward_id = 2;
+}
+
+message PlayerLogBodySeaLampTakePhaseReward
+{
+    uint32 phase_id = 1;                    // 领取的阶段id
+    uint32 reward_id = 2;
+}
+
+message PlayerLogBodySeaLampFlyLamp
+{
+    uint32 add_contribution = 1;            // 增加的贡献值
+    uint32 contribution = 2;                // 放飞后当前的贡献值
+    uint32 item_num = 3;                    // 放灯数量
+}
+
+// 消息推送 PLAYER_ACTION_PUSH_TIPS_CHANGE
+message PlayerLogBodyPushTipsChange
+{
+    enum PushTipsOpType
+    {
+        NONE = 0;   // 不存在
+        ACTIVE = 1; // 激活
+        READ = 2;   // 阅读完毕
+        FINISH = 3; // 领取阅读奖励完毕
+    }
+    uint32 id = 1;                          // 消息ID
+    uint32 guide_id = 2;                    // 教程ID
+    uint32 op = 3;                          // PushTipsOpType
+}
+
+// 爬塔玩法进入日志 PLAYER_ACTION_TOWER_ENTER_LEVEL
+message PlayerLogBodyTowerEnterLevel
+{
+    string tower_level_transaction = 1;     // 爬塔关卡流水号
+    uint32 schedule_id = 2;                 // 当前爬塔排期ID
+    uint32 floor_index = 3;                 // 第几层，从1开始计数
+    uint32 level_index = 4;                 // 所在层的第几关，从1开始计数
+    repeated AvatarLog first_avatar_list = 5;   // 镜像角色列表1
+    repeated AvatarLog second_avatar_list = 6;   // 镜像角色列表2
+    uint32 path = 7;                        // 分路（1或2）
+}
+
+// 爬塔玩法结算日志 PLAYER_ACTION_TOWER_SETTLE
+message PlayerLogBodyTowerSettle
+{
+    enum TowerResultType
+    {
+        SUCC = 0;   // 地城成功
+        FAIL = 1;   // 地城成功之外的结算结果
+    }
+    string tower_level_transaction = 1;     // 爬塔关卡流水号
+    uint32 schedule_id = 2;                 // 当前爬塔排期ID
+    uint32 floor_index = 3;                 // 第几层，从1开始计数
+    uint32 level_index = 4;                 // 所在层的第几关，从1开始计数
+    uint32 path = 5;                        // 分路（1或2）
+    uint32 result = 6;                      // TowerResultType
+    uint32 floor_star_num = 7;              // 本次结算后，本层内累计星级
+    uint32 schedule_star_num = 8;           // 本次结算后，本月周期内累计星级
+    repeated uint32 satisfied_star_condition_list = 9; // 每个元素是1~3的整数，表示完成了哪些星级条件
+    uint32 cur_tower_buff_id = 10;          // 当前增益ID
+    repeated uint32 tower_buff_list = 11;   // 历史增益ID
+}
+
+// 爬塔玩法层数解锁日志 PLAYER_ACTION_TOWER_UNLOCK_FLOOR
+message PlayerLogBodyTowerUnlockFloor
+{
+    uint32 schedule_id = 1;                 // 当前爬塔排期ID
+    uint32 floor_index = 2;                 // 第几层，从1开始计数
+}
+
+// 爬塔首通奖励日志 PLAYER_ACTION_TOWER_FIRST_PASS_REWARD
+message PlayerLogBodyTowerFirstPassReward
+{
+    uint32 reason = 1;                      // ActionReasonType
+    RewardLog reward_log = 2;               // 奖励日志
+    uint32 schedule_id = 3;                 // 当前爬塔排期ID
+    uint32 floor_index = 4;                 // 第几层，从1开始计数
+    uint32 level_index = 5;                 // 所在层的第几关，从1开始计数
+}
+
+// 爬塔每日奖励 PLAYER_ACTION_TOWER_DAILY_REWARD
+message PlayerLogBodyTowerDailyReward
+{
+    uint32 reason = 1;                      // ActionReasonType
+    RewardLog reward_log = 2;               // 奖励日志
+    uint32 schedule_id = 3;                 // 当前爬塔排期ID
+    uint32 best_floor_index = 4;                 // 第几层，从1开始计数
+    uint32 best_level_index = 5;                 // 所在层的第几关，从1开始计数
+}
+
+// 爬塔每层的星数奖励 PLAYER_ACTION_TOWER_FLOOR_STAR_REWARD
+message PlayerLogBodyTowerFloorStarReward
+{
+    uint32 reason = 1;                      // ActionReasonType
+    repeated RewardLog reward_log_list = 2; // 奖励日志
+    uint32 schedule_id = 3;                 // 当前爬塔排期ID
+    uint32 floor_index = 4;                 // 第几层，从1开始计数
+    uint32 floor_star_num = 5;              // 层的星数
+}
+
+// 爬塔排期奖励 PLAYER_ACTION_TOWER_SCHEDULE_REWARD
+message PlayerLogBodyTowerScheduleReward
+{
+    uint32 reason = 1;                      // ActionReasonType
+    RewardLog reward_log = 2;               // 奖励日志
+    uint32 schedule_id = 3;                 // 当前爬塔排期ID
+    uint32 schedule_star_num = 4;           // 排期内的总星数
+    uint32 last_floor_index = 5;            // 最后赢的一关所在的层
+    uint32 last_level_index = 6;            // 最后赢的一关所在的层的第几关
+} 
+
+// 树脂变化
+message PlayerLogBodyResinChange
+{
+    int32 original_delta = 1;              // 理论变化量
+    int32 real_delta = 2;                  // 真实变化量
+    uint32 cur_value = 3;                  // 当前量
+    uint32 reason = 4;                     // 变化原因
+}
+
+// 大世界体力变化
+message PlayerLogBodyWorldResinChange
+{
+    int32 original_delta = 1;              // 理论变化量
+    int32 real_delta = 2;                  // 真实变化量
+    uint32 cur_value = 3;                  // 当前量
+    uint32 reason = 4;                     // 变化原因
+}
+
+enum UserTextType
+{
+   USER_TEXT_INVALID = 0;   //  无效
+   USER_TEXT_NICKNAME = 1;  //  昵称
+   USER_TEXT_TEAMNAME = 2;  //  队伍名
+   USER_TEXT_MARKNAME= 3;   //  标记名
+   USER_TEXT_MP_CHAT = 4;   //  联机聊天
+   USER_TEXT_SEA_LAMP_FLY_LAMP =5;  // 海灯节放花灯
+}
+
+message DropLog
+{
+    uint32 drop_id = 1;             // 掉落ID
+    uint32 drop_num = 2;            // 掉落次数
+    uint32 item_limit_type = 3;     // 产出类型 ItemLimitData.xml data::ItemLimitType
+    uint32 daily_num = 4;           // 当日累计掉落次数
+    uint32 history_num = 5;         // 历史累计掉落次数
+    string daily_num_limit = 6;     // 当日累计掉落次数上限(0：禁止产出；空：不作限制)
+    string history_num_limit = 7;   // 历史累计掉落次数上限(0：禁止产出；空：不作限制)
+}
+
+// 记录玩家获得DropID的行为 PLAYER_ACTION_ADD_DROP
+message PlayerLogBodyAddDrop
+{
+    repeated DropLog drop_log_list = 1;
+}
+
+message PlayerRewardLog
+{
+    uint32 reward_id = 1;         // 本次奖励的id
+    uint32 reward_num = 2;        // 奖励次数（一般是1）
+    uint32 item_limit_type = 3;   // 产出类型 ItemLimitData.xml中data::ItemLimitType
+    uint32 daily_num = 4;         // 当日累计奖励次数
+    uint32 history_num = 5;       // 历史累计奖励次数
+    string daily_num_limit = 6;   // 当日累计奖励次数上限(0：禁止产出；空：不作限制)
+    string history_num_limit = 7; // 历史累计奖励次数上限(0：禁止产出；空：不作限制)
+}
+
+// 记录玩家获得RewardID的行为 PLAYER_ACTION_ADD_REWARD
+message PlayerLogBodyAddReward
+{
+    repeated PlayerRewardLog reward_log_list = 2;
+}
+
+// 记录有产出次数限制的产出来源的累计产出次数 PLAYER_ACTION_ITEM_LIMIT_TYPE_LIMIT
+message PlayerLogBodyItemLimitTypeLimit
+{
+    uint32 item_limit_type = 1;     // 产出类型
+    uint32 daily_num = 2;           // 当日累计产出次数
+    uint32 history_num = 3;         // 历史累计产出次数
+    string daily_num_limit = 4;     // 当日累计产出次数上限(0：禁止产出；空：不作限制)
+    string history_num_limit = 5;   // 历史累计产出次数上限(0：禁止产出；空：不作限制)
+}
+
+
+
+message PlayerLogBodyOperateFriend
+{
+    enum FriendActionType
+    {
+        ADD = 0;        // 加好友
+        DELETE = 1;     // 删好友
+    }
+
+    uint32 target_uid = 1;          // 添加/删除的好友uid
+    uint32 friend_action = 2;       // 操作
+    uint32 self_friend_num = 3;     // 自己的好友数量
+    uint32 target_friend_num = 4;   // 目标好友数量
+}
+
+message PlayerLogBodyBlossomCircleCampRefresh
+{
+    uint32 refresh_id = 1;
+    uint32 circle_camp_id = 2;
+    uint32 city_id = 3;
+    uint32 section_id = 4;
+    repeated uint32 new_group_id_list = 5;
+    repeated uint32 decorate_group_id_list = 6;
+    uint32 refresh_type = 7;
+}
+
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

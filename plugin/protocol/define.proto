@@ -1,0 +1,1380 @@
+/***************************************************************************
+ *
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ *
+ **************************************************************************/
+
+/**
+ * @file define.proto
+ * @author jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @date 2017/08/08 13:55:32
+ * @brief 类型定义
+ **/
+
+syntax = "proto3";
+package proto;
+
+/////////////////////////////////////////////////////////////////////////////////
+// 通用定义
+
+// ENet原因
+enum ENetReason
+{
+    // 断开连接
+    ENET_TIMEOUT = 0;   // ENet超时
+    ENET_CLIENT_CLOSE = 1;  // 客户端主动退出
+    ENET_CLIENT_REBIND_FAIL = 2;    // 客户端重新绑定端口失败
+    ENET_CLIENT_SHUTDOWN = 3;   // 客户端关闭(意外退出)
+    ENET_SERVER_RELOGIN = 4;    // 服务器重登录
+    ENET_SERVER_KICK = 5;       // 服务器踢人
+    ENET_SERVER_SHUTDOWN = 6;   // 服务器关闭
+    ENET_NOT_FOUND_SESSION = 7; // gate不存在uid和client的连接
+    ENET_LOGIN_UNFINISHED = 8;  // 登入未完成(可能gateserver重启)
+    ENET_PACKET_FREQ_TOO_HIGH = 9;  // 客户端发包频率太高
+    ENET_PING_TIMEOUT = 10;     // game上player检查到心跳超时
+    ENET_TRANFER_FAILED = 11;   // 迁移失败，客户端重连
+    ENET_SERVER_KILL_CLIENT = 12;   // 服务端踢人切强制客户端杀游戏
+
+    // 连接
+    ENET_CLIENT_CONNECT_KEY = 1234567890;   // 客户端连接Key
+    ENET_CLIENT_EDITOR_CONNECT_KEY = 987654321;   // 客户端编辑器连接Key
+}
+
+// 参数列表
+message ParamList
+{
+    repeated uint32 param_list = 1;     // 参数列表
+}
+
+// 属性值
+message PropValue
+{
+    uint32 type = 1;      // 属性类型
+    oneof value
+    {
+        int64 ival = 2;     // 整数值
+        float fval = 3;     // 浮点值
+    }
+    int64 val = 4;          // 数值
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// 运营相关定义
+
+// 渠道账号类型
+enum AccountType
+{
+    ACCOUNT_NONE = 0;       // 无意义
+    ACCOUNT_MIHOYO = 1;     // miHoYo通行证
+
+    ACCOUNT_XIAOMI = 11; // 小米
+    ACCOUNT_COOLPAD = 12;   // 酷派
+    ACCOUNT_YYB = 13;       // 应用宝
+    ACCOUNT_BILI = 14;      // bilibili
+    ACCOUNT_HUAWEI = 15;    // 华为
+    ACCOUNT_MEIZU = 16;     // 魅族
+    ACCOUNT_360 = 17;       // 奇虎360
+    ACCOUNT_OPPO = 18;      // oppo
+    ACCOUNT_VIVO = 19;      // vivo
+    ACCOUNT_UC = 20;        // uc
+    ACCOUNT_WANDOJIA = 21;  // 豌豆荚渠道
+    ACCOUNT_LENOVO = 22;    // 联想
+    ACCOUNT_JINLI = 23;     // 金立
+}
+
+// 处理协议的服务类型, 以node要转发给谁为标准
+enum ServiceType
+{
+    SERVICE_NONE = 0;
+    SERVICE_CLIENT = 1;
+    SERVICE_GATE = 2;
+    SERVICE_GAME = 3;
+    SERVICE_NODE = 4;
+    SERVICE_DB = 5;
+    SERVICE_SNS = 6;
+    SERVICE_DISPATCH = 7;
+    SERVICE_MUIP = 8;
+    SERVICE_OFFLINE_MSG = 9;
+    SERVICE_MAIL = 10;
+    SERVICE_MP = 11;
+    SERVICE_HTTPPROXY = 12;
+    SERVICE_ACTIVITY = 13;
+    SERVICE_PATHFINDING = 14;
+    SERVICE_SOCIAL = 15;
+    SERVICE_OA = 16;
+}
+
+// 客户端类型
+enum ClientType
+{
+    CLIENT_PRODUCT = 0; // 正式包
+    CLIENT_DEV = 1; // 测试包
+}
+
+// 游戏分区类型
+enum RegionType
+{
+    REGION_PRODUCT = 0;     // 正式生产环境
+    REGION_EXAM = 1;        // 审核服
+    REGION_DEV_PUB = 2;    // 公共测试服
+    REGION_DEV_PRI = 3;    // 私服
+}
+
+// 区服相关的配置，避免在http中使用Json格式
+message RegionCustomConfig
+{
+    bool close_antidebug = 1;   // 默认false: 默认打开反调开关
+    bool force_kill = 2;        // 默认false: 
+    bool antidebug_pc = 3;      // 默认false: pc默认不开启反调
+    bool antidubug_ios = 4;     // 默认false: ios默认不开启反调
+    bool antidubug_androd = 5;  // 默认false: android默认不开启反调
+}
+
+// 客户端向一级dispatch拉取分区列表数据
+message RegionSimpleInfo
+{
+    string name = 1;    // 分区名
+    string title = 2;   // 分区标题
+    string type = 3;    // 分区类型
+    string dispatch_url = 4;    // 分区的dispatch url
+    RegionCustomConfig region_custom_config = 5;    // 分区发送给客户端的配置
+};
+
+// 客户端版本号对应的配置, 需要兼容老的json格式
+message ClientCustomConfig
+{
+    bool visitor = 1;       // 游客功能
+    string sdkenv = 2;      // sdk环境类型
+    bool debugmenu = 3;     // debug菜单
+    repeated int32 debuglogswitch = 4;  // 打开的log类型
+    bool debuglog = 5;  // log总开关
+    map<string, string> devicelist = 6;
+    bool loadjsondata = 7;  // 用json读取InLevel数据
+    bool showexception = 8; // 是否显示异常提示框 默认为：true
+}
+
+message QueryRegionListHttpRsp
+{
+    int32 retcode = 1;
+    repeated RegionSimpleInfo region_list = 2;
+    string client_custom_config = 3; // 客户端版本定义的配置, TODO...cb2test停服后删除
+    ClientCustomConfig client_config = 4;   // 客户端版本定义的配置
+    bytes client_secret_key = 5; // 客户端使用密钥
+    bytes client_custom_config_encrypted = 6; // 加密后的客户端版本定义的配置
+}
+
+// 客户端向二级dispatch拉取region数据
+message ForceUpdateInfo
+{
+    string force_update_url = 1;    // 强更url
+    ClientCustomConfig client_config = 2;   // 客户端版本定义的配置
+}
+
+message StopServerInfo
+{
+    uint32 stop_begin_time = 1;     // 停服开始时间戳
+    uint32 stop_end_time = 2;
+}
+
+// 某个平台下的资源版本信息
+message ResVersionConfig
+{
+    uint32 version = 1;     // 版本号
+    bool relogin = 2;       // 是否要求重新登入强制下载这个版本
+    string md5 = 3;         // 客户端校验资源下载
+    string release_total_size = 4;
+}
+
+message RegionInfo
+{
+    string gateserver_ip = 1;
+    uint32 gateserver_port = 2;
+    string pay_callback_url = 3;        // 订单回调地址
+    //string account_url = 5;          // 通行证url
+    //string account_url_bak = 6;      // 通行证url备份
+    string area_type = 7;            // 区服area_type
+    string resource_url = 8;         // 资源url
+    string data_url = 9;             // 数值url
+    string feedback_url = 10;         // 反馈url
+    string bulletin_url = 11;         // 公告url
+    string resource_url_bak = 12;     // 资源url备份
+    string data_url_bak = 13;         // 数值url备份
+    uint32 client_data_version = 14;  // 客户端非静默版本
+    uint32 res_version = 15;          // 大包资源版本号
+    string handbook_url = 16;         // 游戏指南Url
+    //uint32 res_version_ex = 17;       // 小包资源版本号
+    uint32 client_silence_data_version = 18; // 客户端静默版本
+    string client_data_md5 = 19;        // 客户端数值md5
+    string client_silence_data_md5 = 20;// 客户端静默数值md5
+    string res_md5 = 21;                // 资源md5
+    ResVersionConfig res_version_config = 22;   // TODO...删除res_version/res_md5
+    bytes secret_key = 23;              //第一条协议加密密钥 
+    string official_community_url = 24; // 官方社区url
+}
+
+message QueryCurrRegionHttpRsp
+{
+    int32 retcode = 1;  // 错误码
+    string msg = 2;     // 错误信息
+    RegionInfo region_info = 3;             // retcode == 0 || RET_STOP_SERVER
+    oneof detail
+    {
+        ForceUpdateInfo force_udpate = 4;   // retcode == RET_CLIENT_FORCE_UPDATE
+        StopServerInfo stop_server = 5;     // retcode == RET_STOP_SERVER
+    }
+    ClientCustomConfig client_config = 10;  // 客户端版本定义的配置
+    bytes client_secret_key = 11; // 客户端使用密钥
+    bytes region_custom_config_encrypted = 12; // 加密后的区服定义的配置
+    bytes client_region_custom_config_encrypted = 13; // 加密后的客户端区服定义的配置
+}
+
+// 用于统计加道具或其他行为的通用原因
+enum ActionReasonType
+{
+    ACTION_REASON_NONE = 0;
+    ACTION_REASON_QUEST_ITEM = 1;     // 任务道具
+    ACTION_REASON_QUEST_REWARD = 2;   // 任务奖励
+    ACTION_REASON_TRIFLE = 3;         // 掉落物
+    ACTION_REASON_SHOP = 4;           // 商店购买
+    ACTION_REASON_PLAYER_UPGRADE_REWARD = 5;    // 玩家升级奖励
+    ACTION_REASON_ADD_AVATAR = 6;               // 获的角色时附带的武器等
+    ACTION_REASON_GADGET_ENV_ANIMAL = 7;        // 和Gadget类型的环境小动物交互
+    ACTION_REASON_MONSTER_ENV_ANIMAL = 8;       // 和Monster类型的环境小动物交互
+    ACTION_REASON_COMPOUND = 9;                 // 烹饪食材合成
+    ACTION_REASON_COOK = 10;                    // 烹饪
+    ACTION_REASON_GATHER = 11;                  // 采集
+    ACTION_REASON_MAIL_ATTACHMENT = 12;         // 领取邮件附件
+    ACTION_REASON_CITY_LEVELUP_RETURN = 15;     // 城市升级返还材料
+    ACTION_REASON_CITY_LEVELUP_REWARD = 17;     // 升级城市奖励
+    ACTION_REASON_AREA_EXPLORE_REWARD = 18;     // 区域探索事件奖励
+    ACTION_REASON_UNLOCK_POINT_REWARD = 19;     // 解锁传送点奖励
+    ACTION_REASON_DUNGEON_FIRST_PASS = 20;      // 地城首通奖励
+    ACTION_REASON_DUNGEON_PASS = 21;            // 地城通关奖励
+    ACTION_REASON_CHANGE_ELEM_TYPE = 23;        // 改变元素类型（自动消耗对应天赋点道具）
+    ACTION_REASON_FETTER_OPEN = 25;             // 羁绊系统开启新的条目
+    ACTION_REASON_DAILY_TASK_SCORE = 26;        // 固定事件的积分奖励
+    ACTION_REASON_DAILY_TASK_HOST = 27;         // 固定事件奖励,主机领取
+    ACTION_REASON_RAND_TASK_HOST = 28;          // 随机事件完成,主机领取
+    ACTION_REASON_EXPEDITION = 29;              // 挂机探索奖励
+    ACTION_REASON_GACHA = 30;                   // 扭蛋奖励
+    ACTION_REASON_COMBINE = 31;                 // 道具合成
+    ACTION_REASON_RAND_TASK_GUEST = 32;         // 随机事件完成,客机领取
+    ACTION_REASON_DAILY_TASK_GUEST = 33;        // 固定事件奖励,客机领取
+    ACTION_REASON_FORGE_OUTPUT = 34;            // 锻造产出
+    ACTION_REASON_FORGE_RETURN = 35;            // 锻造终止返还
+    ACTION_REASON_INIT_AVATAR = 36;             // 获取初始等级不为1的角色的特殊道具用
+    ACTION_REASON_MONSTER_DIE = 37;             // 怪物死亡
+    ACTION_REASON_GM = 38;                      // GM指令
+    ACTION_REASON_OPEN_CHEST = 39;              // 开宝箱
+    ACTION_REASON_GADGET_DIE = 40;              // 物件死亡掉落
+    ACTION_REASON_MONSTER_CHANGE_HP = 41;       // 怪物掉血
+    ACTION_REASON_SUBFIELD_DROP = 42;           // 分支掉落
+    ACTION_REASON_PUSH_TIPS_REWARD = 43;        // 教学阅读奖励
+    ACTION_REASON_ACTIVITY_MONSTER_DROP = 44;   // 活动杀怪的额外掉落
+    ACTION_REASON_ACTIVITY_GATHER = 45;         // 活动采集的额外掉落
+    ACTION_REASON_ACTIVITY_SUBFIELD_DROP = 46;  // 活动分支掉落的额外掉落
+    ACTION_REASON_TOWER_SCHEDULE_REWARD = 47;   // 爬塔排期结束星数奖励
+    ACTION_REASON_TOWER_FLOOR_STAR_REWARD = 48; // 爬塔每层星数奖励
+    ACTION_REASON_TOWER_FIRST_PASS_REWARD = 49; // 爬塔每关首通奖励
+    ACTION_REASON_TOWER_DAILY_REWARD = 50;      // 爬塔每日奖励
+    ACTION_REASON_HIT_CLIENT_TRIVIAL_ENTITY = 51;   // 玩家攻击客户端创建的且服务器不存在的实体(目前仅限于灌木)
+    ACTION_REASON_OPEN_WORLD_BOSS_CHEST = 52;   // 开大世界boss宝箱
+    ACTION_REASON_MATERIAL_DELETE_RETURN = 53;  // 道具删除返还
+    ACTION_REASON_SIGN_IN_REWARD = 54;          // 签到奖励
+    ACTION_REASON_OPEN_BLOSSOM_CHEST = 55;      // 开启地脉之花宝箱
+    ACTION_REASON_RECHARGE = 56;                // 充值奖励
+    ACTION_REASON_BONUS_ACTIVITY_REWARD = 57;   // bonus活动奖励
+
+    ACTION_REASON_PLAYER_USE_ITEM = 1001;       // 玩家使用道具
+    ACTION_REASON_DROP_ITEM = 1002;             // 扔到地上
+    ACTION_REASON_WEAPON_UPGRADE = 1011;        // 武器升级消耗材料
+    ACTION_REASON_WEAPON_PROMOTE = 1012;        // 武器突破消耗材料
+    ACTION_REASON_WEAPON_AWAKEN = 1013;         // 武器觉醒消耗材料
+    ACTION_REASON_RELIC_UPGRADE = 1014;         // 圣遗物升级消耗材料
+    ACTION_REASON_ABILITY = 1015;               // ability效果
+    ACTION_REASON_DUNGEON_STATUE_DROP = 1016;   // 地城神像掉落
+    ACTION_REASON_OFFLINE_MSG = 1017;           // 离线消息删道具
+    ACTION_REASON_AVATAR_UPGRADE = 1018;        // 角色升级消耗材料
+    ACTION_REASON_AVATAR_PROMOTE = 1019;        // 角色突破消耗材料
+    ACTION_REASON_QUEST_ACTION = 1021;          // 任务执行删道具操作
+    ACTION_REASON_CITY_LEVELUP = 1022;          // 城市充能升级
+    ACTION_REASON_UPGRADE_SKILL = 1024;         // 升级角色技能
+    ACTION_REASON_UNLOCK_TALENT = 1025;         // 激活命之座
+    ACTION_REASON_UPGRADE_PROUD_SKILL = 1026;   // 升级得意技
+    ACTION_REASON_PLAYER_LEVEL_LIMIT_UP = 1027; // 玩家等级限制改变
+    ACTION_REASON_DUNGEON_DAILY = 1028;         // 自动添加地城需要的印记
+    ACTION_REASON_ITEM_GIVING = 1030;           // 道具交付
+    ACTION_REASON_FORGE_COST = 1031;            // 锻造消耗
+    ACTION_REASON_INVESTIGATION_REWARD = 1032;  // 调查奖励
+    ACTION_REASON_INVESTIGATION_TARGET_REWARD = 1033; // 调查目标奖励
+    ACTION_REASON_GADGET_INTERACT = 1034;       // 物件交互消耗
+    ACTION_REASON_SEA_LAMP_CI_MATERIAL = 1036;      // 海灯节活动提交材料
+    ACTION_REASON_SEA_LAMP_CONTRIBUTION_REWARD = 1037;     // 海灯节活动贡献奖励
+    ACTION_REASON_SEA_LAMP_PHASE_REWARD = 1038;     // 海灯节活动贡献奖励
+    ACTION_REASON_SEA_LAMP_FLY_LAMP = 1039;     // 海灯节活动放花灯
+    ACTION_REASON_AUTO_RECOVER = 1040;        // 自动恢复树脂
+    ACTION_REASON_ACTIVITY_EXPIRE_ITEM = 1041;  // 活动自动销毁残留的材料
+    ACTION_REASON_SUB_COIN_NEGATIVE = 1042;     // 扣除货币到负数
+    ACTION_REASON_BARGAIN_DEDUCT = 1043;        // 讲价扣除
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+// 道具系统
+
+// 存储类型
+enum StoreType
+{
+    STORE_NONE = 0;     // 无
+    STORE_PACK = 1;     // 道具包裹
+    STORE_DEPOT = 2;    // 道具仓库
+}
+
+// 装备
+message Reliquary
+{
+    uint32 level = 1;   // 装备的等级
+    uint32 exp = 2;     // 装备经验
+    uint32 promote_level = 3; // 装备突破等级
+    uint32 main_prop_id = 4; // 主属性ID
+    repeated uint32 append_prop_id_list = 5; // 附加属性ID列表
+}
+
+// 武器
+message Weapon
+{
+    uint32 level = 1;       // 等级
+    uint32 exp = 2;         // 经验
+    uint32 promote_level =3;  // 突破等级
+    map<uint32, uint32> affix_map = 4;  // 词缀(affix_id->affix_level)
+}
+
+message MaterialDeleteInfo
+{
+   message CountDownDelete
+   {
+       map<uint32, uint32> delete_time_num_map = 1; // 时间戳，删除个数映射
+       uint32 config_count_down_time = 2;           // 配置的倒计时删除时间, 按秒计
+   }
+
+   message DateTimeDelete
+   {
+       uint32 delete_time = 1; // 时间戳
+   }
+
+   bool has_delete_config = 1; // 是否有过期配置
+   oneof delete_info
+   {
+       CountDownDelete count_down_delete = 2;
+       DateTimeDelete date_delete = 3;
+   }
+}
+
+message Material
+{
+    uint32 count = 1;        // 数量
+    MaterialDeleteInfo delete_info = 2; // 删除相关信息
+}
+
+message Equip
+{
+    oneof detail
+    {
+        Reliquary reliquary = 1;
+        Weapon weapon = 2;
+    }
+}
+
+// 道具
+message Item
+{
+    uint32 item_id = 1;
+    uint64 guid = 2;            // 唯一ID
+    oneof detail
+    {
+        Material material = 5;  // 材料
+        Equip equip = 6;        // 装备
+    }
+}
+
+enum VirtualItem
+{
+    ITEM_VIRTUAL_NONE = 0;
+    ITEM_VIRTUAL_AVATAR_EXP = 101;
+    ITEM_VIRTUAL_PLAYER_EXP = 102;
+    ITEM_VIRTUAL_FETTER_EXP = 105; // 羁绊值
+    ITEM_VIRTUAL_RESIN = 106;   // 树脂
+    ITEM_VIRTUAL_WORLD_RESIN = 107; // 大世界体力
+
+    ITEM_VIRTUAL_HCOIN = 201;
+    ITEM_VIRTUAL_SCOIN = 202;
+}
+
+message ItemParam
+{
+    uint32 item_id = 1;
+    uint32 count = 2;
+}
+
+// 包括Weapon和Reliquary,需要额外的参数控制
+message EquipParam
+{
+    uint32 item_id = 1;
+    uint32 item_num = 2;
+    uint32 item_level = 3;
+    uint32 promote_level = 4;
+}
+
+// EquipParam/EquipParamList 需要解析Db中的奖励列表，字段名最好不要修改
+message EquipParamList
+{
+    repeated EquipParam item_list = 1;
+}
+
+message Reward
+{
+    uint32 reward_id = 1;
+    repeated ItemParam item_list = 2;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// Ability
+
+// ability操作数类别定义
+enum AbilityScalarType
+{
+	ABILITY_SCALAR_TYPE_UNKNOW = 0;
+	ABILITY_SCALAR_TYPE_FLOAT = 1;
+	ABILITY_SCALAR_TYPE_INT = 2;
+	ABILITY_SCALAR_TYPE_BOOL = 3;
+	ABILITY_SCALAR_TYPE_TRIGGER = 4;
+	ABILITY_SCALAR_TYPE_STRING = 5;
+    ABILITY_SCALAR_TYPE_UINT = 6;
+}
+
+// Ability中使用的string定义
+message AbilityString
+{
+    oneof type
+    {
+        string str = 1;     // 字符串
+        uint32 hash = 2;    // 哈希码
+    }
+}
+
+// 通用的技能相关的float value
+message AbilityFloatValue
+{
+	float value = 1;
+}
+
+// Ability Override 定义
+message AbilityScalarValueEntry
+{
+	AbilityString key = 1;				// override key，应该用int编码
+	AbilityScalarType value_type = 2;	// override value类型
+    oneof value
+    {
+        float float_value = 3;				// override value是float时候填充
+	    string string_value = 4;			// override value是string时候填充
+        int32 int_value = 5;                // override value是int时候填充
+        uint32 uint_value = 6;              // override value是value是uint时候填充
+    }
+}
+
+// 技能的状态同步 同步正在生效的技能
+message AbilityAppliedAbility
+{
+	AbilityString ability_name = 1;							// 技能名字，应该用int编码
+	AbilityString ability_override = 2;						// 技能override，应该用int编码
+	repeated AbilityScalarValueEntry override_map = 3;		// 技能override map
+	uint32 instanced_ability_id = 4;						// 技能instanced ability id
+}
+
+// 技能的状态同步，同步正在生效的modifier
+message AbilityAttachedModifier
+{
+    bool is_invalid = 1;                                // 标识attachedmodfiier在服务器找不到了，是不合法的状态，需要客户端把modfiier给删除掉
+    uint32 owner_entity_id = 2;                         // modifier的owner entity runtimeid，如果attached的ownerentityid和当前的modifier的owner相同，置0，省流量
+    uint32 instanced_modifier_id = 3;                   // 生效的modifier instanced modifier id，即使is_invalid是true也需要把该字段填充对，需要通过该字段判断是否是有attachedmodifier
+}
+
+// 同步正在生效的ModifierDurability
+message ModifierDurability
+{
+    float reduce_ratio = 1;                             // 当前元素每秒衰减值
+    float remaining_durability = 2;                     // 当前元素剩余衰减值
+}
+
+// 技能的状态同步，同步正在生效的modifier
+message AbilityAppliedModifier
+{
+	int32 modifier_local_id = 1;						// modifier的config local id
+	uint32 parent_ability_entity_id = 2;				// modifier的parent ability entity runtimeid，如果parentability的caster和当前的modifier的owner相同，置0，省流量
+	AbilityString parent_ability_name = 3;				// parent技能名字，防止parent ability的caster不存在或者没有准备好使用的，应该用int编码
+	AbilityString parent_ability_override = 4;			// parent技能override，防止parent ability的caster不存在或者没有准备好使用的，应该用int编码
+	uint32 instanced_ability_id = 5;				    // parent ability的instanced ability id
+	uint32 instanced_modifier_id = 6;					// 生效的modifier instanced modifier id
+    float exist_duration = 7;                           // 已生效时间
+    AbilityAttachedModifier attached_instanced_modifier = 8;        // 被attached的modifier
+    uint32 apply_entity_id = 9;                         // modifier来源的entityid, 如果和当前单位id相同置0，省流量
+	bool is_attached_parent_ability = 10;				//是否attach到parentAbility上
+	ModifierDurability modifier_durability = 11;        //ModifierDurability 的恢复
+}
+
+
+// 一个entity需要状态同步的完整信息
+message AbilitySyncStateInfo
+{
+	bool is_inited = 1;     // 是否已经初始化过
+	repeated AbilityScalarValueEntry dynamic_value_map = 2;		// ability global value
+	repeated AbilityAppliedAbility applied_abilities = 3;       // 所有的ability
+	repeated AbilityAppliedModifier applied_modifiers = 4;      // 所有的modifier
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// 场景相关定义
+
+// 向量
+message Vector
+{
+    float x = 1;
+    float y = 2;
+    float z = 3;
+}
+
+//向量 *100, 保留两位小数
+message Vector3Int
+{
+    int32 x = 1;
+    int32 y = 2;
+    int32 z = 3;
+}
+
+// 运动状态
+enum MotionState
+{
+    MOTION_NONE = 0;
+    MOTION_RESET = 1;   // 重置
+    MOTION_STANDBY = 2; // 待机
+    MOTION_STANDBY_MOVE = 3; // 待机移动
+    MOTION_WALK = 4;    // 走
+    MOTION_RUN = 5;     // 跑
+    MOTION_DASH = 6;    // 冲刺
+    MOTION_CLIMB = 7;   // 攀爬
+    MOTION_CLIMB_JUMP = 8;     // 攀爬跳跃
+    MOTION_STANDBY_TO_CLIMB = 9;   // 待机到攀爬
+    MOTION_FIGHT = 10;  // 战斗
+    MOTION_JUMP = 11;   // 跳
+    MOTION_DROP = 12;   // 掉落
+    MOTION_FLY = 13;    // 飞行
+    MOTION_SWIM_MOVE = 14;  // 游泳移动
+    MOTION_SWIM_IDLE = 15;  // 游泳待机
+    MOTION_SWIM_DASH = 16;  // 游泳猛冲
+    MOTION_SWIM_JUMP = 17;  // 游泳跳跃
+    MOTION_SLIP = 18;   // 下滑
+    MOTION_GO_UPSTAIRS = 19;    // 上下梯子
+    MOTION_FALL_ON_GROUND = 20; // 掉到地上
+    MOTION_JUMP_UP_WALL_FOR_STANDBY = 21;    // 待机上墙
+    MOTION_JUMP_OFF_WALL = 22;      // 跳下墙
+    MOTION_POWERED_FLY = 23;    // 动力飞行
+    MOTION_LADDER_IDLE = 24;    // 梯上待机
+    MOTION_LADDER_MOVE = 25;    // 梯上移动
+    MOTION_LADDER_SLIP = 26;    // 梯上下滑
+    MOTION_STANDBY_TO_LADDER = 27;    // 待机到梯上
+    MOTION_LADDER_TO_STANDBY = 28;    // 梯上到待机
+    MOTION_DANGER_STANDBY = 29; // 危险区域中待机
+    MOTION_DANGER_STANDBY_MOVE = 30;    // 危险区域中待机移动
+    MOTION_DANGER_WALK = 31;    // 危险区域中走
+    MOTION_DANGER_RUN = 32;     // 危险区域中跑
+    MOTION_DANGER_DASH = 33;    // 危险区域中冲刺
+    MOTION_CROUCH_IDLE = 34;    // 蹲下待机
+    MOTION_CROUCH_MOVE = 35;    // 蹲下移动
+    MOTION_CROUCH_ROLL = 36;    // 蹲下翻滚
+    MOTION_NOTIFY = 37;         // 只通知位置时使用
+    MOTION_LAND_SPEED = 38;     // 只通知落地速度时使用
+    MOTION_MOVE_FAIL_ACK = 39;  // 移动失败确认
+    MOTION_WATERFALL = 40;  // 瀑布滑落
+    MOTION_DASH_BEFORE_SHAKE = 41;  // 冲刺前摇
+    MOTION_SIT_IDLE = 42;   // 坐下
+
+	MOTION_NUM = 43;		// 运动状态数量
+}
+
+// 运动信息
+message MotionInfo
+{
+    Vector pos = 1;   // 位置
+    Vector rot = 2;   // 旋转
+    Vector speed = 3;  // 速度
+    MotionState state = 4;  // 状态
+    repeated Vector params = 5;     // 参数
+}
+
+// 方位信息
+message PlaceInfo
+{
+    Vector pos = 1;   // 位置
+    Vector rot = 2;   // 旋转
+}
+
+// 场景上的实体类型
+enum ProtEntityType
+{
+    PROT_ENTITY_NONE = 0;
+    PROT_ENTITY_AVATAR = 1;     // 角色
+    PROT_ENTITY_MONSTER = 2;    // 怪物
+    PROT_ENTITY_NPC = 3;        // NPC
+    PROT_ENTITY_GADGET = 4;     // 物件
+
+    // 以下协议实体类型，客户端忽略
+    // TODO:整理EntityType枚举
+    PROT_ENTITY_REGION = 5;     // 区域
+    PROT_ENTITY_WEAPON = 6;     // 武器
+    PROT_ENTITY_WEATHER = 7;    // 天气
+    PROT_ENTITY_SCENE = 8;      // 场景
+    PROT_ENTITY_TEAM = 9;       // 队伍
+    PROT_ENTITY_MASSIVE_ENTITY = 10;  // 水草等大量的物件
+    PROT_ENTITY_MP_LEVEL = 11;       // 联机大Team关卡Entity
+    PROT_ENTITY_MAX = 12;       // 最大值
+}
+
+// NPC对话状态
+enum NpcTalkState
+{
+    NPC_TALK_NONE = 0;      // 无对话
+    NPC_TALK_AUTO = 1;      // 有自动触发的对话
+    NPC_TALK_MANUAL = 2;    // 有手动触发的对话
+}
+
+// 武器entity信息
+message SceneWeaponInfo
+{
+    uint32 entity_id = 1;   // entity_id
+    uint32 gadget_id = 2;   // 对应的gadget
+    uint32 item_id = 3;     // 对应的装备id
+    uint64 guid = 4;        // 装备唯一ID
+    uint32 level = 5;       // 等级
+    uint32 promote_level = 6;   // 突破等级
+    AbilitySyncStateInfo ability_info = 7;    // 技能信息
+    map<uint32, uint32> affix_map = 8;  // 词缀等级(affix_id -> level)
+}
+
+// 场景上avatar的圣遗物信息
+message SceneReliquaryInfo
+{
+    uint32 item_id = 1;
+    uint64 guid = 2;        // 装备唯一ID
+    uint32 level = 3;
+    uint32 promote_level = 4;
+}
+
+// ServerBuff信息
+message ServerBuff
+{
+    uint32 server_buff_uid = 1; // server_buff唯一ID
+    uint32 server_buff_id = 2;  // server_buff配置ID
+    uint32 server_buff_type = 3; // server_buff类型（AvatarBuff、TeamBuff、TowerBuff）
+    uint32 instanced_modifier_id = 4;   // 如果为0，客户端加Modifier；否则是断线重连从服务器恢复，Modifier应该已经在AbilitySyncStateInfo里了
+}
+
+// 场景上的角色信息
+message SceneAvatarInfo
+{
+    uint32 uid = 1;
+    uint32 avatar_id = 2;   // AvatarID
+    uint64 guid = 3;        // 唯一ID
+    uint32 peer_id = 4;     // PeerID
+    repeated uint32 equip_id_list = 5;      // 外观装备(item_id)列表
+    uint32 skill_depot_id = 6;      // 技能库ID
+    repeated uint32 talent_id_list = 7;     // 天赋ID列表
+    SceneWeaponInfo weapon = 8;     // 武器信息
+    repeated SceneReliquaryInfo reliquary_list = 9; // 圣遗物信息
+    repeated uint32 buff_id_list = 10;   // Buff列表
+    uint32 core_proud_skill_level = 11;  // 核心得意技等级
+    repeated uint32 inherent_proud_skill_list = 12;  // 固有得意技ID列表
+    map<uint32, uint32> skill_level_map = 13;        // 主动技能等级(skill_id=>level)
+    map<uint32, uint32> proud_skill_extra_level_map = 14;   // 得意技额外等级(key:得意技组ID)
+    repeated ServerBuff server_buff_list = 15;  // ServerBuff列表
+}
+
+// 怪物出生类型
+enum MonsterBornType
+{
+    MONSTER_BORN_NONE = 0;
+    MONSTER_BORN_DEFAULT = 1;   // 服务器指定所有坐标
+    MONSTER_BORN_RANDOM = 2;    // 服务器指定x,z坐标，客户端计算y坐标
+}
+
+// 场景上的怪物信息
+message SceneMonsterInfo
+{
+    uint32 monster_id = 1;  // 怪物ID
+    uint32 group_id = 2;    // 组ID
+    uint32 config_id = 3;   // 配置ID
+    repeated SceneWeaponInfo weapon_list = 4;   // 武器信息
+    uint32 authority_peer_id = 5;   // 所属主机
+    repeated uint32 affix_list = 6; // lua中配置的词缀列表
+    bool is_elite = 7;              // lua中是否是精英怪
+    uint32 owner_entity_id = 8;     // 所属的实体ID
+    uint32 summoned_tag = 9;        // 被召唤时的标记
+    map<uint32, uint32> summon_tag_map = 10; // 召唤数据组(tag->count)
+    uint32 pose_id = 11;    // 预制状态
+    MonsterBornType born_type = 12; // 怪物出生类型
+    uint32 block_id = 13;           // 客户端ai需要
+    uint32 mark_flag = 14;          // 标记
+    uint32 title_id = 15;           // 怪物称号ID
+    uint32 special_name_id = 16;    // 怪物名字ID
+}
+
+// 场景上的NPC信息
+message SceneNpcInfo
+{
+    uint32 npc_id = 1;
+    uint32 room_id = 2;
+	uint32 parent_quest_id = 3; // 关联的父任务id
+    uint32 block_id = 4; // 客户端需要
+}
+
+// 物件出生类型
+enum GadgetBornType
+{
+    GADGET_BORN_NONE = 0;
+    GADGET_BORN_IN_AIR = 1;     // 在空中出生
+    GADGET_BORN_PLAYER = 2;     // 玩家掉落
+    GADGET_BORN_MONSTER_HIT = 3;    // 怪物受击掉落
+    GADGET_BORN_MONSTER_DIE = 4;    // 怪物死亡掉落
+    GADGET_BORN_GADGET = 5;     // 物件掉落
+    GADGET_BORN_GROUND = 6;     // 在地上出生
+}
+
+// 操作台信息
+message WorktopInfo
+{
+    repeated uint32 option_list = 1;   // 操作台选项列表
+    bool is_guest_can_operate = 2;  // 联机时客机是否可以操作
+}
+
+// 旋转 四元数
+message MathQuaternion
+{
+    float x = 1;
+    float y = 2;
+    float z = 3;
+    float w = 4;
+}
+
+// 移动平台信息
+message PlatformInfo
+{
+    uint32 route_id = 1;    // 移动路径ID
+    int32 start_index = 2;  // 移动开始路径点索引
+    uint32 start_route_time = 3;    // 移动开始的路径时间
+    uint32 start_scene_time = 4;    // 开始移动时间(场景时间，毫秒)
+    uint32 temp_route_time = 5;     // 正式路径之前的移动时间，为0表示在进入正式路径后停止过(毫秒)
+    uint32 temp_start_route_time = 6;   // 正式路径之前的路径点时间(毫秒)
+    Vector start_pos = 7;   // 移动开始位置
+    bool is_started = 8;    // 是否已启动
+    MathQuaternion start_rot = 9;     // 开始的旋转(既用于正式路径，也用于临时路径)
+    uint32 stop_scene_time = 10;      // 变成stop状态的场景时间
+}
+
+message WeatherInfo
+{
+    uint32 weather_area_id = 1;
+}
+
+// 客户端创建的物件信息
+message ClientGadgetInfo
+{
+    uint32 camp_id = 1;
+	uint32 camp_type = 2;
+    uint64 guid = 3;
+    uint32 owner_entity_id = 4;
+	uint32 target_entity_id = 5;
+    bool async_load = 6;
+}
+
+// 服务器Ability创建的Gadget信息
+message AbilityGadgetInfo
+{
+	uint32 camp_id = 1;
+	uint32 camp_target_type = 2;
+	uint32 target_entity_id = 3;
+}
+
+// 采集物信息
+message GatherGadgetInfo
+{
+    uint32 item_id = 1;
+    bool is_forbid_guest = 2;   // 是否禁止客机采集
+}
+
+
+// 领奖台信息
+message StatueGadgetInfo
+{
+	repeated uint32 opened_statue_uid_list = 1; // 已经开启过领奖台的玩家id列表
+}
+
+// 世界boss宝箱信息
+message BossChestInfo
+{
+    uint32 monster_config_id = 1;   // 对应的世界boss config_id(同一个group) 
+    uint32 world_resin = 2;         // 消耗的大世界体力值
+    repeated uint32 remain_uid_list = 3;     // 尚未领取宝箱的uid列表
+    repeated uint32 qualify_uid_list = 4;    // 有资格交互的uid列表
+}
+
+// 地脉之花宝箱信息
+message BlossomChestInfo
+{
+    uint32 world_resin = 1;
+    repeated uint32 qualify_uid_list = 2;    // 有资格交互的uid列表
+    repeated uint32 remain_uid_list = 3;     // 尚未交互的uid列表
+    uint32 dead_time = 4;                    // 销毁时间戳 如果为0,客户端不要显示倒计时
+}
+
+// 场景上的物件信息
+message SceneGadgetInfo
+{
+    uint32 gadget_id = 1;   // 物件配置ID
+    uint32 group_id = 2;    // 组ID
+    uint32 config_id = 3;   // 配置ID
+    uint32 owner_entity_id = 4;     // 所属的实体ID
+    GadgetBornType born_type = 5;   // 出生类型
+    uint32 gadget_state = 6;    // 物件状态(取值范围: GadgetState)
+    uint32 gadget_type = 7;     // 物件类型(取值范围: GadgetType)
+    bool is_show_cutscene = 8;  // 宝箱是否需要cutscene展示
+    uint32 authority_peer_id = 9;	// 所属主机
+	bool is_enable_interact = 10;   // 是否可交互
+    uint32 interact_id = 11;        // 交互配置id
+    oneof content
+    {
+        Item trifle_item = 12;      // 掉落物中的道具
+        GatherGadgetInfo gather_gadget = 13;    // 采集物的信息
+        WorktopInfo worktop = 14;   // 操作台
+        ClientGadgetInfo client_gadget = 15;   // 客户端物件
+        PlatformInfo platform = 16; // 移动平台
+        WeatherInfo weather = 17;   // 天气实体
+		AbilityGadgetInfo ability_gadget = 18; // 服务器Ability物件
+		StatueGadgetInfo statue_gadget = 19; // 领奖台
+        BossChestInfo boss_chest = 20;   // 世界boss宝箱信息
+        BlossomChestInfo blossom_chest = 41;        // 地脉之花宝箱信息 todo 和客户端同步后，修改ID
+    }
+    uint32 mark_flag = 21;           // 标记
+}
+
+// 动画状态机的参数值
+message AnimatorParameterValueInfo
+{
+    uint32 para_type = 1;   // 动画参数类型
+
+    oneof paraVal           // 动画值
+    {
+        int32 int_val = 2;
+        float float_val = 3;
+        bool bool_val = 4;
+    }
+}
+
+// AI数据中的召唤信息
+message ServantInfo
+{
+    uint32 master_entity_id = 1;    // 召唤者的entity_id
+    uint32 born_slot_index = 2;     // 召唤从者的位置
+}
+
+// AI相关数据
+message SceneEntityAiInfo
+{
+    bool is_ai_open = 1;
+    Vector born_pos = 2;   // 出生位置
+	map<uint32, uint32> skill_cd_map = 3;	// 技能CD信息
+	ServantInfo servant_info = 4;   // 召唤信息
+	map<uint32, uint32> ai_threat_map = 5;  // 仇恨列表（key:EntityID value:仇恨值）
+}
+
+// Entity Renderer 状态
+message EntityRendererChangedInfo
+{
+	map<string, int32> changed_renderers = 1; //服务器cache的Entity Renderers Enable/Disable数据
+}
+
+// 场景上的实体信息
+message SceneEntityInfo
+{
+    ProtEntityType entity_type = 1; // 实体类型
+    uint32 entity_id = 2;		    // 实体ID(本场景唯一)
+    string name = 3;			    // 名字(没有则显示配置中的)
+    MotionInfo motion_info = 4;     // 运动信息
+    map<uint32, PropValue> prop_map = 5;    // 实体属性(主要是外观属性)
+    map<uint32, float> fight_prop_map = 6;  // 战斗属性列表
+    uint32 life_state = 7;          // 生命状态
+    AbilitySyncStateInfo ability_info = 8;  // 技能ability信息
+    map<int32, AnimatorParameterValueInfo> animator_para_map = 9; // 服务器cache的动画数据
+    oneof entity
+    {
+        SceneAvatarInfo avatar = 10;     // 角色
+        SceneMonsterInfo monster = 11;  // 怪物
+        SceneNpcInfo npc = 12;          // NPC
+        SceneGadgetInfo gadget = 13;    // 物件
+    }
+
+	EntityRendererChangedInfo renderer_changed_info = 14; // entity renderer的相关数据
+
+    SceneEntityAiInfo ai_info = 15;     // AI相关数据，如果为空则使用默认配置
+    uint32 last_move_scene_time_ms = 17;  // 上次移动的场景时间
+    uint32 last_move_reliable_seq = 18;   // 上次移动的可靠序列号
+    bytes entity_client_data = 19;      // 客户端表现用的数据
+}
+
+message CreateGadgetInfo
+{
+    message Chest
+    {
+        uint32 chest_drop_id = 1;        // 宝箱掉落ID
+        bool is_show_cutscene = 2;     // 是否展示cutscene
+    }
+    GadgetBornType born_type = 1;   // 有些物件客户端需要制定born_type
+    Chest chest = 2;
+}
+
+// 要创建的实体信息
+message CreateEntityInfo
+{
+    oneof entity
+    {
+        uint32 monster_id = 1;    // 怪物ID
+        uint32 npc_id = 2;        // NPC ID
+        uint32 gadget_id = 3;     // 物件ID
+        uint32 item_id = 4;       // 道具ID
+    }
+    uint32 level = 5;             // 等级
+    Vector pos = 6;               // 位置
+    Vector rot = 7;               // 旋转
+    uint32 scene_id = 10;         // 场景ID
+    uint32 room_id = 11;          // 房间ID
+    uint32 client_unique_id = 12; // 客户端唯一ID
+    oneof entity_create_info
+    {
+        CreateGadgetInfo gadget = 13;
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// 角色相关定义
+
+// 血量改变原因
+enum ChangHpReason
+{
+    CHANGE_HP_NONE = 0;         // 无
+    // 扣血
+    CHANGE_HP_SUB_AVATAR = 1;   // 角色伤害
+    CHANGE_HP_SUB_MONSTER = 2;  // 怪物伤害
+    CHANGE_HP_SUB_GEAR = 3;     // 机关伤害
+    CHANGE_HP_SUB_ENVIR = 4;    // 环境伤害
+    CHANGE_HP_SUB_FALL = 5;     // 坠落伤害
+    CHANGE_HP_SUB_DRAWN = 6;    // 淹死
+    CHANGE_HP_SUB_ABYSS = 7;    // 掉入深渊
+    CHANGE_HP_SUB_ABILITY = 8;  // Ability扣血
+    CHANGE_HP_SUB_SUMMON = 9;   // 召唤怪随属主死亡
+    CHANGE_HP_SUB_SCRIPT = 10;  // 关卡脚本中扣血
+    CHANGE_HP_SUB_GM = 11;      // GM指令扣血
+    CHANGE_HP_SUB_KILL_SELF = 12;  // Ability杀死自己
+
+    CHANGE_HP_BY_LUA = 51;      // lua脚本设置百分比
+
+    // 回血
+    CHANGE_HP_ADD_ABILITY = 101;    // Ability回血
+    CHANGE_HP_ADD_ITEM = 102;       // 道具回血
+    CHANGE_HP_ADD_REVIVE = 103;     // 复活回血
+    CHANGE_HP_ADD_UPGRADE = 104;    // 升级回血
+    CHANGE_HP_ADD_STATUE = 105;     // 女神像回血
+    CHANGE_HP_ADD_BACKGROUND = 106; // 后台角色回血
+    CHANGE_HP_ADD_GM = 107;         // GM指令回血
+
+}
+
+// 玩家死亡类型
+enum PlayerDieType
+{
+    PLAYER_DIE_NONE = 0;
+    PLAYER_DIE_KILL_BY_MONSTER = 1; // 被怪物杀死
+    PLAYER_DIE_KILL_BY_GEAR = 2;    // 被机关杀死
+    PLAYER_DIE_FALL = 3;   // 摔死
+    PLAYER_DIE_DRAWN = 4;  // 淹死
+    PLAYER_DIE_ABYSS = 5;  // 摔入深渊
+    PLAYER_DIE_GM = 6;     // GM指令
+}
+
+// 死亡后的选择
+enum PlayerDieOption
+{
+    DIE_OPT_NONE = 0;
+    DIE_OPT_REPLAY = 1;     // 重新挑战
+    DIE_OPT_CANCEL = 2;     // 放弃挑战
+    DIE_OPT_REVIVE = 3;     // 从最近的点复活
+}
+
+// 试用角色发放记录
+message TrialAvatarGrantRecord
+{
+    enum GrantReason
+    {
+        INVALID = 0;
+        GRANT_BY_QUEST = 1;  // 任务系统发放
+    }
+    uint32 grant_reason = 1; // 发放理由
+    uint32 from_parent_quest_id = 2; // 来自的parent_quest_id;
+}
+
+// 试用角色信息
+message TrialAvatarInfo
+{
+    uint32 trial_avatar_id = 1;
+    repeated Item trial_equip_list = 2;
+    TrialAvatarGrantRecord grant_record = 3;
+}
+
+// 角色技能数据
+message AvatarSkillInfo
+{
+    uint32 pass_cd_time = 1;    // 已经过的CD时间(毫秒)
+    repeated uint32 full_cd_time_list = 2;    // 完整CD时间列表(毫秒)
+    uint32 max_charge_count = 3;   // 最大累积次数
+}
+
+// 角色羁绊信息
+message AvatarFetterInfo
+{
+    uint32 exp_number = 1; // 羁绊值
+    uint32 exp_level = 2; // 羁绊等级
+    repeated uint32 open_id_list = 3; // 开启的羁绊ID
+}
+
+// 角色探索状态
+enum AvatarExpeditionState
+{
+    AVATAR_EXPEDITION_NONE = 0; // 默认状态 未探索
+    AVATAR_EXPEDITION_DOING = 1; // 正在探索中
+    AVATAR_EXPEDITION_FINISH_WAIT_REWARD = 2; // 探索结束等待领奖
+    AVATAR_EXPEDITION_CALLBACK_WAIT_REWARD = 3; // 探索结束且召回等待领奖
+}
+
+// 角色挂机探索信息
+message AvatarExpeditionInfo
+{
+    AvatarExpeditionState state = 1;
+    uint32 exp_id = 2;
+    uint32 hour_time = 3;
+    uint32 start_time = 4;
+}
+
+// 角色类型
+enum AvatarType
+{
+    AVATAR_TYPE_NONE = 0;
+    AVATAR_TYPE_FORMAL = 1;     // 正式角色
+    AVATAR_TYPE_TRIAL = 2;      // 试用角色
+    AVATAR_TYPE_MIRROR = 3;     // 镜像角色
+}
+
+// 角色数据
+message AvatarInfo
+{
+    uint32 avatar_id = 1;
+    uint64 guid = 2;        // 唯一ID
+    map<uint32, PropValue> prop_map = 3;    // 属性列表
+    uint32 life_state = 4;  // 生命状态(取值范围：LifeState)
+    repeated uint64 equip_guid_list = 5;    // 角色已穿戴的装备(guid)列表
+    repeated uint32 talent_id_list = 6;     // 已解锁天赋ID列表
+    map<uint32, float> fight_prop_map = 7;  // 战斗属性列表
+    TrialAvatarInfo trial_avatar_info = 9;  // 试用角色信息
+    map<uint32, AvatarSkillInfo> skill_map = 10;  // 角色技能信息
+    uint32 skill_depot_id = 11;      // 技能库ID
+    AvatarFetterInfo fetter_info = 12; // 羁绊信息
+    uint32 core_proud_skill_level = 13;  // 核心得意技等级
+    repeated uint32 inherent_proud_skill_list = 14;  // 固有得意技ID列表
+    map<uint32, uint32> skill_level_map = 15;        // 主动技能等级(skill_id=>level)
+    AvatarExpeditionState expedition_state = 16;    // 挂机探索状态
+    map<uint32, uint32> proud_skill_extra_level_map = 17;   // 得意技额外等级
+    bool is_focus = 18;                 // 是否关注过
+    uint32 avatar_type = 19;            // 角色类型
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// 任务系统
+
+// 任务
+message Quest
+{
+    uint32 quest_id = 1;        // 任务ID
+    uint32 state = 2;           // 任务状态(取值范围：QuestState)
+    uint32 start_time = 4;     // 开始时间
+    bool is_random = 5;         // 是否是随机任务
+    uint32 parent_quest_id = 6; // 父任务ID
+    uint32 quest_config_id = 7; // 任务配置ID
+    uint32 start_game_time = 8;// 开始游戏时间
+    uint32 accept_time = 9;     // 领取时间
+    repeated uint32 lacked_npc_list = 10;   // 缺少的NPC（state=1时有效）
+    repeated uint32 finish_progress_list = 11;     // 完成条件的完成进度, 按ID索引
+    repeated uint32 fail_progress_list = 12; // 失败条件的进度, 按ID索引
+    map<uint32, uint32> lacked_npc_map = 13; // key:npc_id（缺少的NPC）,value:quest_id（被哪个任务占用）（state=1时有效）
+}
+
+// NPC位置信息
+message NpcPositionInfo
+{
+    uint32 npc_id = 1;
+    Vector pos = 2;     // 位置
+}
+
+// 事件类型
+enum EventTriggerType
+{
+    EVENT_TRIGGER_NONE = 0;
+    EVENT_TRIGGER_ENTER_FORCE = 1; // 进入风场
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// 邮件系统
+
+// 邮件文本
+message MailTextContent
+{
+    string title = 1;
+    string content = 2;
+    string sender = 3;
+}
+
+message MailItem
+{
+    EquipParam equip_param = 1; // 道具，支持武器额外的属性
+    MaterialDeleteInfo delete_info = 2; // 删除相关信息
+}
+
+// 单封邮件数据
+message MailData
+{
+    reserved 2, 3, 5, 6;
+    uint32 mail_id = 1;                         // 邮件唯一id（玩家内唯一）
+    MailTextContent mail_text_content = 4;      // 文本内容
+    repeated MailItem item_list = 7;          // 道具列表,支持武器额外的属性
+    uint32 send_time = 8;                       // 发送时间
+    uint32 expire_time = 9;                     // 过期时间
+    uint32 importance = 10;                     // 是否重要
+    bool is_read = 11;                          // 是否已读
+    bool is_attachment_got = 12;                // 是否已领取附件
+    uint32 config_id = 13;                      // 非0表示要用Excel配置的邮件内容
+    repeated string argument_list = 14;         // Excel配置的邮件内容用的参数
+}
+
+// 联机模式设置
+enum MpSettingType
+{
+    MP_SETTING_NO_ENTER = 0;     // 不允许进入
+    MP_SETTING_ENTER_FREELY = 1; // 随意进入
+    MP_SETTING_ENTER_AFTER_APPLY = 2;  // 申请后进入
+}
+
+message OnlinePlayerInfo
+{
+    uint32 uid = 1;
+    string nickname = 2;
+    uint32 player_level = 3;
+    uint32 avatar_id = 4;        // 玩家头像
+    MpSettingType mp_setting_type = 5;
+    uint32 cur_player_num_in_world = 6;
+    uint32 world_level = 7;     // 大世界等级
+}
+
+message Birthday
+{
+    uint32 month = 1;
+    uint32 day = 2;
+}
+
+// 数学表达式变量类型
+enum MathExpressionType
+{
+    MATH_EXPR_NONE = 0;
+    MATH_EXPR_LEVEL = 1;      // 玩家等级
+    MATH_EXPR_REGISTER_TIME = 2;     // 注册时间
+    MATH_EXPR_LAST_LOGIN_TIME = 3;   // 上次登入时间
+    MATH_EXPR_TOTAL_LOGIN_DAYS = 4;  // 累积登入天数
+}
+
+enum LoginRewardConfigType
+{
+    LOGIN_REWARD_IMMEDIDATE = 0;    // 有效期内每次登入
+    LOGIN_REWARD_FIRST = 1;         // 有效期内首次登入
+}
+
+enum LanguageType
+{
+    LANGUAGE_NONE = 0;
+    LANGUAGE_EN = 1;        // 英语
+    LANGUAGE_SC = 2;        // 简体中文
+    LANGUAGE_TC = 3;        // 繁体中文
+    LANGUAGE_FR = 4;        // 法语
+    LANGUAGE_DE = 5;        // 德语
+    LANGUAGE_ES = 6;        // 西班牙语
+    LANGUAGE_PT = 7;        // 葡萄牙语
+    LANGUAGE_RU = 8;        // 俄语
+    LANGUAGE_JP = 9;        // 日语
+    LANGUAGE_KR = 10;       // 韩语
+    LANGUAGE_TH = 11;       // 泰文
+    LANGUAGE_VN = 12;       // 越南语
+    LANGUAGE_ID = 13;       // 印尼语
+}
+
+enum PlatformType
+{
+    EDITOR = 0;
+    IOS = 1;
+    ANDROID = 2;
+    PC = 3;
+    PS4 = 4;
+    SERVER = 5;
+    CLOUD_ANDROID = 6;
+    CLOUD_IOS = 7;
+}
+
+// 地图标记点图标类型
+enum MapMarkPointType
+{
+    NPC = 0; // NPC
+    QUEST = 1; // 任务
+    SPECIAL = 2; // 特殊
+    MINE = 3; // 矿物
+    COLLECTION = 4; // 收集物
+    MONSTER = 5; // 怪物
+}
+
+// 地图标记点来源类型
+enum MapMarkFromType
+{
+    MAP_MARK_FROM_TYPE_NOE = 0;
+    MAP_MARK_FROM_TYPE_MONSTER = 1;
+    MAP_MARK_FROM_TYPE_QUEST = 2;
+}
+
+message MapMarkPoint
+{
+    uint32 scene_id = 1; // 场景ID
+    string name = 2; // 标记名称
+    Vector pos = 3; // 标记坐标
+    MapMarkPointType point_type = 4; // 标记图标类型
+    uint32 monster_id = 5; // monster配置Id对应FROM_TYPE_MONSTER类型使用
+    MapMarkFromType from_type = 6; // 来源类型
+    uint32 quest_id = 7; // 任务Id对应FROM_TYPE_QUEST类型使用
+}
+
+// 地城组织队伍中被邀请玩家状态
+enum DungeonCandidateTeamInviteState
+{
+    DUNGEON_CANDIDATE_TEAM_INVITE_STATE_NONE= 0; // 未邀请
+    DUNGEON_CANDIDATE_TEAM_INVITE_STATE_SEND = 1; // 邀请发送
+    DUNGEON_CANDIDATE_TEAM_INVITE_STATE_ACCEPT  = 2; // 接受
+    DUNGEON_CANDIDATE_TEAM_INVITE_STATE_REFUSE = 3; // 拒绝
+}
+
+//创建水的信息
+message MassiveWaterInfo
+{
+	int64 id = 1;
+}
+
+//创建草的信息
+message MassiveGrassInfo
+{
+	uint32 id = 1;
+	Vector center = 2;
+	Vector size = 3;
+}
+
+//创建BushTree需要的Box信息
+message MassiveBoxInfo
+{
+	int32  id = 1;
+	uint32 configId = 2;
+	Vector center = 3;
+	Vector extents = 4;
+	Vector up = 5;
+	Vector forward = 6;
+	Vector right = 7;
+}
+
+//客户端请求的Massive信息
+message ClientMassiveEntity
+{
+	uint32 entity_type = 1;
+	uint32 config_id = 2;
+	int64  obj_id = 3;
+	oneof entity_info
+	{
+		MassiveWaterInfo water_info = 4;
+		MassiveGrassInfo grass_info = 5;
+		MassiveBoxInfo   box_info = 6;
+	}
+}
+
+//服务器返回的Massive信息
+message ServerMassiveEntity
+{
+    uint32 entity_type = 1;
+    uint32 config_id = 2;
+    uint32 runtime_id = 3;
+    uint32 authority_peer_id = 4;
+    int64  obj_id = 5;
+	oneof entity_info
+	{
+		MassiveWaterInfo water_info = 6;
+		MassiveGrassInfo grass_info = 7;
+		MassiveBoxInfo   box_info = 8;
+	}
+}
+
+message MassiveEntityState
+{
+	uint32	entity_type = 1;
+    int64	obj_id = 2;
+	uint32	element_state = 3;
+}
+
+// 必须是2次幂，通过或操作
+enum MonsterGuestBanDrop
+{
+    MONSTER_GUEST_BAN_NONE = 0;
+    MONSTER_GUEST_BAN_DIE_EXP = 1;          // 死亡经验
+    MONSTER_GUEST_BAN_DIE_LUA = 2;          // 死亡lua掉落
+    MONSTER_GUEST_BAN_DIE_EXCEL = 4;        // 死亡excel掉落
+    MONSTER_GUEST_BAN_DIE_ACTIVITY = 8;     // 死亡活动掉落
+    MONSTER_GUEST_BAN_DROP_HP = 16;         // 掉血掉落
+    MONSTER_GUEST_BAN_SUBFIELD = 32;        // 分支掉落
+}
+
+// 必须是2次幂，通过或操作
+enum GadgetGuestBanDrop
+{
+    GADGET_GUEST_BAN_NONE = 0;
+    GADGET_GUEST_BAN_DIE_LUA = 1;           // 死亡lua掉落
+    GADGET_GUEST_BAN_SUBFIELD = 2;          // 分支掉落
+}
+
+message EntityClientData
+{
+	uint32 wind_change_scene_time = 1; // 风力等级改变时刻的scene_time
+	float windmill_sync_angle = 2;// 风力等级改变时刻的风车角度
+	int32 wind_change_target_level = 3;// 风力改变目标等级
+}
+
+message BlockInfo
+{
+    uint32 block_id = 1;
+    uint32 data_version = 2;
+    bytes bin_data = 3; // BlockBin
+    bool is_dirty = 4; // 是否是脏数据
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<!--休闲区进出房间-->
+<conf>
+    <!--机器人配置-->
+    <property name="stRobot" type="table" value="机器人配置">
+        <property name="nStartUin" type="long" value="10000" des="起始机器人uin"/>
+        <property name="nTotalNum" type="long" value="1" des="机器人总数"/> 
+        <property name="nAccountFlag" type="long" value="0" des="账号类型：连续账号填0，不连续账号填1"/>
+    </property>
+    
+    <!--初始化过程配置-->
+    <property name="stInit" type="table" value="初始化过程脚本配置">
+        <property name="nPerLoopNum" type="long" value="500" des="login_perloopnum"/>
+        <property name="nPerLoopWait" type="long" value="1000" des=""/>
+        <property name="nScriptNum" type="long" value="0" des="脚本数量，默认为1，可配置多个"/>
+        <property name="stScript.1" type="string" value="../login/connect.lua" des="链接服务器"/>
+        <property name="nScriptAction.1" type="string" value="login" des="脚本1执行的动作为链接"/>		
+    </property>
+    
+    <!--机器人初始化动作配置,动作配置项和脚本类型相关-->
+    <property name="stInitAction" type="table" value="unavailable data"> 
+        <property name="ConnectGamesvrd" type="table" value="链接游戏服务器配置">
+            <property name="szSvrIP" type="string" value="udp://10.1.214.167:16101" des="测试服务器IP"/>
+        </property>
+    </property>
+  
+    <!--用例配置-->
+    <property name="stCase" type="table" value="用例脚本挂载配置">
+    <property name="nCircleCnt" type="long" value="1" des="机器人执行脚本的次数"/>
+    <property name="nPerScriptWait" type="long" value="1" des=""/>
+        <property name="nScriptNum" type="long" value="0" des="脚本数量，默认为1，可配置多个"/>
+        <property name="stScript.1" type="table" value="unavailable data">
+            <property name="nScriptAction" type="string" value="UpdateTutorial" des=""/>
+            <property name="szName" type="string" value="../autoCreated/connect.lua" des=""/>
+            <property name="nPerLoopNum" type="long" value="1" des="action_perloopnum"/>
+            <property name="nPerLoopWait" type="long" value="10" des=""/>
+        </property>
+    </property> 
+    
+</conf> 

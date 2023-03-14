@@ -1,0 +1,248 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_property.proto
+ * @作者 jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @日期 2018/09/19 14:25:32
+ * @brief 属性协议[1201 - 1300]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 实体属性通知(S->C改变后通知)
+message EntityPropNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1201;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 entity_id = 1;     // 实体ID
+    map<uint32, PropValue> prop_map = 2;   // 属性列表
+}
+
+// 实体生命状态改变通知(S->C)
+message LifeStateChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1202;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 entity_id = 1;
+    uint32 life_state = 2;          // 生命状态(取值范围：LifeState)
+    uint32 source_entity_id = 3;    // 源实体ID
+    string attack_tag = 4;          // AttackResult中的标记
+    PlayerDieType die_type = 5;     // 死亡原因(仅在死亡状态时有效)
+	uint32 move_reliable_seq = 6;	// 移动的可靠包的序列号
+}
+
+// 战斗属性全量同步协议
+message EntityFightPropNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1203;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 entity_id = 1;     // 实体ID
+    map<uint32, float> fight_prop_map = 2;
+}
+
+// 战斗属性差量同步
+message EntityFightPropUpdateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1204;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 entity_id = 1;     // 实体ID
+    map<uint32, float> fight_prop_map = 2;
+}
+
+// 角色战斗属性全量同步
+message AvatarFightPropNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1205;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint64 avatar_guid = 1;     // 实体ID
+    map<uint32, float> fight_prop_map = 2;
+}
+
+// 角色战斗属性差量同步
+message AvatarFightPropUpdateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1206;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint64 avatar_guid = 1;     // 实体ID
+    map<uint32, float> fight_prop_map = 2;
+}
+
+// 属性改变原因
+enum PropChangeReason
+{
+    PROP_CHANGE_NONE = 0;
+    PROP_CHANGE_STATUE_RECOVER = 1; // 女神像回复
+    PROP_CHANGE_ENERGY_BALL = 2;    // 吃能量球
+    PROP_CHANGE_ABILITY = 3;        // 技能改变
+    PROP_CHANGE_LEVELUP = 4;        // 升级
+    PROP_CHANGE_ITEM = 5;           // 使用道具
+    PROP_CHANGE_AVATAR_CARD = 6;    // 角色卡转换
+    PROP_CHANGE_CITY_LEVELUP = 7;   // 城市升级
+    PROP_CHANGE_AVATAR_UPGRADE = 8; // 角色升级
+    PROP_CHANGE_AVATAR_PROMOTE = 9; // 角色突破
+    PROP_CHANGE_PLAYER_ADD_EXP = 10;// 增加玩家经验
+    PROP_CHANGE_FINISH_QUEST = 11; // 完成任务触发 
+}
+
+// 战斗属性改变原因通知
+message EntityFightPropChangeReasonNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1207;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 entity_id = 1;   // 实体ID
+    uint32 prop_type = 2;   // 属性类型(取值范围：FightPropType)
+    float prop_delta = 3;   // 属性改变
+    PropChangeReason reason = 4;    // 改变原因
+    repeated uint32 param_list = 5; // 改变参数
+}
+
+// 实体生命状态改变通知(S->C)
+message AvatarLifeStateChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1208;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint64 avatar_guid = 1;
+    uint32 life_state = 2;          // 生命状态(取值范围：LifeState)
+    uint32 source_entity_id = 3;    // 源实体ID
+    string attack_tag = 4;          // AttackResult中的标记
+    PlayerDieType die_type = 5;     // 死亡原因(仅在死亡状态时有效)
+	uint32 move_reliable_seq = 6;	// 移动的可靠包的序列号
+}
+
+// 角色属性变化(S->C)
+message AvatarPropChangeReasonNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1209;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint64 avatar_guid = 1;
+    uint32 prop_type = 2;
+    float old_value = 3;
+    float cur_value = 4;
+    PropChangeReason reason = 5;
+}
+
+// 玩家属性变化(S->C)
+message PlayerPropChangeReasonNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1210;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 prop_type = 1;
+    float old_value = 2;
+    float cur_value = 3;
+    PropChangeReason reason = 4;
+}
+
+// 通知角色属性全量更新，不表现(S->C改变后通知)
+message AvatarPropNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1211;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint64 avatar_guid = 1;     // 角色guid
+    map<uint32, int64> prop_map = 2;   // 属性列表
+}
+
+// 展示用的“新”标记
+enum MarkNewType
+{
+    MARK_NEW_TYPE_NONE = 0;
+    MARK_NEW_TYPE_COMBINE = 1;  // 合成系统
+    MARK_NEW_TYPE_FORGE = 2;    // 锻造系统
+}
+
+// 通知客户端需要标新的地方
+message MarkNewNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1212;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 mark_new_type = 1;       // 标新系统
+    repeated uint32 id_list = 2;    // ID列表
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

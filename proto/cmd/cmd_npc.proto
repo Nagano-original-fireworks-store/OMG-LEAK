@@ -1,0 +1,96 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file npc.proto
+ * @作者 jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @日期 2017/11/23 20:17:09
+ * @brief NPC相关协议[501 - 600]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// NPC对话类型
+enum NpcTalkType
+{
+    TALK_NONE = 0;
+    TALK_START = 1;     // 开始对话
+    TALK_CHOOSE = 2;    // 选择对话
+    TALK_NEXT = 3;      // 下句对话
+    TALK_FINISH = 4;    // 结束对话
+}
+
+// 与NPC对话
+message NpcTalkReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 501;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 npc_entity_id = 1;   // NPC实体ID
+    NpcTalkType talk_type = 2;  // 对话类型
+    uint32 talk_id = 3;         // 对话ID
+}
+
+message NpcTalkRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 502;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 npc_entity_id = 2;   // NPC实体ID
+    NpcTalkType talk_type = 3;  // 对话类型
+    uint32 cur_talk_id = 4;     // 当前对话ID
+}
+
+// 获取场景中所有NPC的位置信息
+message GetSceneNpcPositionReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 504;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 scene_id = 1;    // 场景ID
+    repeated uint32 npc_id_list = 2; // 请求的NpcId
+}
+
+message GetSceneNpcPositionRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 505;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 scene_id = 2;    // 场景ID
+    repeated NpcPositionInfo npc_info_list = 3;  // 位置信息
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

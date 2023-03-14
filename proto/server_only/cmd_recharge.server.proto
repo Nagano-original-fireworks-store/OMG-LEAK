@@ -1,0 +1,90 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_recharge.server.proto
+ * @作者 peng.huang(peng.huang@mihoyo.com)
+ * @日期 2020/03/19 13:23:22
+ * @brief 充值协议[10701-10751]
+ **/
+
+syntax = "proto3";
+package proto;
+
+message Order
+{
+    uint32 id = 1;              // MySQL 主键
+    uint32 uid = 2;             // 玩家uid
+    string product_id = 3;      // 商品id, 客户端下单时指定的
+    string product_name = 4;
+    uint32 product_num = 5;     // 下单时客户端提供
+    uint32 coin_num = 6;        // 自定义充值水晶, 海外点卡充值的情况下使用
+    string total_fee = 7;
+    string currency = 8;        // 货币类型, 需要校验
+    string price_tier = 9;      // 价格档位, 需要校验
+    //string trade_no = 10;       // 流水号 全局唯一
+    uint32 channel_id = 11; 
+    string channel_order_no = 12;   // 和channel_id组合后全局唯一
+    string pay_plat = 13;           // 支付渠道
+    string extend = 14;             // 扩展参数, 客户端提供
+};
+
+// oaserver接到一笔订单通知game处理
+message RechargeOrderNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10701;
+    }
+    Order order = 1;
+}
+
+// game通知oa标记订单完成
+message MarkOrderFinishedReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10702;
+    }
+    uint32 order_id = 1;            // 订单编号
+    uint32 finish_time = 2;         // 完成时间
+}
+
+message MarkOrderFinishedRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10703;
+    }
+    int32 retcode = 1;
+    uint32 order_id = 2;            // 订单编号
+}
+
+// 玩家上线后拉取近30天未完成的订单
+message GetUnfinishedOrderReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10704;
+    }
+}
+
+message GetUnfinishedOrderRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10705;
+    }
+    int32 retcode = 1;
+    repeated Order order_list = 2;
+}
+
+

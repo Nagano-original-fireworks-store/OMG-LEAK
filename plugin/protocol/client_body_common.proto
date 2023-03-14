@@ -1,0 +1,41 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+ /**
+ * @file client_body_common.proto
+ * @author shuo.xu(shuo.xu@mihoyo.com)
+ * @date 2018/12/04 18:50:42
+ * @brief 
+ *      定义通用客户端日志body
+ **/
+
+syntax = "proto3";
+package proto_log;
+
+// 客户端登入日志
+message ClientLogBodyLogin
+{
+    string action_type = 1;    //登陆中的动作
+    string action_result = 2;  //登陆结果
+    uint32 action_time = 3;    //登陆中动作耗时
+    string xg = 4;             //网络制式
+    uint32 signal_level = 5;   //信号强度
+    string dns = 6;            //客户端dns
+}
+
+// 客户端Ping值日志
+message ClientLogBodyPing
+{
+    string xg = 1;             //网络制式
+    uint32 signal_level = 2;   //信号强度
+    uint32 ping = 3;           //ping值
+    string servertype = 4;     //连接server的类型
+    string serverip = 5;       //连接server ip
+    string serverport = 6;     //连接server 端口
+	uint32 pcount = 7;         //ping次数
+    uint32 plost = 8;          //丢包次数
+    string dns = 9;            //客户端dns
+}

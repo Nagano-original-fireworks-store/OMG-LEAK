@@ -1,0 +1,167 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file gadget.proto
+ * @作者 jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @日期 2018/03/09 10:56:29
+ * @brief 物件协议[801 - 900]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 交互类型
+enum InteractType
+{
+    INTERACT_NONE = 0;
+    INTERACT_PICK_ITEM = 1;  // 拾取道具
+    INTERACT_GATHER = 2;     // 采集
+    INTERACT_OPEN_CHEST = 3; // 开宝箱
+	INTERACT_OPEN_STATUE = 4; // 地城领奖台领奖
+    INTERACT_CONSUM = 5;
+}
+
+// 交互操作类型
+enum InterOpType
+{
+    INTER_OP_FINISH = 0;    // 完成交互
+    INTER_OP_START = 1;     // 开始交互
+    //INTER_OP_CANCEL = 2;    // 取消交互
+}
+
+// 物件交互
+message GadgetInteractReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 801;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 gadget_entity_id = 1;    // 物件实体ID
+    InterOpType op_type = 2;        // 交互操作类型
+    uint32 gadget_id = 3;           // 物件配置ID
+}
+
+message GadgetInteractRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 802;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 gadget_entity_id = 2;    // 物件实体ID
+    InteractType interact_type = 3; // 交互类型
+    InterOpType op_type = 4;        // 交互操作类型
+    uint32 gadget_id = 5;           // 物件配置ID
+}
+
+// 物件状态通知(S->C)
+message GadgetStateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 803;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 gadget_entity_id = 1;    // 物件实体ID
+    uint32 gadget_state = 2;        // 物件状态(取值范围: GadgetState)
+    bool is_enable_interact = 3;    // 是否可交互
+}
+
+// 操作台选项通知(改变后通知)
+message WorktopOptionNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 804;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 gadget_entity_id = 1;    // 物件实体ID
+    repeated uint32 option_list = 2;   // 操作台选项列表
+}
+
+// 选择操作台选项
+message SelectWorktopOptionReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 805;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 gadget_entity_id = 1;    // 物件实体ID
+    uint32 option_id = 2;   // 选项ID
+}
+
+message SelectWorktopOptionRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 806;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 gadget_entity_id = 2;    // 物件实体ID
+    uint32 option_id = 3;   // 选项ID
+}
+
+message BossChestActivateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 807;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 entity_id = 1;
+    repeated uint32 qualify_uid_list = 2;     // 交互资格的uid列表
+}
+
+message BlossomChestInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 808;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 entity_id = 1;
+    BlossomChestInfo blossom_chest_info = 2;
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

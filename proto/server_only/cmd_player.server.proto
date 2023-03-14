@@ -1,0 +1,131 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file player.server.proto
+ * @author jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @date 2017/10/09 14:17:27
+ * @brief 为服务器玩家数据协议[10101 - 10200]
+ **/
+
+syntax = "proto3";
+import "server_only/bin.server.proto";
+import "define.proto";
+package proto;
+
+// 保存用户数据
+message SavePlayerDataReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10102;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    PlayerData player_data = 1;
+}
+
+message SavePlayerDataRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10103;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 data_version = 2;    // 写回的数据version
+}
+
+// 玩家在线状态通知 game->node, redis的核心数据不用这个协议
+message PlayerOnlineStatusNotify
+{
+    enum Enum
+    {
+        NONE = 0;
+        CMD_ID = 10104;
+    }
+    // 状态类型
+    enum StatusType
+    {
+        ONLINE = 0;     // 上线
+        OFFLINE = 1;    // 掉线
+    }
+    repeated uint32 uid_list = 1;   // uid列表
+    StatusType status = 2;  // 状态
+    uint32 platform_type = 3;   // 平台类型
+};
+
+message ServiceDisconnectNotify
+{
+    enum Enum
+    {
+        NONE = 0;
+        CMD_ID = 10107;
+    }
+    ServiceType type = 1;   // 服务类型
+    uint32 ip = 2;   // 对应服务的IP
+}
+
+// 客户端掉线通知, 用来通知gameserver工作线程回写数据、定时logout
+message PlayerDisconnectNotify
+{
+    enum Enum
+    {
+        NONE = 0;
+        CMD_ID = 10108;
+    }
+    uint32 data = 1;        // ENetReason,服务端区分断开的原因
+}
+
+// game通知gate断开当前连接
+message DisconnectClientNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10109;
+    }
+    uint32 data = 1;            // ENetReason
+}
+
+
+
+// 加载Group用的提示包，不会真的用于发送消息
+message SysCreateGroupReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10110;
+    }
+}
+
+// 加载Block用到的提示包，不会真的用于发送消息
+message SysLoadBlockReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10111;
+    }
+}
+
+message SysSaveBlockReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10112;
+    }
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

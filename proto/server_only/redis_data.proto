@@ -1,0 +1,117 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file redis_data.proto
+ * @作者 xiao.liu(xiao.liu@mihoyo.com)
+ * @日期 2018/01/04 19:37:46
+ * @brief 定义在redis中存储的数据
+ **/
+
+syntax = "proto3";
+import "server_only/bin_common.server.proto";
+import "define.proto";
+package proto;
+
+/////////////////////////////////////////////////////////////////////////////////////
+// OnlineStatus
+
+enum PlayerStatusType
+{
+    PLAYER_STATUS_OFFLINE = 0;      // 离线
+    PLAYER_STATUS_ONLINE = 1;       // 在线
+}
+message PlayerStatusRedisData
+{
+    PlayerStatusType status = 1;
+    uint32 gameserver_id = 2;
+    uint64 login_rand = 3;           // 登入随机数
+    uint32 login_time = 4;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Mail
+
+message MailRedisData
+{
+    MailBin mail_bin = 1;
+    uint32 id = 2;
+    bool is_read = 3;
+    bool is_attachment_got = 4;
+}
+
+message MailMaxIdRedisData // 最大邮件ID，只是用来标识redis key
+{
+    
+}
+
+message MailIdSortedSetRedisData // 当前玩家的邮件ID数据，只是用来标识redis key
+{
+    
+}
+
+message MailTicketHashMapRedisData // 外部邮件流水号数据，只是用来标识redis key
+{
+
+}
+
+message MailTransactionIdHashMapRedisData // 内部邮件transaction_id数据，只是用来标识redis key
+{
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// OfflineMsg
+
+message TicketTimeBin
+{
+    uint32 enque_time = 1;      // 进入队列时间 
+    string ticket = 2;          // 运营指定的ticket
+}
+message OfflineMsgRedisData
+{
+    uint32 last_index = 1;           // 最后一个msg的index
+    repeated OfflineMsgBin offline_msg_list = 2;
+    repeated TicketTimeBin recent_ticket_list = 3;     // 最近30天收到的非空ticket列表
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Social
+
+message PlayerFriendListRedisData    // 玩家好友列表，redis存储为Set，只是用来标识redis key
+{
+
+}
+
+message PlayerAskFriendListRedisData    // 玩家好友请求数据，redis存储为Set
+{
+    
+}
+
+message PlayerSocialBriefData // 玩家社交数据
+{
+    Birthday birthday = 1;    // 生日
+    string signature = 2;   // 个人签名
+    uint32 avatar_id = 3;   // 头像
+}
+
+message PlayerBasicBriefData    // 玩家BasicComp数据
+{
+    string nickname = 1;    // 昵称
+    uint32 level = 2;       // 冒险等级
+    uint32 world_level = 3; // 大世界等级
+    uint32 last_login_time = 4;    // 最近的活跃时间(gameserver定时同步在线玩家basicbrief)
+}
+
+message PlayerBriefDataRedisData
+{
+    PlayerSocialBriefData social_brief = 1;
+    PlayerBasicBriefData basic_brief = 2;
+}
+
+
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

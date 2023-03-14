@@ -1,0 +1,13 @@
+{
+  "target_lock_point_index": 0, 
+  "entity_id": 0, 
+  "config_id": 0, 
+  "is_async_load": false, 
+  "camp_type": 0, 
+  "target_entity_id": 0, 
+  "room_id": 0, 
+  "forward_type": "FORWARD_LOCAL", 
+  "guid": "0", 
+  "owner_entity_id": 0, 
+  "camp_id": 0
+}

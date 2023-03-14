@@ -1,0 +1,196 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_investigation.proto
+ * @作者 zhengdong.wang(zhengdong.wang@mihoyo.com)
+ * @日期 2019/10/09 15:58:40
+ * @brief 调查相关协议[1901-1930]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+
+message Investigation
+{
+    enum State
+    {
+        INVALID = 0;      // 非法
+        IN_PROGRESS = 1;  // 进行中
+        COMPLETE = 2;     // 已完成
+        REWARD_TAKEN = 3; // 已领奖
+    }
+    uint32 id = 1; // 调查ID
+    uint32 progress = 2; // 调查当前进度
+    uint32 total_progress = 3; // 总进度
+    State state = 4; // 调查当前的状态
+}
+
+message InvestigationTarget
+{
+    enum State
+    {
+        INVALID = 0;      // 非法
+        IN_PROGRESS = 1;  // 进行中
+        COMPLETE = 2;     // 已完成
+        REWARD_TAKEN = 3; // 已领奖
+    }
+    uint32 quest_id = 1;         // 对应的子任务ID
+    uint32 investigation_id = 2; // 对应的调查ID
+    State state = 3;             // 当前的状态
+}
+
+message PlayerInvestigationAllInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1901;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated Investigation investigation_list = 1;
+    repeated InvestigationTarget investigation_target_list = 2;
+}
+
+// 领取调查的奖励
+message TakeInvestigationRewardReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1902;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 id  = 1; // 要领取奖励的调查ID
+}
+
+message TakeInvestigationRewardRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1903;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 id  = 2; // 领取奖励的调查ID
+}
+
+// 领取调查目标任务的奖励
+message TakeInvestigationTargetRewardReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1904;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 quest_id  = 1; // 要领取奖励的调查任务ID
+}
+
+message TakeInvestigationTargetRewardRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1905;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 quest_id  = 2; // 领取奖励的调查任务ID
+}
+
+// 拉取调查怪物的信息
+message GetInvestigationMonsterReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1906;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated uint32 city_id_list = 1; // 请求查询的city_id列表 
+}
+
+message InvestigationMonster
+{
+    enum LockState
+    {
+        LOCK_NONE = 0;  // 无锁定
+        LOCK_QUEST = 1; // 任务锁定
+    }
+    uint32 id = 1;       // 配置ID
+    uint32 city_id = 2;  // 所属城市ID
+    uint32 level = 3;    // 怪物等级
+    bool is_alive = 4;   // 怪物是否活着
+    uint32 next_refresh_time = 5; // 下次刷新时间戳
+    uint32 refresh_interval = 6;  // 总共刷新需要的时间间隔
+    Vector pos = 7;               // 位置
+    LockState lock_state = 8;     // 锁定状态，展示用
+    uint32 max_boss_chest_num = 9;  // boss宝箱领取数量限制
+    uint32 boss_chest_num = 10;     // 已经领取的boss宝箱数量
+    uint32 world_resin = 11;        // 开启boss宝箱需要的大世界体力
+}
+
+message GetInvestigationMonsterRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1907;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    int32 retcode = 1;
+    repeated InvestigationMonster monster_list = 2;
+}
+
+message PlayerInvestigationNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1908;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated Investigation investigation_list = 1;
+}
+
+message PlayerInvestigationTargetNotify
+{
+
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1909;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated InvestigationTarget investigation_target_list = 1;
+}
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

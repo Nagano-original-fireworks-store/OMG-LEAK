@@ -1,0 +1,37 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+ /**
+ * @file client_head.proto
+ * @author shuo.xu(shuo.xu@mihoyo.com)
+ * @date 2018/12/04 18:50:42
+ * @brief 
+ *      定义客户端日志head
+ **/
+
+
+syntax = "proto3";
+package proto_log;
+
+// 客户端日志HEAD
+message ClientLogHead
+{
+    // 日志基本属性
+    string event_time = 1;      // 上报时间
+    string log_serial_number = 2; //日志序列号，用于标识同一个流程中的日志，便于日志关联
+    uint32 action_id = 3;       // 行为类型，对应ActionType中的value
+    string action_name = 4;     // 行为类型的字符串名称，仅仅用来方便人为阅读日志
+    string upload_ip = 5;       // 客户端ip
+    string product_id = 6;      // 产品ID(APPKEY)，url用product id区分
+    string channel_id = 7;      // 渠道号
+    string region_name = 8;     // 分区名称
+    string game_version = 9;    // 产品版本
+    string device_type = 10;    // 设备类型
+    string device_uuid = 11;    // device_uuid
+    string mac_addr = 12;       // mac_addr
+    string account_name = 13;   // 账号名
+    string account_uuid = 14;   // 账号UID
+}

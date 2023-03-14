@@ -1,0 +1,244 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_muip.server.proto
+ * @作者 jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @日期 2019/01/28 14:15:17
+ * @brief  服务器杂项协议[10201 - 10300]
+ **/
+
+syntax = "proto3";
+package proto;
+
+import "define.proto";
+import "server_only/config.server.proto";
+
+// 查询在线玩家数量
+message OnlinePlayerNumReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10201;
+    }
+}
+
+message OnlinePlayerNumRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10202;
+    }
+    int32 retcode = 1;
+    uint32 online_player_num = 2;
+    map<uint32, uint32> gameserver_player_num_map = 3;
+}
+
+// 仅仅是把玩家当成断线处理，并不会立即下线
+message KickoutPlayerNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10203;
+    }
+}
+
+// 查询玩家是否在指定的game上
+message CheckOnlinePlayerReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10204;
+    }
+    uint32 gameserver_id = 1;
+    uint32 ns_gameserver_id = 2;    // nodeserver填充
+}
+
+message CheckOnlinePlayerRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10205;
+    }
+    message NodeStatus
+    {
+        uint32 gameserver_id = 1;
+        uint32 nodeserver_id = 2;
+    }
+    message GameStatus
+    {
+        uint32 gameserver_id = 1;
+        uint32 login_time = 2;
+        uint64 login_rand = 3;
+        bool is_wait_save = 4;
+    }
+    int32 retcode = 1;
+    NodeStatus node_status = 2;    // node中的状态
+    GameStatus game_status = 3;    // 指定game上UID的状态
+}
+
+// 查询玩家战斗力
+message PlayerCombatForceReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10206;
+    }
+}
+
+message PlayerCombatForceRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10207;
+    }
+    int32 retcode = 1;
+    float player_combat_force = 2;
+    map<uint32, float> player_combat_force_map = 3;
+}
+
+// 查询版本号
+message DataAndResVersionReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10208;
+    }
+}
+
+message GameserverVersionData
+{
+    DataVersionConfig data_version_config = 1;
+    map<uint32, ResVersionConfig> res_version_config_map = 2;
+}
+
+message DataAndResVersionRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10209;
+    }
+    int32 retcode = 1;
+    map<uint32, GameserverVersionData> gameserver_version_map = 2;
+}
+
+// 查询在线玩家数量
+message PlatformPlayerNumReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10210;
+    }
+}
+
+message PlatformPlayerNumRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10211;
+    }
+    int32 retcode = 1;
+    uint32 online_player_num = 2;
+    map<uint32, uint32> platform_player_num_map = 3;
+}
+
+enum PlayerMemDataType
+{
+    MEM_DATA_BASIC = 0;         //基础数据
+}
+
+message PlayerMemBasicData
+{
+    string nickname = 1;
+    uint32 level = 2;
+    uint32 exp = 3;
+    uint32 scoin = 4;           //摩拉
+    uint32 hcoin = 5;           //原石
+    uint32 last_login = 6;      //上次登入时间
+}
+
+// 查询玩家内存里面的实时数据
+message QueryPlayerMemDataByMuipReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10212;
+    }
+    uint32 data_type = 1;
+}
+
+message QueryPlayerMemDataByMuipRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10213;
+    }
+    int32 retcode = 1;
+    oneof detail
+    {
+        PlayerMemBasicData basic_data = 2;
+    }
+}
+
+// 设置免密登入:运营账号 -> 玩家账号
+message BindGmUidNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10214;
+    }
+    uint32 gm_uid = 1;      // 运营账号uid
+    uint32 player_uid = 2;  // 普通玩家uid
+}
+
+// 取消免密登入设置
+message UnbindGmUidNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10215;
+    }
+    uint32 gm_uid = 1;
+}
+
+// 查询免密登入配置
+message GetBindGmUidReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10216;
+    }
+}
+
+message GetBindGmUidRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10217;
+    }
+    int32 retcode = 1;
+    map<uint32, uint32> gm_uid_map = 2;
+}
+
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

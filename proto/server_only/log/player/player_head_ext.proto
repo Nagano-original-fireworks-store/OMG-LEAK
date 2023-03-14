@@ -1,0 +1,41 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file player_head_ext.proto
+ * @作者 yifan.fang(yifan.fang@mihoyo.com)
+ * @日期 2019/01/28 15:54:14
+ * @brief 
+ *  定义玩家日志headext
+ **/
+
+syntax = "proto3";
+package proto_log;
+
+// 玩家日志HEADEXT
+message PlayerLogHeadExt
+{
+    uint32 avatar_id = 1;           // 角色ID
+    uint32 scene_id = 2;            // 场景ID
+    uint32 world_owner_uid = 3;     // 当前所处世界的所有者UID，若处于自己的世界则记录自己的UID
+    int32 x_coordinate = 4;         // 玩家当前X坐标
+    int32 y_coordinate = 5;         // 玩家当前Y坐标
+    int32 z_coordinate = 6;         // 玩家当前Z坐标
+    uint32 player_time = 7;         // 玩家累计在线时长，单位秒，不包括断线后重连前的时间，不包括联机时断线后的时间
+    uint32 login_time = 8;          // 本次登录时间的时间戳
+    uint32 platform_type = 9;       // 平台，例如android，ios，pc，值的定义在define.proto的PlatformType
+    uint32 weather = 10;            // 当前的天气类型（WeatherExcelConfig.xml的ClimateType）
+    repeated string sub_action_list = 11;   // 所有的sub_action_type
+    uint32 unpaused_time = 12;      // 累计非暂停时长，单位秒，包括联机时断线后的时间
+    uint32 is_in_mp = 13;           // 1表示在联机、0表示不在联机
+    uint32 level1_area_id = 14;     // 一级区域ID，用以标识当前玩家所在的一级区域
+    uint32 level2_area_id = 15;     // 二级区域ID，用以标识当前玩家所在的二级区域
+    uint32 wait_sub_hcoin = 16;     // 扣除到负数的原石
+    uint32 wait_sub_scoin = 17;     // 扣除到负数的摩拉
+    uint32 gm_uid = 18;             // 如果是免密登入，真实的运营账号uid
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

@@ -1,0 +1,117 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2020 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_shopmall.proto
+ * @作者 peng.huang(peng.huang@miHoYo.com)
+ * @日期 2020/03/26 10:38:51
+ * @brief 商城相关协议[4151-4200]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 客户端请求商城的基础数据
+message GetShopmallDataReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 4151;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message GetShopmallDataRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 4152;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    repeated uint32 shop_type_list = 2;
+}
+
+// 商城里面商品信息
+message ShopmallGoodsData
+{
+
+}
+
+// 商城里面商店信息
+message ShopmallShopData
+{
+    uint32 shop_type = 1;       // 商店类型
+    repeated ShopmallGoodsData goods_data_list = 2;     // 商品信息
+    // TODO...商店本身的属性
+}
+
+// 客户端请求某个商店页签的数据
+message GetShopmallShopDataReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 4153;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 shop_type = 1;
+}
+
+message GetShopmallShopDataRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 4154;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    ShopmallShopData shop_data = 2;
+}
+
+// 客户端在商城里面购买普通商品（非支付money）
+message BuyShopmallGoodsReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 4155;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 shop_type = 1;
+}
+
+message BuyShopmallGoodsRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 4156;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

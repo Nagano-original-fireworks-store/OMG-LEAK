@@ -1,0 +1,193 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file hk4e_proto/pb/cmd/cmd_mail.proto
+ * @作者 yifan.fang(yifan.fang@mihoyo.com)
+ * @日期 2019/02/21 15:45:55
+ * @brief 邮件协议[1401 - 1500]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 新邮件/邮件数据变化/删除邮件时通知 S->C
+message MailChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1402;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated MailData mail_list = 1; // 增加或字段变化的邮件
+    repeated uint32 del_mail_id_list = 2;   // 删除的邮件
+}
+
+// 读邮件通知服务端 C->S
+message ReadMailNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1403;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated uint32 mail_id_list = 1;
+}
+
+// 获取邮件附件
+message GetMailItemReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1404;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated uint32 mail_id_list = 1;
+}
+
+message GetMailItemRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1405;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 retcode = 1;
+    repeated uint32 mail_id_list = 2;
+    repeated EquipParam item_list = 3;           // 获得的道具
+}
+
+// 删除邮件
+message DelMailReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1406;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated uint32 mail_id_list = 1;
+}
+
+message DelMailRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1407;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 retcode = 1;
+    repeated uint32 mail_id_list = 2;
+}
+
+enum AuthkeySignType
+{
+    AUTHKEY_SIGN_TYPE_NONE = 0;
+    AUTHKEY_SIGN_TYPE_DEFAULT = 1;
+    AUTHKEY_SIGN_TYPE_RSA = 2;
+}
+
+// 加密信息获取
+message GetAuthkeyReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1408;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    string auth_appid = 1;       // appid
+    uint32 sign_type = 2;        // 加密类型
+    uint32 authkey_ver = 3;      // 密钥版本
+}
+
+message GetAuthkeyRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1409;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 retcode = 1;
+    string authkey = 2;          // 加密串
+    string auth_appid = 3;       // appid
+    uint32 sign_type = 4;        // 加密类型
+    uint32 authkey_ver = 5;      // 密钥版本
+    string game_biz = 6;         // 运营要求的game_biz
+}
+
+// 通知是否有新邮件，登录时通知 S->C
+message ClientNewMailNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1410;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 not_read_num = 1;            // 未读邮件数量
+    uint32 not_got_attachment_num = 2;  // 未领取的邮件的数量
+}
+
+// 请求拉取所有邮件数据 C->S
+message GetAllMailReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1411;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+// 请求拉取所有邮件数据的回复 S->C
+message GetAllMailRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1412;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 retcode = 1;
+    repeated MailData mail_list = 2; // 所有邮件的列表
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

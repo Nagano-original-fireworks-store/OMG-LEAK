@@ -1,0 +1,284 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file hk4e_proto/pb/server_only/cmd_mail.server.proto
+ * @作者 yifan.fang(yifan.fang@mihoyo.com)
+ * @日期 2019/02/18 11:23:55
+ * @brief  [10301 - 10400]
+ **/
+
+syntax = "proto3";
+import "server_only/bin_common.server.proto";
+import "server_only/redis_data.proto";
+import "server_only/enum.server.proto";
+package proto;
+
+// 发邮件
+message AddRedisMailReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10301;
+    }
+
+    MailAddOpType op_type = 1;
+    MailBin mail_bin = 2; 
+    string ticket = 3;      // 外部邮件需要带ticket
+    uint64 transaction_id = 4; // 内部邮件需要带transaction_id
+}
+
+message AddRedisMailRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10302;
+    }
+
+    int32 retcode = 1;
+    MailAddOpType op_type = 2; 
+    string ticket = 3;      
+    uint64 transaction_id = 4; 
+}
+
+// 删除邮件
+message DelRedisMailReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10303;
+    }
+
+    MailDelOpType op_type = 1;
+    repeated uint32 mail_id_list = 2;
+
+}
+
+message DelRedisMailRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10304;
+    }
+
+    int32 retcode = 1;
+    MailDelOpType op_type = 2;
+    repeated uint32 mail_id_list = 3;
+}
+
+// 拉取邮件
+message GetRedisMailReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10305;
+    }
+
+    MailGetOPType op_type = 1;
+    MailGetType get_type = 2;
+    repeated uint32 mail_id_list = 7;
+}
+
+message GetRedisMailRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10306;
+    }
+    int32 retcode = 1;
+    repeated MailRedisData mail_list = 2;
+    MailGetOPType op_type = 3;
+}
+
+// 邮件变化通知
+message RedisMailChangeNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10307;
+    }
+    
+    repeated MailRedisData update_mail_list = 1;
+    repeated uint32 del_mail_id_list = 2;
+}
+
+// 发送offlinemsg
+message SendOfflineMsgReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10308;
+    }
+    OfflineMsgBin msg = 1;
+}
+
+message SendOfflineMsgRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10309;
+    }
+    int32 retcode = 1;
+    string ticket = 2;
+}
+
+// multi通知game有新的离线消息
+message NewOfflineMsgNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10310;
+    }
+}
+
+// game向multi拉取新的离线消息
+message GetOfflineMsgReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10311;
+    }
+    uint32 index = 1;               // game已经处理的最大编号
+}
+
+message GetOfflineMsgRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10312;
+    }
+    int32 retcode = 1;
+    uint32 last_index = 2;          // req中的index
+    repeated OfflineMsgBin offline_msg_list = 3;   // 离线消息列表
+}
+
+// 移除redis中已经处理的消息
+message RemoveOfflineMsgNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10313;
+    }
+    uint32 index = 1;               // game已经处理的最大编号
+}
+
+// 清除redis里面的消息，一般是GM指令
+message ClearOfflineMsgNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10314;
+    }
+}
+
+// 更新邮件
+message UpdateRedisMailReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10315;
+    }
+    MailUpdateOpType op_type = 1;
+    repeated uint32 mail_id_list = 2;
+}
+
+message UpdateRedisMailRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10316;
+    }
+
+    int32 retcode = 1;
+    MailUpdateOpType op_type = 2;
+    repeated uint32 mail_id_list = 3;
+}
+
+
+// 查询邮件transaction状态
+message GetRedisMailTransactionStatusReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10317;
+    }
+
+    repeated uint64 transaction_id_list = 2;
+}
+
+message GetRedisMailTransactionStatusRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10318;
+    }
+
+    int32 retcode = 1;
+    map<uint64, bool> transaction_status_map = 2;
+}
+
+// 整理邮件通知
+message ClearUpRedisMailNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10319;
+    } 
+}
+
+// 清空所有邮件
+message CleanRedisMailNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10320;
+    } 
+}
+
+// gameserver邮件补单
+message ResendRedisMailReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10321;
+    }  
+    map<uint64, MailBin> mail_bin_map = 1;
+}
+
+message ResendRedisMailRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10322;
+    }  
+    int32 retcode = 1;
+    map<uint64, bool> resend_status_map = 2; 
+}
+
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

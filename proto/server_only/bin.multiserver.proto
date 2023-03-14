@@ -1,0 +1,41 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file bin.multiserver.proto
+ * @author peng.huang(peng.huang@mihoyo.com)
+ * @date 2019/11/22 20:25:19
+ * @brief 社交性质的玩法存档
+ **/
+
+syntax = "proto3";
+package proto;
+
+// 活动的基本数据
+message BaseActivityGlobalBin
+{
+    uint32 schedule_id = 1;
+    bool is_started = 2;
+    bool is_finished = 3;
+}
+
+// 海灯节存档数据
+message SeaLampActivityGlobalBin
+{
+    uint32 progress = 1;            // 进度值
+}
+
+message ActivityGlobalBin
+{
+    BaseActivityGlobalBin base_bin = 1;  // 基础数据
+    oneof detail
+    {
+        SeaLampActivityGlobalBin sea_lamp_bin = 2;    // 海灯节数据
+    }
+}
+
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

@@ -1,0 +1,178 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+ /**
+ * @file player_body_common.proto
+ * @author zili.huang(zili.huang@mihoyo.com)
+ * @date 2018/11/01 17:27:08
+ * @brief 
+ *      定义通用玩家日志body
+ **/
+
+syntax = "proto3";
+package proto_log;
+
+// 玩家创建角色日志HEAD
+message PlayerLogBodyRegister
+{
+    uint32 platform = 1;            // 平台，例如android，ios，pc
+    string register_cps = 2;       // CPS，注册CPS
+    string cps = 3;                    // 当前CPS
+    string client_ip = 4;             // 客户端IP地址，例如192.168.1.1
+    string device_uuid = 5;       // 设备唯一标识
+    string device_info = 6;        // 设备信息
+    string system_info = 7;       // 操作系统信息
+}
+
+// 玩家角色登入日志
+message PlayerLogBodyLogin
+{
+    uint32 platform = 1;            // 平台，例如android，ios，pc
+    string register_cps = 2;       // CPS，注册CPS
+    string cps = 3;                    // 当前CPS
+    string client_ip = 4;             // 客户端IP地址，例如192.168.1.1
+    string device_uuid = 5;       // 设备唯一标识，例如fcfdbbd16cd15dad8b18cac4eedff174
+    string device_info = 6;        // 设备信息，例如samsung SM-G9250
+    string system_info = 7;       // 操作系统信息，例如Android OS 7.0 / API-24 (NRD90M/G9250ZTU2ERF1)
+}
+
+// 玩家角色登出日志日志
+message PlayerLogBodyLogout
+{
+    uint32 platform = 1;            // 平台，例如android，ios，pc
+    string register_cps = 2;       // CPS，注册CPS
+    string cps = 3;                    // 当前CPS
+    string client_ip = 4;             // 客户端IP地址，例如192.168.1.1
+    string device_uuid = 5;       // 设备唯一标识
+    string device_info = 6;        // 设备信息
+    string system_info = 7;       // 操作系统信息
+    uint32 game_time = 8;       // 游戏时长，单位秒
+}
+
+// 玩家加减经验日志
+message PlayerLogBodyAddExp
+{
+    int64 add_exp = 1;            // 经验值增量
+    int64 exp_after = 2;          // 变动后经验值
+    uint32 reason = 3;            // 冒险经验来源
+}
+
+// 玩家等级提升日志
+message PlayerLogBodyLevelUp
+{
+    int64 add_exp = 1;            // 经验值增量
+    int64 exp_after = 2;          // 变动后经验值
+    uint32 level_before = 3;      // 变动前玩家等级
+    uint32 level_after = 4;         // 变动后玩家等级
+    uint32 level_limit = 5;       // 当前冒险等级上限
+}
+
+// 玩家资源产出消耗日志
+message PlayerLogBodyAddMaterial
+{
+    uint32 material_id = 1;            // 道具id
+    uint32 material_type = 2;         // 道具类型
+    uint32 material_level = 3;       // 道具等级
+    uint32 material_star = 4;         // 道具星级
+    uint32 material_sub_star = 5;     // 道具子星级
+    int64 add_num = 6;              // 道具产出（消耗）数量，如果是消耗则为负数
+    int64 left_num = 7;               // 道具剩余数量
+    uint32 reason = 8;                // 增减的原因
+}
+
+// 玩家充值日志
+message PlayerLogBodyRecharge
+{
+    string platform = 1;            // 平台，例如android，ios，pc
+    string register_cps = 2;       // CPS，注册CPS
+    string cps = 3;                    // 当前CPS
+    string client_ip = 4;             // 客户端IP地址，例如192.168.1.1
+    string device_uuid = 5;       // 设备唯一标识
+    string device_info = 6;        // 设备信息
+    string system_info = 7;       // 操作系统信息
+
+    // 订单信息
+    string order_id = 8;             // 订单编号
+    string product_name = 9;   // 商品编号
+    string price_tier = 10;     // 档位
+    string pay_channel = 11;      // 支付渠道，例如itunes、google、alipay、weixin
+    string currency_code = 12;   // 币种代号
+    string format_price = 13;      // 单价
+    uint64 pay_coin_add = 14;     // 1级代币（付费）获得
+    uint64 free_coin_add = 15;     // 1级代币（免费）获得
+    uint64 vip_point_add = 16;     // vip点数获得
+}
+
+// 玩家商城购买日志
+message PlayerLogBodyBuyGoods
+{
+    string platform = 1;            // 平台，例如android，ios，pc
+
+    // 商城商品信息
+    uint32 shop_id = 2;        // 商店编号
+    uint32 goods_id = 3;      // 商品id
+    uint32 goods_num = 4;   // 商品数量
+    uint64 coin_1_cost = 5;   // 1级代币消耗
+    uint64 coin_2_cost = 6;   // 2级代币消耗
+    uint64 coin_3_cost = 7;   // 3级代币消耗
+    repeated PlayerLogCurrencyCost currency_cost_list = 8;   // 其它代币消耗列表 
+}
+
+message PlayerLogCurrencyCost
+{
+    uint32 currency_id = 1;    // 代币id
+    uint64 need_cost_num = 2;   // 原价应消耗数量
+    uint64 real_cost_num = 3;   // 本次购买实际消耗量
+}
+
+// 玩家代币产出消耗日志
+message PlayerLogBodyAddCoin
+{
+    string platform = 1;            // 平台，例如android，ios，pc
+    string register_cps = 2;       // CPS，注册CPS
+    string cps = 3;                    // 当前CPS
+
+    uint32 coin_id = 4;            // 代币id
+    uint32 coin_type = 5;         // 代币类型
+    int64 add_num = 6;          // 代币产出（消耗）数量，如果是消耗则为负数
+    int64 pay_add = 7;           // 付费代币产出（消耗）数量，如果是消耗则为负数
+    int64 free_add = 8;           // 免费代币产出（消耗）数量，如果是消耗则为负数
+    uint64 left_num = 9;         // 代币剩余数量
+    uint64 pay_left = 10;           // 付费代币剩余数量
+    uint64 free_left = 11;          // 免费代币剩余数量
+    uint32 reason = 12;             // 产耗的原因
+}
+
+// 玩家接受任务日志
+message PlayerLogBodyMissionAccept
+{
+    uint32 mission_type = 1;            // 任务类型
+    uint32 mission_id = 2;                // 任务id
+}
+
+// 玩家开始任务日志
+message PlayerLogBodyMissionStart
+{
+    uint32 mission_type = 1;           // 任务类型
+    uint32 mission_id = 2;             // 任务Id
+}
+
+// 玩家完成任务日志
+message PlayerLogBodyMissionFinish
+{
+    uint32 mission_type = 1;            // 任务类型
+    uint32 mission_id = 2;                // 任务id
+    uint32 start_time = 3;             // 任务开始时间
+}
+
+// 玩家任务失败日志
+message PlayerLogBodyMissionFail
+{
+    uint32 mission_type = 1;            // 任务类型
+    uint32 mission_id = 2;                // 任务id
+    uint32 start_time = 3;             // 任务开始时间
+}
+

@@ -1,0 +1,162 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_activity.server.proto
+ * @author peng.huang(peng.huang@mihoyo.com)
+ * @date 2019/11/15 11:32:26
+ * @brief 协议编号范围 [10601, 10700]
+ **/
+
+syntax = "proto3";
+package proto;
+
+// gs向ms通知玩家的贡献以及进度值
+message SeaLampPlayerContributionNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10601;
+    }
+    uint32 total_contribution = 1;              // 玩家总贡献值
+    uint32 add_progress = 2;                    // 本次增加的进度值
+}
+
+// ms向gs通知海灯节的进度
+message SeaLampProgressNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10602;
+    }
+    uint32 schedule_id = 1;
+    uint32 progress = 2;
+    bool is_finished = 3;
+    bool is_changed_by_muip = 4;
+}
+
+// gs需要以某种策略通知当前进程中的所有玩家
+message SeaLampBroadcastNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10603;
+    }
+    uint32 schedule_id = 1;
+    uint32 last_phase = 2;
+    uint32 phase = 3;
+    uint32 progress = 4;
+    bool is_changed_by_muip = 5;
+}
+
+// 通过muip指令设置海灯节进度
+message SeaLampSetProgressByMuipReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10604;
+    }
+    uint32 progress = 1;
+}
+
+message SeaLampSetProgressByMuipRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10605;
+    }
+    int32 retcode = 1;
+    uint32 old_progress = 2;
+    uint32 new_progress = 3;
+    uint32 factor = 4;          // 进度系数
+}
+
+// ms向gs通知海灯节的进度(真正处理逻辑的地方)
+message SeaLampProgressImplementNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10606;
+    }
+    SeaLampProgressNotify msg = 1;
+}
+
+// GM指令清除海灯节的进度
+message SeaLampClearProgressByGmNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10607;
+    }
+}
+
+// muip指令增加海灯节的进度
+message SeaLampAddProgressByMuipReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10608;
+    }
+    uint32 add_progress = 1;
+}
+message SeaLampAddProgressByMuipRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10609;
+    }
+    int32 retcode = 1;
+    uint32 old_progress = 2;
+    uint32 new_progress = 3;
+    uint32 factor = 4;          // 系数
+}
+
+// muip指令查询全服活动的实时数据
+message SeaLampActivityDataMuip
+{
+    uint32 progress = 1;
+    uint32 phase_id = 2;
+    uint32 factor = 3;          // 进度系数
+}
+message GetActivityDataByMuipReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10610;
+    }
+    uint32 activity_id = 1;
+}
+message GetActivityDataByMuipRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10611;
+    }
+    int32 retcode = 1;
+    uint32 activity_id = 2;
+    uint32 schedule_id = 3;
+    bool is_started = 4;        // 是否已经开始
+    bool is_finished = 5;       // 是否已经结束
+
+    oneof detail
+    {
+        SeaLampActivityDataMuip sea_lamp_data = 10;
+    }
+}
+
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

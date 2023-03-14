@@ -1,0 +1,59 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_recharge.proto
+ * @作者 peng.huang(peng.huang@mihoyo.com)
+ * @日期 2020/03/19 13:23:22
+ * @brief 充值协议[4101-4150]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 客户端点击product后发送RechargeReq给服务端
+message RechargeReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 4101;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    string product_id = 1;          // product_id
+}
+
+// 客户端接到RechargeRsp才能唤起SDK支付
+message RechargeRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 4102;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 服务端发货成功通知客户端
+message OrderFinishNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 4103;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    string product_id = 1;
+}

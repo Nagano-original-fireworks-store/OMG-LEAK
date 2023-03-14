@@ -1,0 +1,294 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_skill.proto
+ * @作者 jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @日期 2018/07/23 09:54:55
+ * @brief 技能协议[1001 - 1100]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 角色技能天赋解锁
+message UnlockAvatarTalentReq
+{
+	enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1001;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+		IS_ALLOW_CLIENT = 1;
+	}
+
+    uint64 avatar_guid = 1; // 角色guid
+	uint32 talent_id = 2;   // 天赋ID
+}
+
+message UnlockAvatarTalentRsp
+{
+	enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1002;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+	}
+
+	int32 retcode = 1;
+    uint64 avatar_guid = 2; // 角色guid
+	uint32 talent_id = 3;   // 天赋ID
+}
+
+// 角色解锁天赋通知(增加后通知，S->C)
+message AvatarUnlockTalentNotify
+{
+    enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1003;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+	}
+    uint64 avatar_guid = 1; // 角色guid
+    uint32 entity_id = 2;   // 角色实体ID
+	uint32 talent_id = 3;   // 天赋ID
+	uint32 skill_depot_id = 4;  // 技能库ID
+}
+
+// 角色技能库改变通知(S->C)
+message AvatarSkillDepotChangeNotify
+{
+    enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1004;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+	}
+    uint64 avatar_guid = 1; // 角色guid
+    uint32 entity_id = 2;   // 角色实体ID
+    uint32 skill_depot_id = 3;   // 技能库ID
+	repeated uint32 talent_id_list = 4;   // 已解锁天赋ID列表
+	repeated uint32 proud_skill_list = 5; // 已解锁得意技ID列表
+	uint32 core_proud_skill_level = 6;    // 核心得意技等级
+	map<uint32, uint32> skill_level_map = 7;    // 主动技能等级(skill_id=>level)
+	map<uint32, uint32> proud_skill_extra_level_map = 8;    // 得意技额外等级(key:得意技组ID)
+}
+
+// 大天赋点转化
+message BigTalentPointConvertReq
+{
+    enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1005;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+		IS_ALLOW_CLIENT = 1;
+	}
+
+    uint64 avatar_guid = 1; // 角色guid
+    repeated uint64 item_guid_list = 2; // 转化大天赋点的道具列表
+}
+
+message BigTalentPointConvertRsp
+{
+    enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1006;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+	}
+
+    int32 retcode = 1;
+    uint64 avatar_guid = 2; // 角色guid
+}
+
+// 角色技能最大累积次数通知(改变后通知，S->C)
+message AvatarSkillMaxChargeCountNotify
+{
+    enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1007;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+	}
+    uint64 avatar_guid = 1; // 角色guid
+	uint32 skill_id = 2;    // 技能ID
+    uint32 max_charge_count = 3;    // 最大累积次数
+}
+
+// 角色技能信息通知(S->C，在后台角色出战时通知)
+message AvatarSkillInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1008;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint64 guid = 1;        // 角色唯一ID
+    map<uint32, AvatarSkillInfo> skill_map = 2;  // 角色技能信息
+}
+
+// 升级（激活）角色得意技
+message ProudSkillUpgradeReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1009;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+		IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 avatar_guid = 1;     // 角色唯一ID
+    uint32 proud_skill_id = 2;  // 得意技（一般只有核心得意技）
+    uint32 old_proud_skill_level = 3;   // 旧的得意技等级
+}
+
+message ProudSkillUpgradeRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1010;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 avatar_guid = 2;     // 角色唯一ID
+    uint32 proud_skill_id = 3;  // 得意技
+}
+
+// 角色得意技激活通知（得意技升级成功或角色突破时通知）
+message ProudSkillChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1011;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint64 avatar_guid = 1;     // 角色唯一ID
+    uint32 entity_id = 2;   // 角色实体ID
+    uint32 skill_depot_id = 3;  // 技能库
+    repeated uint32 proud_skill_list = 4;  // 激活了的得意技
+}
+
+// 升级角色主动技能
+message AvatarSkillUpgradeReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1012;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+		IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 avatar_guid = 1;     // 角色唯一ID
+    uint32 avatar_skill_id = 2; // 主动技能ID
+    uint32 old_level = 3;       // 升级前的角色技能等级
+}
+
+message AvatarSkillUpgradeRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1013;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 avatar_guid = 2;     // 角色唯一ID
+    uint32 avatar_skill_id = 3; // 主动技能ID
+    uint32 old_level = 4;       // 升级前的角色技能等级
+    uint32 cur_level = 5;       // 升级后的角色技能等级
+}
+
+// 角色主动技能变化通知（主动技能升级时通知）
+message AvatarSkillChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1014;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint64 avatar_guid = 1;     // 角色唯一ID
+    uint32 entity_id = 2;       // 角色实体ID
+    uint32 skill_depot_id = 3;  // 技能库
+    uint32 avatar_skill_id = 4; // 主动技能ID
+    uint32 old_level = 5;       // 升级前的角色技能等级
+    uint32 cur_level = 6;       // 升级后的角色技能等级
+}
+
+// 得意技额外等级变化通知
+message ProudSkillExtraLevelNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1015;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint64 avatar_guid = 1;     // 角色唯一ID
+    uint32 talent_type = 2;     // 技能类型：主动技能/核心得意技/固有得意技
+    uint32 talent_index = 3;    // 技能索引
+    uint32 extra_level = 4;     // 额外等级
+}
+
+// 是否能使用主动技能的通知，爬塔使用(S->C)
+message CanUseSkillNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1016;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    bool is_can_use_skill = 1;  // 是否能使用主动技能，默认可以使用
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

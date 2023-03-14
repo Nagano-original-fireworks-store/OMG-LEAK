@@ -1,0 +1,12 @@
+{
+  "entity_id": 0, 
+  "can_move": false, 
+  "use_auto_focus": false, 
+  "fast_focus": false, 
+  "enter_holding_focus_shoot": false, 
+  "use_gyro": false, 
+  "use_focus_sticky": false, 
+  "show_cross_hair": false, 
+  "enter_normal_focus_shoot": false, 
+  "forward_type": "FORWARD_LOCAL"
+}

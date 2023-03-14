@@ -1,0 +1,33 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_monster.proto
+ * @作者 jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @日期 2018/12/12 18:22:47
+ * @brief 怪物协议[1301 - 1400]
+ **/
+
+syntax = "proto3";
+package proto;
+
+// 怪物召唤标记通知(改变时通知，S->C)
+message MonsterSummonTagNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1301;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 monster_entity_id = 1;    // 怪物实体ID
+    map<uint32, uint32> summon_tag_map = 2; // 召唤数据组(tag->count)
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

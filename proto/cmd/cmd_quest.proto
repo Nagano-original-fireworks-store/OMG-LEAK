@@ -1,0 +1,506 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file quest.proto
+ * @作者 jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @日期 2017/11/21 16:52:15
+ * @brief 任务相关协议[401 - 500]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 玩家的任务通知(S->C)
+message QuestListNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 401;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated Quest quest_list = 1;  // 任务列表
+}
+
+// 玩家的任务差量同步
+message QuestListUpdateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 402;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated Quest quest_list = 1;  // 任务列表
+}
+
+// 玩家的任务删除通知(S->C)
+message QuestDelNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 403;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 quest_id = 1;    // 任务id
+}
+
+message ChildQuest
+{
+    uint32 quest_id = 1;
+    uint32 state = 2;
+    uint32 quest_config_id = 3;  // 任务配置ID, 随机任务时读配置使用
+}
+
+message ParentQuestRandomInfo
+{
+    uint32 entrance_id = 1;
+    uint32 template_id = 2;
+    repeated uint32 factor_list = 3;
+}
+
+message ParentQuest
+{
+    uint32 parent_quest_id = 1;
+    repeated ChildQuest child_quest_list = 2;
+    bool is_finished = 3;
+    bool is_random = 4;
+    ParentQuestRandomInfo random_info = 5;
+	repeated int32 quest_var = 6; // quest var 列表
+	uint32 parent_quest_state = 7; // 父任务当前状态
+}
+
+// 已经完成的父任务通知(S->C) 全量同步
+message FinishedParentQuestNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 404;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated ParentQuest parent_quest_list = 1;    // 已完成的父任务ID列表
+}
+
+// 已经完成的父任务通知(S->C) 差量同步
+message FinishedParentQuestUpdateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 405;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated ParentQuest parent_quest_list = 1;    // 已完成的父任务ID列表
+}
+
+// 添加任务内容进度请求(C->S)
+message AddQuestContentProgressReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 406;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 content_type = 1;    // 内容类型(取值范围：QuestContentType)
+    uint32 param = 2;           // 内容参数
+    uint32 add_progress = 3;    // 添加的进度
+}
+
+message AddQuestContentProgressRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 407;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 content_type = 2; // 内容类型(取值范围：QuestContentType)
+}
+
+message GetQuestTalkHistoryReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 408;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 parent_quest_id = 1;   // 父任务ID
+}
+
+message GetQuestTalkHistoryRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 409;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 parent_quest_id = 2;   // 父任务ID
+    repeated uint32 talk_id_list = 3;
+}
+
+// 在地图上创建实体
+message QuestCreateEntityReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 410;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    CreateEntityInfo entity = 1;    // 要创建的实体 
+    uint32 quest_id = 2;            // 创建该实体的quest_id
+    bool is_rewind = 3;             // 是否因为回滚
+    uint32 parent_quest_id = 4;     // 创建该实体的parent_quest_id，和quest_id存在一个即可
+}
+
+message QuestCreateEntityRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 411;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 entity_id = 2;           // 创建的实体ID
+    CreateEntityInfo entity = 3;    // 实体信息
+    uint32 quest_id = 7;            // 创建该实体的quest_id
+    bool is_rewind = 8;             // 是否因为回滚
+    uint32 parent_quest_id = 9;     //  创建该实体的parent_quest_id，和quest_id存在一个即可
+}
+
+// 在地图上销毁实体
+message QuestDestroyEntityReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 412;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 entity_id = 1;   // 删除的实体ID
+    uint32 quest_id = 2;    // 删除该实体的任务ID(只能销毁同一父任务创建出来的实体)
+    uint32 scene_id = 3;    // 场景ID, 为0时表示使用当前场景
+}
+
+message QuestDestroyEntityRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 413;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 entity_id = 2;   // 删除的实体ID
+    uint32 quest_id = 3;    // 删除该实体的任务ID
+    uint32 scene_id = 4;
+}
+
+// 用来记录对话的埋点日志(C->S)
+message LogTalkNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 414;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 talk_id = 1;     // TalkID
+    bool is_start = 2;      // 是否是开始
+}
+
+// 用来记录Cutscene的埋点日志(C->S)
+message LogCutsceneNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 415;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    string cutscene_name = 1;   // Cutscene标识
+    bool is_start = 2;          // 是否是开始
+    bool is_skip = 3;           // 是否是跳过
+}
+
+enum ChapterState
+{
+    CHAPTER_STATE_INVALID = 0;
+    CHAPTER_STATE_UNABLE_TO_BEGIN = 1;
+    CHAPTER_STATE_BEGIN = 2;
+    CHAPTER_STATE_END = 3;
+}
+
+// 章节状态通知(S->C)
+message ChapterStateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 416;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    message NeedPlayerLevel
+    {
+        bool is_limit = 1;   // 是否被等级限制
+        uint32 config_need_player_level = 2; // 限制的冒险等阶
+    }
+
+    message NeedBeginTime
+    {
+        bool is_limit = 1;   // 是否被开始时间限制
+        uint32 config_need_begin_time = 2; // 限制的开始时间
+    }
+    uint32 chapter_id = 1;
+    ChapterState chapter_state = 2;
+    NeedPlayerLevel need_player_level = 3;
+    NeedBeginTime need_begin_time = 4;
+}
+
+// 任务进度通知
+message QuestProgressUpdateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 417;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 quest_id = 1;
+    repeated uint32 finish_progress_list = 2;
+    repeated uint32 fail_progress_list = 3;
+}
+
+message QuestVarOp
+{
+    uint32 index = 1;
+    int32 value = 2;
+    bool is_add = 3; // 修改的方式：add方式 还是set方式
+}
+
+// 在地图上销毁实体
+message QuestUpdateQuestVarReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 418;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 quest_id = 1;  // 子任务id
+	repeated QuestVarOp quest_var_op_list = 2;
+	uint32 parent_quest_id = 3;// 父任务id和子任务id 传递一个即可，尽量传递子任务id
+}
+
+message QuestUpdateQuestVarRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 419;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 quest_id = 2;
+	uint32 parent_quest_id = 3;
+}
+
+// 任务进度通知
+message QuestUpdateQuestVarNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 420;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 parent_quest_id = 1;
+    repeated int32 quest_var = 2;
+}
+
+message QuestDestroyNpcReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 421;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 npc_id = 1; // NPC ID
+    uint32 parent_quest_id = 2; // 相关的parent_quest_id
+}
+
+message QuestDestroyNpcRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE= 0;
+        CMD_ID = 422;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 npc_id = 2;
+    uint32 parent_quest_id = 3;
+}
+
+//////////////////////////////////////////
+// 讲价
+
+// 讲价开启
+message BargainStartNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE= 0;
+        CMD_ID = 423;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 bargain_id = 1;
+    int32 cur_mood = 2;        // 当前心情值
+    uint32 expected_price = 3;  // 期望价
+    uint32 price_low_limit = 4; // 最低价 
+}
+
+// 出价
+message BargainOfferPriceReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 424;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 bargain_id = 1;
+    uint32 price      = 2;  // 出价值 
+}
+
+enum BargainResultType
+{
+    BARGAIN_COMPLETE_SUCC = 0;  // 完全成功
+    BARGAIN_SINGLE_FAIL = 1;    // 单次失败
+    BARGAIN_COMPLETE_FAIL = 2;  // 完全失败
+}
+
+message BargainOfferPriceRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 425;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    BargainResultType bargain_result = 2;   // 讲价结果
+    uint32 result_param = 3;                // 结果参数(用于区分talk)
+    int32 cur_mood = 4;                    // 当前心情值
+}
+
+// 讲价关闭
+message BargainTerminateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 426;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 bargain_id = 1;
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

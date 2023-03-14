@@ -1,0 +1,42 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file editor.proto
+ * @author yi.chen
+ * @date 2018/02/27 16:56:00
+ * @brief 编辑器序列化相关协议
+ **/
+
+syntax = "proto3";
+package proto;
+
+enum SceneSurfaceMaterial
+{
+	Invalid = 0;
+	Grass = 1;  //草
+	Dirt = 2;   //土
+	Rock = 3;   //石头
+	Snow = 4;   //雪地
+	Water = 5;  //水
+	Tile = 6;   //瓷砖（主城的地面）
+	Sand = 7;   //沙
+}
+
+message MapInfo
+{
+    int32 minx = 1;
+	int32 maxx = 2;
+	int32 minz = 3;
+	int32 maxz = 4;
+	repeated CellInfo cells = 5;
+}
+
+message CellInfo
+{
+	SceneSurfaceMaterial type = 1;
+	int32 y = 2;
+}

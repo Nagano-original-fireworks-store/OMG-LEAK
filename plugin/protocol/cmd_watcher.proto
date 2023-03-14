@@ -1,0 +1,184 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd/cmd_watcher.proto
+ * @作者 yifan.fang(yifan.fang@mihoyo.com)
+ * @日期 2019/11/18 17:08:34
+ * @brief 观测者系统，用于触发教学或成就
+ **/
+
+
+syntax = "proto3";
+package proto;
+
+// 通知全部观察者
+message WatcherAllDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2201;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated uint32 watcher_list = 1;               // 正在进行的且客户端需要监听的watcher
+}
+
+// 观察者变化通知
+message WatcherChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2202;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated uint32 new_watcher_list = 1;           // 新增的客户端需要监听的watcher
+    repeated uint32 removed_watcher_list = 2;       // 通知客户端卸下的watcher
+}
+
+// 客户端通知服务器某个观察者进度发生变化（C->S）
+message WatcherEventNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2203;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 watcher_id = 1;                          // 观测者ID
+    uint32 add_progress = 2;                        // 增加的进度
+}
+
+// 客户端通知服务器某种类观察者进度发生变化（C->S）
+message WatcherEventTypeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2204;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 watcher_trigger_type = 1;                // 观测者ID
+    repeated uint32 param_list = 2;                 // 触发参数
+    uint32 add_progress = 3;                        // 增加的进度
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// 消息通知
+
+enum PushTipsState
+{
+    PUSH_TIPS_STATE_NONE = 0;
+    PUSH_TIPS_STATE_START = 1;     // 激活
+    PUSH_TIPS_STATE_READ = 2;      // 读完教学
+    PUSH_TIPS_STATE_FINISH = 3;    // 完成领奖
+}
+
+// 教学记录
+message PushTipsData
+{
+    uint32 push_tips_id = 1;
+    uint32 state = 2;       // proto::PushTipsState
+}
+
+// 通知所有教学信息
+message PushTipsAllDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2221;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated PushTipsData push_tips_list = 1;        // 教学列表
+}
+
+// 教学变化通知
+message PushTipsChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2222;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated PushTipsData push_tips_list = 1;        // push_tips改变
+}
+
+// 读完教学
+message PushTipsReadFinishReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2223;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 push_tips_id = 1;
+}
+
+message PushTipsReadFinishRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2224;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 push_tips_id = 2;
+}
+
+// 领取当前已读完的教学的奖励
+message GetPushTipsRewardReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2225;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated uint32 push_tips_id_list = 1;    // 要领奖的教学ID，服务器不判断是否已读完
+}
+
+message GetPushTipsRewardRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2226;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    repeated uint32 push_tips_id_list = 2;    // 领过的教学
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

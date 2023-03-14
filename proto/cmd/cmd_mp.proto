@@ -1,0 +1,192 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_mp.proto
+ * @作者 zhengdong.wang(zhengdong.wang@mihoyo.com)
+ * @日期 2019/08/23 15:58:40
+ * @brief 联机流程相关协议[1801 - 1850]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 玩家申请进入联机通知, 会转发给相应玩家
+// S --> C
+message PlayerApplyEnterMpNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1801;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    OnlinePlayerInfo src_player_info = 1;  // 相关玩家信息，服务器填写
+}
+
+// 玩家客户端发起的联机申请
+message PlayerApplyEnterMpReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1802;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 target_uid = 1;                 // 目标UID
+}
+
+message PlayerApplyEnterMpRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1803;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;                 // 只代表申请协议的返回码，申请结果请看下面的通知
+    uint32 target_uid = 2;                 // 目标UID
+}
+
+// 处理玩家申请的结果通知，也会推给申请玩家
+// S --> C
+message PlayerApplyEnterMpResultNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1804;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    enum Reason
+    {
+        PLAYER_JUDGE = 0;       // 玩家决定
+        SCENE_CANNOT_ENTER = 1; // 场景无法进入
+        PLAYER_CANNOT_ENTER_MP = 2; // 玩家无法进联机
+        SYSTEM_JUDGE = 3;           // 系统判定
+        ALLOW_ENTER_PLAYER_FULL = 4; // 允许进入的玩家满了
+        WORLD_LEVEL_LOWER_THAN_HOST = 5; // 世界等级比主机低
+    }
+    uint32 target_uid = 1;                // 被申请者的UID
+    bool is_agreed = 2;                   // 是否同意
+    Reason reason = 3;                    // 理由
+}
+
+// 回复申请通知的请求
+message PlayerApplyEnterMpResultReq 
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1805;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 apply_uid = 1;            // 申请者的UID
+    bool is_agreed = 2;              // 是否同意
+}
+
+message PlayerApplyEnterMpResultRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1806;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 apply_uid = 2;            // 申请者的UID
+    bool is_agreed = 3;              // 是否同意
+}
+
+// 玩家从联机中退出回到单机的通知
+message PlayerQuitFromMpNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1807;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    enum QuitReason
+    {
+        INVALID = 0; // 非法无意义
+        HOST_NO_OTHER_PLAYER = 1; // 主机因无其他角色直接退出
+        KICK_BY_HOST = 2; // 被主机踢了
+        BACK_TO_MY_WORLD = 3; // 回自己世界
+        KICK_BY_HOST_LOGOUT = 4; // 主机掉线踢人
+    }
+    QuitReason reason = 1; // 退出的理由
+}
+
+// 玩家尝试进入联机通知
+message PlayerPreEnterMpNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1808;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    enum State
+    {
+        INVALID = 0; // 非法
+        START = 1;   // 进入开始 
+        TIMEOUT = 2; // 进入超时
+    }
+    uint32 uid = 1;
+    State state = 2;
+    string nickname = 3; // 昵称
+}
+
+message GetPlayerMpModeAvailabilityReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1809;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message GetPlayerMpModeAvailabilityRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1810;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;        // req本身的返回码
+    int32 mp_ret = 2;     // MP的返回码，当返回为Succ时可以进入联机
+    repeated uint32 param_list = 3; // MP失败时会填写的失败原因参数
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

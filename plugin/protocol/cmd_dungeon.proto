@@ -1,0 +1,808 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file dungeon.proto
+ * @作者 jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @日期 2018/04/26 11:31:56
+ * @brief 副本协议[901 - 1000]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 副本入口点信息请求
+message DungeonEntryInfoReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 901;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 point_id = 1;    // 副本入口点ID
+}
+
+message DungeonEntryInfo
+{
+    uint32 dungeon_id = 1;
+    bool is_passed = 2;     // 是否通关
+    uint32 left_times = 3;  // 剩余副本次数 废弃, 等待客户端删除
+	uint32 start_time = 4;  // 如果是循环地城，会有进入时间限制
+    uint32 end_time = 5; 
+    uint32 max_boss_chest_num = 6;  // boss地城boss宝箱领取上限
+    uint32 boss_chest_num = 7;      // boss地城当前领取boss宝箱数量
+}
+message DungeonEntryInfoRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 902;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 point_id = 2;    // 副本入口点ID
+    repeated DungeonEntryInfo dungeon_entry_list = 3;
+    uint32 recommend_dungeon_id = 4;    // 推荐副本ID
+}
+
+
+// 玩家进入副本请求
+message PlayerEnterDungeonReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 903;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 point_id = 1;    // 副本入口点ID
+    uint32 dungeon_id = 2;  // 玩家选择的副本ID
+}
+
+message PlayerEnterDungeonRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 904;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 point_id = 2;    // 副本入口点ID
+    uint32 dungeon_id = 3;  // 玩家选择的副本ID
+}
+
+// 玩家离开副本请求
+message PlayerQuitDungeonReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 905;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 point_id = 1;    // 副本离开点ID(主动离开填0)
+}
+
+message PlayerQuitDungeonRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 906;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 point_id = 2;    // 副本离开点ID(主动离开填0)
+}
+
+// 已激活的副本路点通知(S->C)
+message DungeonWayPointNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 907;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated uint32 active_way_point_list = 1;     // 激活的副本路点列表
+    bool is_add = 2;       // 是否为增加(否则为初始化时全量通知)
+}
+
+// 副本路点激活请求(激活后，会再广播一遍DungeonWayPointNotify)
+message DungeonWayPointActivateReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 908;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 way_point_id = 1;
+}
+
+message DungeonWayPointActivateRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 909;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 way_point_id = 2;
+}
+
+// 副本结算通知
+message DungeonSettleNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 910;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 dungeon_id = 1;  // 副本ID
+    bool is_success = 2;    // 是否成功通关
+    repeated uint32 fail_cond_list = 3;     // 失败的通关条件索引
+    map<uint32, ParamList> settle_show = 4;    // 结算显示数据(key:SettleShowType)
+    uint32 close_time = 5;      // 副本关闭时间戳
+}
+
+// 副本中玩家死亡通知(S->C)
+message DungeonPlayerDieNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 911;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 dungeon_id = 1;  // 副本ID
+    PlayerDieType die_type = 2;     // 最后一个avatar死亡类型
+    uint32 revive_count = 3;    // 已使用复活次数
+    uint32 wait_time = 4;       // 等待时间(单位：秒)
+    uint32 murderer_entity_id = 5;
+    oneof entity
+    {
+        uint32 monster_id = 6;  // 被怪物杀死
+        uint32 gadget_id = 7;   // 被机关弄死
+    }
+}
+
+// 副本死亡后选择复活方式
+message DungeonDieOptionReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 912;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    PlayerDieOption die_option = 1;
+}
+
+message DungeonDieOptionRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 913;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    PlayerDieOption die_option = 2;
+    uint32 revive_count = 3; // 一共复活了多少次
+}
+
+// 副本中显示提示通知(S->C)
+message DungeonShowReminderNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 914;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 reminder_id = 1;  // 提示ID
+}
+
+// 客户端判断玩家死亡(avatar全部死亡)
+message DungeonPlayerDieReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 915;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 dungeon_id = 1;          // 副本ID
+    PlayerDieType die_type = 2;     // 死亡类型, 只支持PLAYER_DIE_FALL, PLAYER_DIE_ABYSS
+}
+
+// 发送Rsp之前会先发送DungeonPlayerDieNotify
+message DungeonPlayerDieRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 916;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+}
+
+// 地城通知数据类型
+enum DungeonDataType
+{
+    DUNGEON_DATA_NONE = 0;
+    DUNGEON_DATA_END_TIME = 1;              // 限时副本的结束时间
+    DUNGEON_DATA_MONSTER_DIE_COUNT = 2;     // 已经杀死的怪物数量
+    DUNGEON_DATA_LEVEL_CONFIG_ID = 3;       // 挑战组合ID里面包含LeveEntityConfig
+    DUNGEON_DATA_TOWER_MONTHLY_LEVEL_CONFIG_ID = 4; // 爬塔月度挑战组合ID
+    DUNGEON_DATA_TOWER_FLOOR_LEVEL_CONFIG_ID = 5;   // 爬塔层挑战组合ID
+}
+
+message DungeonDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 917;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    map<uint32, uint32> dungeon_data_map = 1;
+}
+
+// 进入地城挑战阶段的通知
+message DungeonChallengeBeginNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 918;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 challenge_id = 1;                // 挑战ID
+    uint32 challenge_index = 2;             // 挑战编号
+    repeated uint32 param_list = 3;         // 挑战的参数
+}
+
+// 离开地城挑战阶段的通知
+message DungeonChallengeFinishNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 919;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 challenge_index = 1;             // 挑战编号
+    bool is_success = 2;                    // 是否挑战成功
+    bool is_new_record = 3;                 // 是否刷新记录，用于展示
+    uint32 challenge_record_type = 4;       // 挑战记录类型，DungeonExcelConfig.xml中的ChallengeRecordType，用于展示
+    uint32 current_value = 5;               // 新的值，用于展示
+}
+
+// 地城挑战进度变化的通知
+message ChallengeDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 920;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 challenge_index = 1;             // 挑战编号
+    uint32 param_index = 2;                 // 这个挑战的第几个参数，从1开始
+    uint32 value = 3;                       // 参数的值（如果参数表示剩余时间，值是时间戳）
+}
+
+// 联机乱入副本进入推送
+message DungeonFollowNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 921;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 target_uid = 1;
+}
+
+// 玩家请求开启神像奖励
+message DungeonGetStatueDropReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 922;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+		IS_ALLOW_CLIENT = 1;
+    }
+}
+
+// 玩家开始神像奖励
+message DungeonGetStatueDropRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 923;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+}
+
+// 区域挑战记录数据
+message ChallengeRecord
+{
+    uint32 challenge_index = 1; // 挑战index
+    uint32 challenge_id = 2;    // 挑战id
+    uint32 challenge_record_type = 3;   // 挑战记录类型，DungeonExcelConfig.xml中的ChallengeRecordType
+    uint32 best_value = 4;      // 记录的值
+}
+
+// 区域挑战记录的通知
+message ChallengeRecordNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 924;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 group_id = 1;
+    repeated ChallengeRecord challenge_record_list = 2; // 区域挑战记录
+}
+
+message DungeonCandidateTeamAvatar
+{
+    uint32 player_uid = 1; // 所属玩家uid
+    AvatarInfo avatar_info = 2; // 角色信息 为空表示没有角色
+}
+
+// 地城组队信息通知 S -> C
+message DungeonCandidateTeamInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 925;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 dungeon_id = 1; // 地城配置ID
+    repeated DungeonCandidateTeamAvatar avatar_list = 2; // 角色列表
+    repeated uint32 ready_player_uid = 3; // 已经准备的玩家
+}
+
+// 地城邀请信息通知 S -> C
+message DungeonCandidateTeamInviteNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 926;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 player_uid = 1; // 邀请者
+    uint32 dungeon_id = 2; // 邀请地城配置ID
+    uint32 vaild_deadline_time_sec = 3; // 有效截至时间(秒)
+}
+
+// 地城组队邀请拒绝通知 S -> C
+message DungeonCandidateTeamRefuseNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 927;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 player_uid = 1; // 拒绝者
+}
+
+// 地城组队玩家离开原因
+enum DungeonCandidateTeamPlayerLeaveReason
+{
+    DUNGEON_CANDIDATE_TPLR_NORMAL = 0; // 正常离开
+    DUNGEON_CANDIDATE_TPLR_DIE = 1; // 死亡离开
+    DUNGEON_CANDIDATE_TPLR_BE_KICK = 2; // 被踢离开
+    DUNGEON_CANDIDATE_DISCONNECT = 3;   // 断线
+}
+
+// 地城组队玩家离开通知 S -> C
+message DungeonCandidateTeamPlayerLeaveNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 928;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 player_uid = 1; // 离开者
+    DungeonCandidateTeamPlayerLeaveReason reason = 2; // 离开原因
+}
+
+enum DungeonCandidateTeamDismissReason
+{
+    DUNGEON_CANDIDATE_TPDR_NORMAL = 0; // 正常解散
+    DUNGEON_CANDIDATE_TPDR_DIE = 1; // 死亡解散
+}
+
+// 地城组队解散通知 S -> C
+message DungeonCandidateTeamDismissNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 929;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 player_uid = 1; // 解散者
+    DungeonCandidateTeamDismissReason reason = 2; // 解散原因
+}
+
+// 地城组队创建请求 C -> S
+message DungeonCandidateTeamCreateReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 930;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 dungeon_id = 1;
+    uint32 point_id = 2;
+}
+
+// 地城组队创建响应 S -> C
+message DungeonCandidateTeamCreateRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 931;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 地城组队邀请请求 C -> S
+message DungeonCandidateTeamInviteReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 932;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated uint32 player_uids = 1;
+}
+
+// 地城组队创建响应 S -> C
+message DungeonCandidateTeamInviteRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 933;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 地城组队踢人请求 C -> S
+message DungeonCandidateTeamKickReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 934;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 player_uid = 1;
+}
+
+// 地城组队踢人响应 S -> C
+message DungeonCandidateTeamKickRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 935;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 地城组队离开请求 C -> S
+message DungeonCandidateTeamLeaveReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 936;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+// 地城组队离开响应 S -> C
+message DungeonCandidateTeamLeaveRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 937;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 地城组队回复邀请请求 C -> S
+message DungeonCandidateTeamReplyInviteReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 938;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    bool is_accept = 1; // 是否接受
+}
+
+// 地城组队回复邀请响应 S -> C
+message DungeonCandidateTeamReplyInviteRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 939;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    bool is_trans_point = 2; // 是否会传送到目标点
+}
+
+// 地城组队设置准备状态请求 C -> S
+message DungeonCandidateTeamSetReadyReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 940;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    bool is_ready = 1; // 是否准备
+}
+
+// 地城组队设置准备状态响应 S -> C
+message DungeonCandidateTeamSetReadyRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 941;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 地城组队替换角色请求 C -> S
+message DungeonCandidateTeamChangeAvatarReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 942;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated uint64 avatar_guid_list = 1;
+}
+
+// 地城组队替换角色响应 S -> C
+message DungeonCandidateTeamChangeAvatarRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 943;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+message DailyDungeonEntryInfo
+{
+    uint32 dungeon_entry_id = 1;
+    uint32 dungeon_entry_config_id = 2;
+    uint32 recommend_dungeon_id = 3;
+}
+
+// 获取日常地城入口Info
+message GetDailyDungeonEntryInfoReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 944;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 scene_id = 1;
+}
+
+message GetDailyDungeonEntryInfoRsp
+{
+    enum CmdId 
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 945;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    repeated DailyDungeonEntryInfo daily_dungeon_info_list = 2;
+}
+
+message DungeonSlipRevivePointActivateReq
+{
+    enum CmdId 
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 946;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 slip_revive_point_id = 1;
+}
+
+message DungeonSlipRevivePointActivateRsp
+{
+    enum CmdId 
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 947;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 slip_revive_point_id = 2;
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

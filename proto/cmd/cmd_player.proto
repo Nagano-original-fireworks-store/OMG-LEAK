@@ -1,0 +1,1044 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file player.proto
+ * @author jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @date 2017/08/04 15:44:59
+ * @brief 玩家相关协议[101 - 200]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 获取玩家token
+message GetPlayerTokenReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 101;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 account_type = 1;    // 账号类型
+    string account_uid = 2;   // 对应账号的uid
+    string account_token = 3;   // token,服务器用来做二次身份验证
+    string account_ext = 4;     // 额外信息
+    uint32 uid = 5;     // 指定登录某个UID，当该字段被赋值后，account字段会被忽略
+    bool is_guest = 6;  // 客户端登入时，平台的返回值
+    uint32 platform_type = 7;
+    uint32 cloud_client_ip = 8;// 玩家通过云游戏APP登录时使用，玩家的真实IP
+}
+
+message GetPlayerTokenRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 102;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    string msg = 2; // 提示信息
+    uint32 uid = 3; // 游戏内的UID
+    string token = 4;   // 也是account_token
+    uint32 black_uid_end_time = 5;      // 黑名单结束原因
+    uint32 account_type = 6;    // 账号类型
+    string account_uid = 7;     // 对应账号的uid
+    bool is_proficient_player = 8;  // 是否是一个老玩家
+    string secret_key = 9;      // 协议加密密钥
+    uint32 gm_uid = 10;         // 免密登入的原始运营uid(仅服务端内部使用)
+    uint64 secret_key_seed = 11;      // 协议加密密钥种子
+}
+
+// 玩家登陆请求
+message PlayerLoginReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 103;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    string token = 1;   // == account_token
+    string client_version = 2;  // 客户端版本号
+    string system_version = 3;  // 系统版本号
+    string device_name = 4;     // 设备名称
+    string device_uuid = 5;     // 设备唯一ID
+    uint32 target_uid = 6;      // 进入别人的世界的uid, 服务端设置，客户端不要填充
+    uint64 login_rand = 7;      // 登入随机数
+    bool is_editor = 8;         // 是否是unity客户端, gateserver填充
+    uint32 language_type = 9;   // 客户端的语言
+    uint32 account_type = 10;   // 账号类型, gateserver填充
+    string account_uid = 11;    // 对应账号的uid, gateserver填充
+    string platform = 12;       // 平台，例如android，ios，pc
+    string device_info = 13;    // 设备信息，例如samsung SM-G9250
+    uint32 platform_type = 14;  // 平台类型，PlatformType，如果玩家通过云游戏平台登录，该字段应该是CLOUD_ANDROID或CLOUD_IOS
+    bool is_guest = 15;         // 客户端填充, TODO...替换Token中的is_guest
+    uint32 cloud_client_ip = 16;// 玩家通过云游戏APP登录时使用，玩家的真实IP
+    uint32 gm_uid = 17;         // 免密登入的原始运营uid(gateserver填充)
+}
+
+message PlayerLoginRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 104;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    bytes player_data = 2;  // 账号数据(服务器内部数据)
+    bool is_new_player = 3; // 是否为新创建的账号
+    uint32 target_uid = 4;  // 进入别人的世界的uid
+    uint64 login_rand = 5;  // 登入随机数
+    bool is_use_ability_hash = 6;   // 是否使用技能hash码
+    int32 ability_hash_code = 7;    // 技能配置hash码
+    map<string, int32> ability_hash_map = 8;    // 所有技能的hash码，Debug模式下才有效
+    uint32 client_data_version = 9;        // gameserver的数值版本号
+    uint32 res_version = 10;        // gameserver的资源版本号
+	bool is_relogin = 11;	// 是否为重新登陆(服务器还有玩家数据的缓存)
+    //uint32 res_version_ex = 12;        // 小包资源版本号
+    uint32 client_silence_data_version = 13;        // gameserver的数值静默版本号
+    string game_biz = 14;         // 运营要求的game_biz
+    uint32 player_data_version = 15; //消息里再放一份，方便登录的时候校验
+    string client_md5 = 16;         // 客户端数值Md5
+    string client_silence_md5 = 17; // 静默数值Md5
+    string res_md5 = 18;            // 资源Md5
+    bool is_res_need_relogin = 19;  // 资源版本是否要求重新登入
+    ResVersionConfig res_version_config = 20;   // TODO...删除res_version/res_md5/is_res_need_relogin
+    map<uint32, BlockInfo> block_info_map = 21; // 当从save wait加载的时候 会携带部分block数据
+
+}
+
+//
+//  注：LogoutReq、Notify的区别
+//      Req是请求服务器退出游戏，并执行退出逻辑
+//      Notify是通知客户端退出
+//
+
+// 玩家登出请求
+message PlayerLogoutReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 105;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    // 登出原因
+    enum Reason
+    {
+        DISCONNECT = 0;         // 断线
+        CLIENT_REQ = 1;         // 客户端主动请求退出
+        TIMEOUT = 2;            // 连接超时
+        ADMIN_REQ = 3;          // 管理员强制退出
+        SERVER_CLOSE = 4;       // 关闭服务
+        GM_CLEAR = 5;           // GM CLEAR ALL
+        PLAYER_TRANSFER = 6;    // 玩家迁移
+    }
+    Reason reason = 1;  // 退出游戏的原因 
+}
+
+message PlayerLogoutRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 106;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 服务器->客户端掉线通知
+message PlayerLogoutNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 107;
+    }
+    int32 retcode = 1;
+}
+
+// 玩家数据通知
+message PlayerDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 108;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    string nick_name = 1;
+    uint64 server_time = 2;     // 服务器时间(1970.1.1开始的毫秒数)
+    bool  is_first_login_today = 3; // 是否是当日的首次登陆
+    uint32 region_id = 4;           // 分区ID
+    map<uint32, PropValue> prop_map = 6;   // 玩家属性列表
+}
+
+// 修改游戏时间
+message ChangeGameTimeReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 109;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 game_time = 1;     // 游戏时间
+    bool is_force_set = 2;    // 是否无视时间锁，强制设置时间
+}
+
+message ChangeGameTimeRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 110;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 cur_game_time = 2;       // 当前的游戏时间
+}
+
+// 玩家的游戏时间通知
+message PlayerGameTimeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 111;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 game_time = 1;     // 当前游戏时间(首次登录当天0点开始的秒数，离线后不计时)
+    uint32 uid = 2;     // 所属玩家的uid
+}
+
+// 玩家的属性通知(改变后通知)
+message PlayerPropNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 112;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    map<uint32, PropValue> prop_map = 1;   // 属性列表
+}
+
+// 客户端触发事件通知(C->S)
+message ClientTriggerEventNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 113;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    EventTriggerType event_type = 1;
+    uint32 force_id = 2;
+}
+// 设置玩家属性(允许客户端修改的才能通过)
+message SetPlayerPropReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 114;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    repeated PropValue prop_list = 1;      // 改变的属性列表
+}
+
+message SetPlayerPropRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 115;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+}
+
+// 设置玩家出生数据
+//  TODO 临时方案，以后会做成正式的角色性别选取
+message SetPlayerBornDataReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 116;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 avatar_id = 1;
+    string nick_name = 2;
+}
+
+message SetPlayerBornDataRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 117;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+// 通知客户端进行新账号初始化 S->C
+message DoSetPlayerBornDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 118;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+}
+
+// 经验变化时用于同步变化量，客户端用来做表现
+message PlayerPropChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 119;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint32 prop_type = 1;   // 属性类型（目前只有经验）
+    uint32 prop_delta = 2;  // 变化量
+}
+
+// 设置玩家名字
+message SetPlayerNameReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 120;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+ 
+    string nick_name = 1;
+}
+
+message SetPlayerNameRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 121;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    string nick_name = 2; 
+}
+
+message SetOpenStateReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 122;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 key = 1;
+    uint32 value = 2;
+}
+
+message SetOpenStateRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 123;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 key = 2;
+    uint32 value = 3;
+}
+
+message OpenStateUpdateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 124;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    map<uint32, uint32> open_state_map = 1;
+}
+
+message OpenStateChangeNotify
+{
+     enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 125;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    
+    map<uint32, uint32> open_state_map = 1;
+}
+
+// 烹饪
+message PlayerCookReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 126;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 recipe_id = 1;       // 食谱编号
+    uint32 qte_quality = 2;     // QTE的结果, 0表示自动烹饪
+    uint32 assist_avatar = 3;   // 辅助avatar
+}
+message PlayerCookRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 127;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 retcode = 1;
+    CookRecipeData recipe_data = 2; // 食谱数据
+    ItemParam item = 3;             // 仅作展示使用
+    uint32 qte_quality = 4;     // QTE的结果
+}
+
+// 乱炖
+message PlayerRandomCookReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 128;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated ItemParam material_list = 1;
+}
+message PlayerRandomCookRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 129;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 retcode = 1;
+}
+
+// 烹饪全部数据
+message CookRecipeData
+{
+    uint32 recipe_id = 1;
+    uint32 proficiency = 2; // 熟练度
+}
+message CookDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 130;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 grade = 1;       // 段位
+    repeated CookRecipeData recipe_data_list = 2;   // 全部的食谱数据,包括默认解锁的食谱id
+}
+
+// 食谱数据变更
+message CookRecipeDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 131;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    CookRecipeData recipe_data = 1;                 // 变更的食谱数据
+}
+
+// 烹饪段位同步
+message CookGradeDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 132;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 grade = 1;
+}
+
+// 材料合成
+message PlayerCompoundMaterialReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 133;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 compound_id = 1; 
+    uint32 count = 2;           // 合成数量
+}
+// 合成生产线数据
+message CompoundQueueData
+{
+    uint32 compound_id = 1;
+    uint32 output_count = 2;    // 已经完成的数量
+    uint32 wait_count = 3;      // 等待合成的数量
+    uint32 output_time = 4;     // 下一个完成合成的时间
+}
+message PlayerCompoundMaterialRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 134;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 retcode = 1;
+    CompoundQueueData compound_que_data = 2;
+}
+
+// 领取合成结果
+message TakeCompoundOutputReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 135;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 compound_id = 1;
+}
+message TakeCompoundOutputRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 136;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 retcode = 1;
+    repeated ItemParam item_list = 2;
+}
+
+// 合成组件的全部数据
+message CompoundDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 137;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated uint32 unlock_compound_list = 1;       // 包括默认解锁的合成id
+    repeated CompoundQueueData compound_que_data_list = 2;
+}
+
+// 客户端主动拉取合成数据
+message GetCompoundDataReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 138;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+message GetCompoundDataRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 139;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 retcode = 1;
+    repeated uint32 unlock_compound_list = 2;       // 包括默认解锁的合成id
+    repeated CompoundQueueData compound_que_data_list = 3;
+}
+
+// 玩家个人时间同步
+message PlayerTimeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 140;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    bool is_paused = 1;
+    uint64 player_time = 2; // 玩家个人时间
+    uint64 server_time = 3; // 服务器时间(1970.1.1开始的毫秒数)
+}
+
+// 玩家暂停请求
+message PlayerSetPauseReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 141;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    bool is_paused = 1;
+}
+
+// 玩家暂停响应
+message PlayerSetPauseRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 142;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 retcode = 1;
+}
+
+message PlayerSetLanguageReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 143;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 language_type = 1;
+}
+message PlayerSetLanguageRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 144;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 retcode = 1;
+}
+
+message DataResVersionNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 145;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 client_data_version = 1;         // 客户端非静默数值版本
+    uint32 client_silence_data_version = 2; // 客户端静默数值版本
+    uint32 res_version = 3;    	            // 打包资源版本
+    //uint32 res_version_ex = 4;              // 小包资源版本号
+    string client_md5 = 5;
+    string client_silence_md5 = 6;
+    string res_md5 = 7;
+    bool is_res_need_relogin = 9;           // res版本号变更是否需要重新登入
+    ResVersionConfig res_version_config = 10;   //TODO...删除res_version/res_md5/is_res_need_relogin
+}
+
+message DailyTaskInfo
+{
+    uint32 daily_task_id = 1;
+    uint32 reward_id = 2;                   // 客户端展示用的reward_id
+    uint32 progress = 3;                    // 当前进度
+    uint32 finish_progress = 4;             // 完成需要的进度
+    bool is_finished = 5;                   // 是否完成
+}
+
+message DailyTaskDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 146;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    //repeated DailyTaskInfo task_list = 1;   // 今天的事件列表
+    //repeated uint32 finished_task_list = 2; // 已经完成的事件列表
+    uint32 score_reward_id = 3;             // 积分奖励
+    bool is_taken_score_reward = 4;         // 是否领取了积分奖励
+    uint32 finished_num = 5;                // 完成次数
+}
+
+message DailyTaskProgressNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 147;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    DailyTaskInfo info = 1;
+}
+
+// 积分奖励的通知
+message DailyTaskScoreRewardNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 148;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 reward_id = 1;
+}
+
+// 主机同步给客机的固定事件
+message WorldOwnerDailyTaskNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 149;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated DailyTaskInfo task_list = 1;   // 主机事件列表
+}
+
+// 通知客户端增加一个随机事件
+message AddRandTaskInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 150;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 rand_task_id = 1;
+    Vector pos = 2; 
+}
+
+// 通知客户端移除一个随机事件
+message RemoveRandTaskInfoNotify
+{
+    enum FinishReason
+    {
+        DEFAULT = 0;
+        CLEAR = 1;          // GM指令清理
+        DISTANCE = 2;       // 远距离销毁
+        FINISH = 3;         // 玩家完成
+    }
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 151;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 rand_task_id = 1;
+    bool is_succ = 2;
+    FinishReason reason = 3;
+}
+
+// 领取等级奖励
+message TakePlayerLevelRewardReq
+{
+    enum CmdId
+    {
+        option allow_alias =true;
+        NONE = 0;
+        CMD_ID = 152;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 level = 1;
+}
+
+message TakePlayerLevelRewardRsp
+{
+    enum CmdId
+    {
+        option allow_alias =true;
+        NONE = 0;
+        CMD_ID = 153;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 level = 2;
+    uint32 reward_id = 3;
+}
+
+message PlayerLevelRewardUpdateNotify
+{
+    enum CmdId
+    {
+        option allow_alias =true;
+        NONE = 0;
+        CMD_ID = 154;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated uint32 level_list = 1;
+}
+
+// 道具交付记录
+message GivingRecord
+{
+    uint32 giving_id = 1;
+    bool is_finished = 2;
+    uint32 last_group_id = 3;
+}
+
+// 登录时通知所有交付记录
+message GivingRecordNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 155;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated GivingRecord giving_record_list = 1;
+}
+
+// 交付记录变化通知
+message GivingRecordChangeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 156;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    GivingRecord giving_record = 1;
+}
+
+// 请求交付道具
+message ItemGivingReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 157;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 giving_id = 1;
+    repeated ItemParam item_param_list = 2;
+    map<uint64, uint32> item_guid_count_map = 3;
+}
+
+message ItemGivingRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 158;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 giving_id = 2;
+}
+
+// 烹饪开始时请求相关参数
+message PlayerCookArgsReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 159;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 recipe_id = 1;       // 食谱ID
+    uint32 assist_avatar = 2;   // 辅助avatar
+}
+message PlayerCookArgsRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 160;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 retcode = 1;
+    float qte_range_ratio = 2;  // QTE完美玩法增加系数：生效的得意技能加的最大值
+}
+
+// 通知客户端执行luashell G --> C
+message PlayerLuaShellNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 161;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 id = 1; // 对应添加到数据库里面的id 唯一标识
+    bytes  lua_shell = 2; // lua 内容
+}
+
+message ServerDisconnectClientNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 162;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    uint32 data = 1;            // ENetReason
+}
+
+
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

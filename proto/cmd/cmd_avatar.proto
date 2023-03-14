@@ -1,0 +1,663 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_avatar.proto
+ * @author zhengdong.wang(zhengdong.wang@mihoyo.com)
+ * @date 2019/08/14 15:44:59
+ * @brief 角色相关协议[1701 - 1800]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+// 玩家的角色增加通知
+message AvatarAddNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1701;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    AvatarInfo avatar = 1;  // 新增角色
+    bool is_in_team = 2;
+}
+
+// 玩家的角色删除通知(仅用于测试)
+message AvatarDelNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1702;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated uint64 avatar_guid_list = 1;  // 删除角色列表
+}
+
+// 角色队伍
+message AvatarTeam
+{
+    repeated uint64 avatar_guid_list = 1;   // 角色列表
+    string team_name = 2;
+}
+
+// 设置角色队伍
+message SetUpAvatarTeamReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1703;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 team_id = 1;     // 队伍ID
+    repeated uint64 avatar_team_guid_list = 2;     // 队伍成员
+    uint64 cur_avatar_guid = 3;     // 当前上场角色, 设置当前队伍时需要使用
+}
+
+message SetUpAvatarTeamRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1704;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 team_id = 2;     // 队伍ID
+    repeated uint64 avatar_team_guid_list = 3;     // 队伍成员
+    uint64 cur_avatar_guid = 4;     // 当前上场角色, 设置当前队伍时需要使用
+}
+
+// 选择当前出战的队伍, 默认切换成第一个角色
+message ChooseCurAvatarTeamReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1705;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 team_id = 1;     // 队伍ID
+}
+
+message ChooseCurAvatarTeamRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1706;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 cur_team_id = 2;     // 当前出战的队伍ID
+}
+
+// 更换角色
+message ChangeAvatarReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1707;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 guid = 1;    // 角色的唯一ID
+    uint32 skill_id = 2;    // 换人技能ID
+}
+
+message ChangeAvatarRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1708;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 cur_guid = 2;     // 当前的角色
+    uint32 skill_id = 3;    // 换人技能ID
+}
+
+// 角色突破
+message AvatarPromoteReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1709;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 guid = 1;    // 角色的guid
+}
+
+message AvatarPromoteRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1710;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 guid = 2;    // 角色的guid
+}
+
+// 泉水使用
+message SpringUseReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1711;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint64 guid = 1;    // 角色的guid
+}
+
+message SpringUseRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1712;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 guid = 2;    // 角色的guid
+}
+
+// 刷新后台角色
+message RefreshBackgroundAvatarReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1713;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message RefreshBackgroundAvatarRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1714;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    map<uint64, uint32> hp_full_time_map = 2;   // 各个血量不满的角色回满血的剩余时间(单位：秒)
+}
+
+// 差量同步角色保存的队伍
+message AvatarTeamUpdateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1715;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    map<uint32, AvatarTeam> avatar_team_map = 1;    // 所有保存的角色队伍
+    repeated uint64 temp_avatar_guid_list = 2;      // 临时队伍 guid列表, 上场时会和当前队伍拼在一起 
+}
+
+// 角色数据全量推送 S->C
+message AvatarDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1716;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated AvatarInfo avatar_list = 1;    // 所有角色的列表
+    map<uint32, AvatarTeam> avatar_team_map = 2;    // 所有的角色队伍
+    uint32 cur_avatar_team_id = 3;      //  当前出战的队伍ID
+    uint64 choose_avatar_guid = 4;      //  一开始选择的角色
+    repeated uint64 temp_avatar_guid_list = 5; // 临时队伍中的角色GUID
+}
+
+// 角色升级协议
+message AvatarUpgradeReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1717;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 item_id = 1;         // 经验材料ID
+    uint32 count = 2;           // 使用个数(只针对可堆叠类道具)
+    uint64 avatar_guid = 3;     // 道具使用的目标角色
+}
+
+// 角色升级响应
+message AvatarUpgradeRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1718;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint64 avatar_guid = 2;  // 唯一ID
+    uint32 old_level = 3;    // 升级前等级
+    uint32 cur_level = 4;    // 升级后等级
+    map<uint32, float> old_fight_prop_map = 5; // 升级前的战斗属性
+    map<uint32, float> cur_fight_prop_map = 6; // 升级后的战斗属性
+}
+
+// 角色死亡并播完死亡动画后，请求服务器更换新角色
+message AvatarDieAnimationEndReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1719;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint64 die_guid = 1;    // 死亡的角色
+    uint32 skill_id = 2;    // 换人技能ID
+	Vector reborn_pos = 3;	// 重生位置(客户端选择)
+}
+
+message AvatarDieAnimationEndRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1720;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint64 die_guid = 2;     // 死亡的角色, 来自req
+    uint32 skill_id = 3;     // 换人技能ID, 来自req
+}
+
+// avatar元素类型切换
+message AvatarChangeElementTypeReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1721;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 scene_id = 1;
+    uint32 area_id = 2;
+}
+
+message AvatarChangeElementTypeRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1722;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+}
+
+message AvatarFetterDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1723;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    map<uint64, AvatarFetterInfo> fetter_info_map = 1; // 羁绊信息
+}
+
+message AvatarExpeditionDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1724;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    map<uint64,AvatarExpeditionInfo> expedition_info_map = 1; // 羁绊信息
+}
+
+message AvatarExpeditionAllDataReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1725;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message AvatarExpeditionAllDataRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1726;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    map<uint64,AvatarExpeditionInfo> expedition_info_map = 2; // 羁绊信息
+    repeated uint32 open_expedition_list = 3;  // 开启的线路
+    uint32 expedition_count_limit = 4; // 探索数量限制
+}
+
+message AvatarExpeditionStartReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1727;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint64 avatar_guid = 1;
+    uint32 exp_id = 2;
+    uint32 hour_time = 3;
+}
+
+message AvatarExpeditionStartRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1728;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    map<uint64,AvatarExpeditionInfo> expedition_info_map = 2; // 羁绊信息
+}
+
+message AvatarExpeditionCallBackReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1729;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated uint64 avatar_guid = 1;
+}
+
+message AvatarExpeditionCallBackRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1730;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    map<uint64,AvatarExpeditionInfo> expedition_info_map = 2; // 羁绊信息
+}
+
+message AvatarExpeditionGetRewardReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1731;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint64 avatar_guid = 1;
+}
+
+message AvatarExpeditionGetRewardRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1732;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    map<uint64,AvatarExpeditionInfo> expedition_info_map = 2; // 羁绊信息
+}
+
+message ChangeMpTeamAvatarReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1734;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated uint64 avatar_guid_list = 1;
+    uint64 cur_avatar_guid = 2;
+}
+
+message ChangeMpTeamAvatarRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1735;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    repeated uint64 avatar_guid_list = 2;
+    uint64 cur_avatar_guid = 3;
+}
+
+// 更改队伍名称请求
+message ChangeTeamNameReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1736;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    int32 team_id = 1;
+    string team_name = 2;
+}
+
+message ChangeTeamNameRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1737;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 team_id = 1;
+    string team_name = 2;
+    int32 retcode = 3;
+}
+
+message SceneTeamAvatar
+{
+    uint32 player_uid = 1;  // 玩家uid
+    uint64 avatar_guid = 2; // 角色Guid
+    uint32 scene_id = 3;    // 角色所处场景ID
+    uint32 entity_id = 4;   // 角色在所处场景上的EntityId
+
+    // 联机时候才需要使用的一些角色信息, 
+    // TODO: 精简整理
+    AvatarInfo avatar_info = 5;
+    SceneAvatarInfo scene_avatar_info = 6; 
+}
+
+// 全量同步
+// 发给玩家当前使用的场景队伍
+message SceneTeamUpdateNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1738;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    repeated SceneTeamAvatar scene_team_avatar_list = 1;
+    repeated MPDisplayCurAvatar display_cur_avatar_list = 2; 
+    bool is_in_mp = 3; // 是否在联机中
+}
+
+// 用作联机展示的当前角色
+message MPDisplayCurAvatar
+{
+    uint32 player_uid = 1;
+    uint64 avatar_guid = 2;
+    uint32 life_state = 3; // 生命状态 取值范围: LifeState
+    map<uint32, float> fight_prop_map = 4; // 展示用到的fight_map, 一般只有血量能量之类的
+}
+
+// ScentTeam当前角色的变化的联机通知
+message SceneTeamMPDisplayCurAvatarNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1739;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    MPDisplayCurAvatar display_cur_avatar = 1;
+}
+
+// 关注avatar（类似于置顶）
+message FocusAvatarReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1740;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint64 avatar_guid = 1;
+    bool is_focus = 2;                  // 是否是关注状态
+}
+
+message FocusAvatarRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1741;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    bool is_focus = 2;                  // 是否是关注状态
+    uint64 avatar_guid = 3;
+}
+

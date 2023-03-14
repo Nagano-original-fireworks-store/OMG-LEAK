@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package proto;
+
+// 消息包的head
+message PacketHead
+{
+    uint32 packet_id = 1;	// 消息包ID
+    uint32 user_id = 2;		// 玩家UID
+    uint32 user_ip = 3;		// 玩家IP
+    uint32 user_session_id = 4;	// 玩家在userver中的session id
+    uint32 dispatch_ip = 5;	// 对应dispatch的ip
+    uint32 gameserver_ip = 6;	// 对应gameserver的ip
+    uint32 rpc_id = 7;	// 每次调用的ID
+    uint32 enet_channel_id = 8;	// enet的信道
+    uint32 enet_is_reliable = 9;	// enet的flag，用来标记消息可靠性等
+    uint32 nodeserver_ip = 10;		// nodeserver的ip，给node下游模块使用
+    uint32 recv_time = 11;		// 收到packet的时间, 单位秒
+    uint32 rpc_begin_time_ms = 12;	// 用来计算一个请求在服务器集群的总耗时, 毫秒足够了，节省存储, gateway负责填充
+    uint32 target_service = 13;		// 当前消息包的目的地
+    uint32 dbgate_ip = 14;		// 对应dbgate_ip
+    uint32 custom_1 = 15;		// 预留两个自定义字段, 避免在head中添加通用性较差的专用字段
+    uint32 custom_2 = 16;	
+}
+
+
+// 测试消息
+message DebugNotify
+{
+    enum Enum
+    {
+	option allow_alias = true;
+	ZERO = 0;
+	CMD_ID = 101;
+	TARGET_SERVICE = 101;
+	ENET_CHANNEL_ID = 2;
+	ENET_IS_RELIABLE = 1;
+    }
+    enum Retcode
+    {
+	SUCC = 0;
+	FAIL = 1;
+    }
+    uint32 id = 1;
+    string name = 2;
+    Retcode retcode = 3;
+}
+

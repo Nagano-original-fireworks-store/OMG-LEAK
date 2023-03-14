@@ -1,0 +1,123 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_gacha.proto
+ * @作者 qiang.li(qiang.li@mihoyo.com)
+ * @日期 2019/07/19 17:03:42
+ * @brief 道具协议[1501 - 1600]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+message GetGachaInfoReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1501;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message GachaInfo
+{
+    uint32 gacha_type = 1;
+    uint32 schedule_id = 2;
+    uint32 begin_time = 3;
+    uint32 end_time = 4;
+    uint32 cost_item_id = 5;
+    uint32 cost_item_num = 6;
+    string gacha_prefab_path = 7;
+    string gacha_prob_url = 8;
+    string gacha_record_url = 9;
+    string gacha_preview_prefab_path = 10;
+    uint32 ten_cost_item_id = 11;               // 十连消耗物品ID
+    uint32 ten_cost_item_num = 12;              // 十连消耗物品数量
+    uint32 left_gacha_times = 13;               // 剩余科扭次数
+    uint32 gacha_times_limit = 14;              // 扭蛋次数上限
+    uint32 gacha_sort_id = 15;                  // 排序ID
+}
+
+message GetGachaInfoRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1502;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    repeated GachaInfo gacha_info_list = 2;
+    uint32 gacha_random = 3;
+}
+
+message DoGachaReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1503;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 gacha_type = 1;  // 扭蛋类型
+    uint32 gacha_times = 2; // 1或10代表单抽或者10连
+    uint32 gacha_random = 3; // 扭蛋随机数，防止客户端重复发送协议
+    uint32 gacha_schedule_id = 4; // 扭蛋排期ID,客户端服务器要保持一致
+    string gacha_tag = 5;   // 扭蛋tag,客户端忽略,用于模拟扭蛋
+}
+
+message GachaTransferItem
+{
+    ItemParam item = 1;      // 转化物品
+    bool is_transfer_item_new = 2;         // 是否是新的
+}
+
+message GachaItem
+{
+    ItemParam gacha_item = 1;   // 扭到的物品
+    repeated GachaTransferItem transfer_items = 2; // 转换物品
+    bool is_flash_card = 3;    // 是否是闪卡
+    bool is_gacha_item_new = 4;           // 是否为新的
+    repeated ItemParam token_item_list = 5;  // 副产出
+}
+
+message DoGachaRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1504;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 gacha_type = 2;
+    uint32 gacha_times = 3;
+    uint32 gacha_schedule_id = 4;
+    repeated GachaItem gacha_item_list = 5; // 主产出
+    uint32 new_gacha_random = 6;
+    uint32 cost_item_id = 7;                // 单抽消耗物品ID
+    uint32 cost_item_num = 8;               // 单抽消耗物品数量
+    uint32 ten_cost_item_id = 9;            // 十连消耗物品ID
+    uint32 ten_cost_item_num = 10;          // 十连消耗物品数量
+    uint32 left_gacha_times = 11;           // 剩余科扭次数
+    uint32 gacha_times_limit = 12;          // 扭蛋次数上限
+}

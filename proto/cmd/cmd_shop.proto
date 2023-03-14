@@ -1,0 +1,107 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file shop.proto
+ * @作者 jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @日期 2018/03/07 15:58:40
+ * @brief 商店相关协议[701 - 800]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+message ShopGoods
+{
+    uint32 goods_id = 1;                        // 商品ID
+    ItemParam goods_item = 2;                   // 商品对应的物品
+    uint32 scoin = 3;                           // 所需金币
+    uint32 hcoin = 4;                           // 所需水晶
+    repeated ItemParam cost_item_list = 5;      // 所需代币列表
+    uint32 bought_num = 6;                      // 购买次数，刷新后置0
+    uint32 buy_limit = 7;                       // 最大购买次数
+    uint32 begin_time = 8;                      // 上架时间（unix时间戳）
+    uint32 end_time = 9;                        // 下架时间（unix时间戳）
+    uint32 next_refresh_time = 10;              // 下次刷新时间，0表示不需要刷新（unix时间戳）
+    uint32 min_level = 11;                      // 最小购买等级
+    uint32 max_level = 12;                      // 最大购买等级
+    repeated uint32 pre_goods_id_list = 13;     // 前置商品ID列表
+}
+
+message Shop
+{
+    uint32 shop_type = 1;                       // 商店类型
+    repeated ShopGoods goods_list = 2;          // 商品列表
+}
+
+// 获取商店
+message GetShopReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 701;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 shop_type = 1;       // 商店类型列表
+}
+
+message GetShopRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 702;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    Shop shop = 2;            // 商店列表
+}
+
+// 兑换商品
+message BuyGoodsReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 703;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    uint32 shop_type = 1;     // 商店ID
+    ShopGoods goods = 2;      // 商品信息
+    uint32 buy_count = 3;     // 商品数量
+}
+
+message BuyGoodsRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 704;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    int32 retcode = 1;
+    uint32 shop_type = 2;     // 商店ID
+    ShopGoods goods = 3;      // 商品信息
+    uint32 buy_count = 4;     // 商品数量
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

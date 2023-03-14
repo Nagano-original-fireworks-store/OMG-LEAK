@@ -1,0 +1,141 @@
+/**************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file bin.server.proto
+ * @作者 zhengyi.shen(zhengyi.shen@mihoyo.com)
+ * @日期 2020/03/24 17:21:02
+ * @brief 定义场景group相关数据库中的二进制数据
+ **/
+
+syntax = "proto3";
+package proto;
+
+/*
+ * 
+ * 注意！！！
+ *      该结构只能增加字段，不可修改、删除已有字段！！！
+ *
+ *      该结构所包含的子结构，同样必须遵循上述规则！ 
+ *
+ *      如果乱改！ 会导致玩家数据存档无法解析！
+ *
+ *      因此尽量避免直接使用define.proto中定义的数据结构，容易改变的结构应该在这里再定义一遍，否则改了C<->S的通信协议，很容易造成这里的数据被破坏！！！
+ *
+ *      为了容易识别这类消息，所有消息命名都以Bin结尾
+ * 
+ */
+
+ // Gadget中地脉之花宝箱组件的数据
+message BlossomChestBin
+{
+    uint32 blossom_chest_id = 1;            // EXCEL中配置的ID
+    uint32 drop_id = 2;                     // 掉落ID
+    uint32 dead_time = 3;                   // 需要销毁的时间戳
+    repeated uint32 qualify_uid_list = 4;   // 有资格交互的uid列表
+    repeated uint32 remain_uid_list = 5;    // 还可以交互的玩家uid
+}
+
+
+// Gadget中Platform组件的数据
+message GadgetPlatformBin
+{
+    uint32 route_id = 1;    // 路径ID
+    int32 point_index = 2; // 路径点索引
+    bool is_started = 3;    // 是否在移动中
+}
+
+// Gadget中BossChest组件的数据
+message BossChestBin
+{
+    repeated uint32 remain_uid_list = 1;    // 还可以交互的玩家uid
+    uint32 dead_time = 2;                   // 需要销毁的时间戳
+    uint32 dead_level = 3;                  // boss死亡时的等级
+    repeated uint32 qualify_uid_list = 4;   // 有资格交互的uid列表
+}
+
+
+
+ // 区域挑战玩法记录
+message ChallengeRecordBin
+{
+    uint32 challenge_index = 1; // 挑战index
+    uint32 challenge_id = 2;    // 挑战id
+    uint32 challenge_record_type = 3;   // 挑战记录类型，如最短完成时间等
+    uint32 best_value = 4;      // 记录的值
+}
+
+// boss怪物死亡信息
+message BossDieInfoBin
+{
+    repeated uint32 surround_uid_list = 1;          // 周边的玩家列表
+    uint32 dead_time = 2;                           // boss死亡时间戳
+    uint32 dead_level = 3;                          // boss死亡时等级
+}
+
+
+// 组内触发器数据
+message GroupTriggerBin
+{
+    uint32 trigger_count = 3;   // 触发次数
+}
+
+// 组内变量数据
+message GroupVariableBin
+{
+    int32 value = 2;
+}
+
+// 组内物件数据
+message GroupGadgetBin
+{
+    //uint32 gadget_id = 1;
+    //string trigger_name = 2;    // 所属触发器
+    uint32 gadget_state = 3;    // 物件状态
+    oneof component
+    {
+        GadgetPlatformBin platform = 4;     // Platform组件
+        BossChestBin boss_chest = 5;        // boss_chest组件
+        BlossomChestBin blossom_chest = 6;  // blossom_chest组件
+    }
+    bool is_enable_interact = 15; // 物件是否可交互
+}
+
+
+// 组内怪物数据
+message GroupMonsterBin
+{
+    //uint32 monster_id = 1;
+    //string trigger_name = 2;    // 所属触发器
+    uint32 dropped_hp_percent = 3;  // 已经掉落过的血量万分比最低值
+}
+
+
+message GroupBin
+{
+    map<uint32, GroupMonsterBin> monster_map = 1;   // 怪物(key:config_id)
+    repeated uint32 del_monster_list = 2;           // 所有已删除怪物config_id
+    map<uint32, GroupGadgetBin> gadget_map = 3;     // 物件(key:config_id)
+    repeated uint32 del_gadget_list = 4;            // 所有已删除物件config_id
+    map<string, GroupTriggerBin> trigger_map = 5;   // 所有已触发的触发器(key:name)
+    map<string, GroupVariableBin> variable_map = 6; // 所有已设置变量(key:name)
+    uint32 suite_index = 7;							// 小组索引
+    repeated uint32 show_cutscene_chest_list = 9;   // 已经对owner播放过的cutscene的宝箱(config_id)
+    repeated ChallengeRecordBin challenge_record_list = 11; // 区域挑战记录
+    uint32 revise_level = 12;                       // 修正等级
+	uint32 last_refresh_time = 13;                  // 上次刷新时间
+	uint32 target_suite_index = 15;                 // group的目标suite(重新加载的时候才生效)
+    map<uint32, BossDieInfoBin> boss_die_info_map = 16;    // boss怪物死亡时信息
+    map<uint32,fixed32> gather_refresh_time_map = 17; // group上的采集物刷新时间
+}
+
+
+ //玩家场景数据 按照block 划分
+message BlockBin
+{
+    map<uint32, GroupBin> group_map = 1;   // 组数据
+}
+

@@ -1,0 +1,63 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_mp.server.proto
+ * @作者 qiang.li(qiang.li@mihoyo.com)
+ * @日期 2019/03/07 11:23:55
+ * @brief 
+ **/
+
+syntax = "proto3";
+package proto;
+
+import "define.proto";
+
+// 更新
+message UpdateMpStatusNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10401;
+    }
+
+    uint32 uid = 1;
+    OnlinePlayerInfo mp_player_info = 2;
+}
+
+// 删除
+message DelMpStatusNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10402;
+    }
+
+    uint32 uid = 1;
+}
+
+message GetPlayerMpStatusListReq
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10403;
+    }
+}
+
+message GetPlayerMpStatusListRsp
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10404;
+    }
+
+    int32 retcode = 1;
+    repeated OnlinePlayerInfo player_list = 2;
+}

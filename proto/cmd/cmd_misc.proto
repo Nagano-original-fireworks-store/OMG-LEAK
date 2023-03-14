@@ -1,0 +1,285 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2015 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+
+/**
+ * @file error.proto
+ * @author jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @date 2017/08/04 15:09:14
+ * @brief 杂项协议[1 - 100]
+ **/
+
+syntax = "proto3";
+package proto;
+
+import "define.proto";
+
+// 心跳包，不需要任何字段
+message KeepAliveNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+}
+
+// GmTalk调试命令
+message GmTalkReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    string msg = 1;    // 调试信息
+}
+
+message GmTalkRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 3;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    string msg = 2;         // 成功时返回原消息
+    string retmsg = 3;      // 返回消息
+}
+
+// 消息参数
+message MsgParam
+{
+    oneof param
+    {
+        uint32 int_param = 1;   // 整形参数
+        float flt_param = 2;    // 浮点型参数
+        string str_param = 3;   // 字符串参数
+    }
+}
+
+// 服务器消息ID(todo: 消息增多后，移动到单独的文件中)
+enum SvrMsgId
+{
+    MSG_UNKNOWN = 0;
+    MSG_BLOCK_REFRESH_COUNTDOWN = 1;    // 怪物即将刷新
+    MSG_AVATAR_REVIVE_BY_STATUE = 2;    // 女神像复活角色
+    MSG_DAILY_TASK_REWARD_MAX_NUM = 3;  // 固定事件奖励次数到达上限
+}
+
+// 在客户端显示消息(S->C)
+message ShowMessageNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 4;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    SvrMsgId msg_id = 1;  // 消息ID
+    repeated MsgParam params = 2;   // 参数列表
+}
+
+// 连接探测
+message PingReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 5;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 seq = 1;     // 序列号
+    uint32 client_time = 2; // 客户端的时间戳
+}
+
+message PingRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 6;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 seq = 2;     // 序列号
+    uint32 client_time = 3; // 转发req里面的client_time
+}
+
+// 获取在线玩家列表，DEBUG功能
+message GetOnlinePlayerListReq 
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 8;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message GetOnlinePlayerListRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 9;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    repeated OnlinePlayerInfo player_info_list = 2;
+}
+
+// 服务器时间，定时推送给客户端对时
+message ServerTimeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 10;
+        ENET_CHANNEL_ID = 1;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    uint64 server_time = 1; // 服务器时间(1970.1.1开始的毫秒数)
+}
+
+// 服务器日志类型
+enum ServerLogType
+{
+    SERVER_LOG_NONE = 0;
+    SERVER_LOG_ABILITY = 1;     // Ability日志
+    SERVER_LOG_LEVEL = 2;       // 关卡日志
+    SERVER_LOG_ENTITY = 3;      // Entity日志
+}
+
+// 服务器日志等级
+enum ServerLogLevel
+{
+    LOG_LEVEL_NONE = 0;
+    LOG_LEVEL_DEBUG = 1;
+    LOG_LEVEL_INFO = 2;
+    LOG_LEVEL_WARNING = 3;
+    LOG_LEVEL_ERROR = 4;
+}
+
+// 服务器日志通知
+message ServerLogNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 11;
+        ENET_CHANNEL_ID = 1;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    ServerLogType log_type = 1; // 日志类型
+    ServerLogLevel log_level = 2;   // 日志等级
+    string server_log = 3;  // 服务器日志
+}
+
+enum ClientReconnectReason
+{
+    CLIENT_RECONNNECT_NONE = 0;
+    CLIENT_RECONNNECT_QUIT_MP = 1; // 退出联机
+}
+
+// 服务器通知客户端重连一次
+message ClientReconnectNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 12;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    ClientReconnectReason reason = 1;
+}
+
+message ClientStatData
+{
+    float x = 1;
+    float y = 2;
+    float z = 3;
+    float fps = 4;
+    float memory = 5;
+}
+
+// 客户端上报卡顿状态(C->S)
+message ClientFpsStatusNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 13;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    bool is_low_fps = 1;        // true:卡顿状态 false:流畅状态
+    float fps = 2;
+    repeated ClientStatData stat_list = 3;
+}
+
+// 推送PlayerDataBin，仅供robot使用
+message RobotPushPlayerDataNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 14;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    bytes bin = 1;
+}
+
+message ClientReportNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 15;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    string report_type = 1;
+    string report_value = 2;
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

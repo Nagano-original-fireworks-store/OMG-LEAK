@@ -1,0 +1,248 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2018 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+ /**
+ * @file player_action_type.proto
+ * @author zili.huang(zili.huang@mihoyo.com)
+ * @date 2018/11/01 16:57:15
+ * @brief 
+ *      定义玩家日志行为枚举
+ **/
+
+syntax = "proto3";
+
+package proto_log;
+
+// 玩家行为枚举(0-1000平台定义)
+enum PlayerActionType
+{
+    // 系统功能
+    PLAYER_ACTION_NONE = 0;
+    PLAYER_ACTION_REGISTER = 1; 
+    PLAYER_ACTION_LOGIN = 2;
+    PLAYER_ACTION_LOGOUT = 3;
+    PLAYER_ACTION_ADD_EXP = 4;
+    PLAYER_ACTION_LEVEL_UP = 5;
+    PLAYER_ACTION_ADD_MATERIAL = 6;
+
+    // 充值&商业化
+    PLAYER_ACTION_RECHARGE = 101;
+    PLAYER_ACTION_BUY_GOODS = 102;
+    PLAYER_ACTION_ADD_COIN = 103;
+
+    // 任务相关
+    PLAYER_ACTION_MISSION_ACCEPT = 201;
+    PLAYER_ACTION_MISSION_FINISH = 202;
+    PLAYER_ACTION_MISSION_FAIL = 203;
+    PLAYER_ACTION_MISSION_START = 204;
+	PLAYER_ACTION_MISSION_CANCEL = 205;
+
+    // 以下非通用
+    PLAYER_ACTION_TALK_BEGIN = 1001;                            // 对话开始
+    PLAYER_ACTION_ONLINE = 1002;                                // 玩家当前在线，用来统计活跃
+    PLAYER_ACTION_PLAYER_DISCONNECT = 1003;                     // 玩家断线
+    PLAYER_ACTION_CLIENT_FPS_STATUS = 1004;                     // 客户端是否进入卡顿状态
+    PLAYER_ACTION_MAIL = 1005;                                  // 邮件相关日志
+    PLAYER_ACTION_TAKE_PLAYER_LEVEL_REWARD = 1006;              // 领取玩家冒险等阶奖励
+    PLAYER_ACTION_GM = 1007;                                    // GmTalk（只用于subaction）
+    PLAYER_ACTION_MATERIAL_DELETE_RETURN = 1008;                // 材料删除返还
+
+    PLAYER_ACTION_USER_TIMER = 1101;                            // 玩家定时器
+    PLAYER_ACTION_USER_LOCATION = 1102;                         // 玩家的角色位置
+    PLAYER_ACTION_START_ENTER_SCENE = 1103;                     // 玩家开始进入场景
+    PLAYER_ACTION_FINISH_ENTER_SCENE = 1104;                    // 场景初始化完成
+    PLAYER_ACTION_CHANGE_SCENE_TEAM = 1105;                     // 更换场景队伍阵容
+    PLAYER_ACTION_CHANGE_AVATAR = 1106;                         // 更换当前角色
+    PLAYER_ACTION_ADD_AVATAR = 1107;                            // 增加角色
+    PLAYER_ACTION_SET_UP_AVATAR_TEAM = 1108;                    // 修改保存的角色队伍
+    PLAYER_ACTION_ADD_TRIAL_AVATAR = 1109;                      // 使用试用角色
+    PLAYER_ACTION_REMOVE_TRIAL_AVATAR = 1110;                   // 换下所有试用角色
+    PLAYER_ACTION_AVATAR_MOTION_CHANGE = 1112;                  // 部分移动状态改变
+    PLAYER_ACTION_AVATAR_MOTION = 1113;                         // 部分移动状态发生
+    PLAYER_ACTION_INIT_ENTER_SCENE_AVATAR = 1114;               // 进入的场景指定了角色（用于记录流水号）
+    PLAYER_ACTION_CHOOSE_CUR_AVATAR_TEAM = 1115;                // 选择当前角色队伍
+    PLAYER_ACTION_CLIENT_REPORT = 1116;                         // 客户端安全日志上报
+
+    // 任务
+    PLAYER_ACTION_MISSION_ROLLBACK = 1201;                      // 回退任务
+    PLAYER_ACTION_MISSION_REMOVE = 1202;                        // 删除任务
+    PLAYER_ACTION_TALK_START = 1203;                            // 对话开始
+    PLAYER_ACTION_TALK_FINISH = 1204;                           // 对话结束
+    PLAYER_ACTION_CUTSCENE_START = 1205;                        // Cutscene开始
+    PLAYER_ACTION_CUTSCENE_FINISH = 1206;                       // Cutscene结束
+
+    // 战斗
+    PLAYER_ACTION_AVATAR_HP_CHANGE = 1301;                      // 角色血量变化
+    PLAYER_ACTION_AVATAR_DEATH_REVIVAL = 1302;                  // 角色死亡
+    PLAYER_ACTION_AVATAR_DO_SKILL = 1305;                       // 角色释放技能
+    PLAYER_ACTION_ATTACK = 1306;                                // 攻击日志
+    PLAYER_ACTION_COMBAT_START = 1307;                          // 进入战斗
+    PLAYER_ACTION_COMBAT_END = 1308;                            // 离开战斗
+    PLAYER_ACTION_ABILITY_STATE_CHANGE = 1309;                  // AbilityState改变
+    PLAYER_ACTION_ABILITY_INVOCATION = 1310;                    // Ability效果（用于记录流水号）
+    PLAYER_ACTION_MONSTER_ALERT_CHANGE = 1311;                  // 怪物仇恨变化（用于记录流水号）
+    PLAYER_ACTION_ATTACK_SHIELD = 1312;                         // 对盾造成伤害
+    PLAYER_ACTION_ELEMENT_REACTION = 1313;                      // 元素反应
+
+    // 地城
+    PLAYER_ACTION_DUNGEON_ENTER = 1401;                         // 进入地城
+    PLAYER_ACTION_DUNGEON_QUIT = 1402;                          // 离开地城
+    PLAYER_ACTION_DUNGEON_REVIVE_ON_WAY_POINT = 1403;
+    PLAYER_ACTION_DUNGEON_SETTLE = 1406;                        // 地城结算
+    PLAYER_ACTION_DUNGEON_DIE_OPTION = 1407;                    // 地城阵容都死亡之后的选择
+
+    // 世界交互
+    PLAYER_ACTION_COLLECT_GATHER = 1501;                        // 采集
+    PLAYER_ACTION_OPEN_CHEST = 1502;                            // 打开宝箱
+    PLAYER_ACTION_USE_WORKTOP = 1503;                           // 使用操作台
+    PLAYER_ACTION_TRANSPORT = 1504;                             // 传送到传送点
+    PLAYER_ACTION_SEAL_BATTLE_START = 1505;                     // 封印战斗开始
+    PLAYER_ACTION_SEAL_BATTLE_END = 1506;                       // 封印战斗结束
+    PLAYER_ACTION_USE_PLATFORM = 1507;                          // 使用移动平台
+    PLAYER_ACTION_GADGET_DIE = 1509;                            // 物件被破坏
+    PLAYER_ACTION_UNLOCK_AREA = 1510;                           // 解锁地图
+    PLAYER_ACTION_LEVELUP_CITY = 1511;                          // 女神像升级
+    PLAYER_ACTION_MONSTER_DIE = 1512;                           // 怪物死亡
+    PLAYER_ACTION_AREA_EXPLORATION = 1513;                      // 区域探索度增加
+    PLAYER_ACTION_UNLOCK_POINT = 1514;                          // 解锁点
+    PLAYER_ACTION_INTERACT_ENV_ANIMAL = 1515;                   // 和环境小动物交互
+    PLAYER_ACTION_ENTER_ELEMENT_VIEW = 1516;                    // 开启元素视野
+    PLAYER_ACTION_ENTER_FOCUS = 1517;                           // 进入瞄准状态
+    PLAYER_ACTION_TRANS_TO_POINT = 1518;                        // 传送到地图上的点
+    PLAYER_ACTION_ENTER_AREA = 1519;                            // 进入1级或2级区域
+    PLAYER_ACTION_INTERACT_GADGET_ENV_ANIMAL = 1520;            // 和物件类型的环境小动物交互（用于记录流水号）
+    PLAYER_ACTION_INTERACT_TRIFLE = 1521;                       // 和掉落物交互（用于记录流水号）
+    PLAYER_ACTION_LEVELUP_CITY_REQ = 1522;                      // 处理女神像升级协议（用于记录流水号）
+    PLAYER_ACTION_DROP_ITEM = 1523;                             // 掉落道具（用于记录流水号）
+    PLAYER_ACTION_WEATHER_CHANGE = 1524;                        // 天气变化
+    PLAYER_ACTION_MARK_PLAYER_ACTION = 1525;                    // 玩法日志
+
+    PLAYER_ACTION_ENTER_WORLD = 1550;                           // 进入大世界
+    PLAYER_ACTION_LEAVE_WORLD = 1551;                           // 退出大世界
+    PLAYER_ACTION_OPEN_BOSS_CHEST = 1552;                       // 开启boss宝箱
+    PLAYER_ACTION_OPEN_BLOSSOM_CHEST = 1553;                    // 开启地脉之花宝箱
+
+    // 角色相关
+    PLAYER_ACTION_AVATAR_LEVELUP = 1601;                        // 角色突破
+    PLAYER_ACTION_AVATAR_ADD_EXP = 1602;                        // 角色经验变化
+    PLAYER_ACTION_AVATAR_UPGRADE = 1603;                        // 角色升级（用于记录升级时的当前队伍中的角色）
+    PLAYER_ACTION_AVATAR_UNLOCK_TALENT = 1605;                  // 角色解锁天赋
+    PLAYER_ACTION_AVATAR_PROMOTE = 1606;                        // 角色突破
+    PLAYER_ACTION_AVATAR_ADD_EXP_USE_ITEM = 1607;               // 角色试用道具加经验
+    PLAYER_ACTION_AVATAR_UPGRADE_PROUD_SKILL = 1608;            // 升级或解锁得意技
+    PLAYER_ACTION_AVATAR_ACTIVE_TALENT = 1609;                  // 激活命之座
+    PLAYER_ACTION_AVATAR_FETTER_CHANGE_EXP = 1610;              // 羁绊改变经验
+    PLAYER_ACTION_AVATAR_EXPEDITION_START = 1613;               // 挂机探索开始
+    PLAYER_ACTION_AVATAR_EXPEDITION_TAKE_REWARD = 1614;         // 挂机探索领奖
+    PLAYER_ACTION_AVATAR_EXPEDITION_FINISH = 1615;              // 挂机探索结束
+    PLAYER_ACTION_AVATAR_UPGRADE_ACTIVE_SKILL = 1616;           // 升级主动技能
+
+    // 装备
+    PLAYER_ACTION_WEAPON_ADD = 1701;                            // 武器增减
+    PLAYER_ACTION_WEAPON_LEVELUP = 1702;                        // 武器升级/突破
+    PLAYER_ACTION_RELIC_ADD = 1711;                             // 圣遗物增减
+    PLAYER_ACTION_RELIC_LEVELUP = 1712;                         // 圣遗物升级/突破
+    PLAYER_ACTION_WEAR_WEAPON = 1713;                           // 穿戴武器
+    PLAYER_ACTION_WEAR_RELIC = 1714;                            // 穿戴圣遗物
+    PLAYER_ACTION_WEAPON_AWAKEN = 1715;                         // 武器觉醒
+    PLAYER_ACTION_WEAPON_ADD_EXP = 1716;                        // 武器加经验
+    PLAYER_ACTION_WEAPON_PROMOTE = 1717;                        // 武器突破
+    PLAYER_ACTION_RELIC_ADD_EXP = 1718;                         // 圣遗物加经验
+
+    // 联机组队
+    PLAYER_ACTION_TEAM = 1801;                                  // 加入组队/退出组队
+    PLAYER_ACTION_TEAM_SWITCH = 1802;                           // 设置组队开关
+    PLAYER_ACTION_APPLY_RESULT = 1803;                          // 客机申请加入的结果
+    PLAYER_ACTION_DEAL_WITH_APPLY = 1804;                        // 主机处理申请
+    PLAYER_ACTION_HOST_ENTER_MP = 1805;                         // 主机进入联机状态(人数>=2)
+    PLAYER_ACTION_HOST_LEAVE_MP = 1806;                         // 主机退出联机状态(人数==1)
+    PLAYER_ACTION_CHAT = 1807;                                  // 玩家聊天内容
+
+    // 烹饪
+    PLAYER_ACTION_COOK = 1901;                                  // 烹饪日志
+    PLAYER_ACTION_PROCESS_INGREDIENTS = 1902;                   // 加工食材
+    PLAYER_ACTION_UNLOCK_RECIPE = 1903;                         // 解锁食谱
+    PLAYER_ACTION_TAKE_COMPOUND_OUTPUT = 1904;                  // 领取生产线产出
+    // 调查
+    PLAYER_ACTION_TAKE_INVESTIGATION_REWARD = 1905;             // 领取调查奖励
+    PLAYER_ACTION_TAKE_INVESTIGATION_TARGET_REWARD = 1906;      // 领取调查目标奖励
+
+    // 养成
+    PLAYER_ACTION_COMPOSE_START = 1951;                         // 合成
+    PLAYER_ACTION_FORGE_START = 1952;                           // 开始进行锻造
+    PLAYER_ACTION_FORGE_GET_OUTPUT = 1953;                          // 锻造完成
+    PLAYER_ACTION_FORGE_FINISH = 1954;                            // 锻造终止
+
+    // 挑战玩法
+    PLAYER_ACTION_CHALLENGE_BEGIN = 2001;                       // 挑战玩法开始
+    PLAYER_ACTION_CHALLENGE_FINISH = 2002;                      // 挑战玩法结束
+
+    // 固定事件系统
+    PLAYER_ACTION_DAILY_TASK_GEN = 2101;                        // 生成一个固定事件
+    PLAYER_ACTION_DAILY_TASK_PROGRESS = 2102;                   // 进度增加
+    PLAYER_ACTION_DAILY_TASK_SCORE_REWARD = 2106;               // 领取积分奖励
+    PLAYER_ACTION_DAILY_TASK_REWARD = 2107;                     // 固定事件产生奖励
+
+    // 随机事件
+    PLAYER_ACTION_RAND_TASK_GEN = 2103;                         // 生成一个随机事件
+    PLAYER_ACTION_RAND_TASK_FINISH = 2104;                      // 完成一个随机事件
+    PLAYER_ACTION_RAND_TASK_REWARD = 2108;                      // 随机事件产生奖励
+
+    PLAYER_ACTION_WORLD_LEVEL_ADD = 2105;                       // 大世界等级升级 
+    
+    
+    PLAYER_ACTION_MARK_MAP = 2110;                              // 标记地图
+
+    // 扭蛋
+    PLAYER_ACTION_DO_GACHA = 2200;                              // 扭蛋
+
+    // 离线MSG处理(MUIP)
+    PLAYER_ACTION_MUIP_OFFLINE_MSG_RESULT = 2300;               // MUIP 
+
+    // 海灯节活动
+    PLAYER_ACTION_SEA_LAMP_CONTRIBUTE_ITEM = 2310;              // 海灯节贡献材料
+    PLAYER_ACTION_SEA_LAMP_TAKE_CONTRIBUTION_REWARD = 2311;     // 海灯节领取贡献奖励
+    PLAYER_ACTION_SEA_LAMP_TAKE_PHASE_REWARD = 2312;            // 海灯节领取阶段奖励
+    PLAYER_ACTION_SEA_LAMP_FLY_LAMP = 2313;                     // 海灯节放飞花灯
+    PLAYER_ACTION_SEA_LAMP_TAKE_PHOTO = 2314;                   // 海灯节拍照
+
+    // 通用领取奖励日志
+    PLAYER_ACTION_GRANT_REWARD = 2400;                          // 通用领取奖励日志
+
+    // 消息提示功能
+    PLAYER_ACTION_PUSH_TIPS_CHANGE = 2410;                      // 消息推送
+
+    // 爬塔系统
+    PLAYER_ACTION_TOWER_ENTER_LEVEL = 2420;                     // 爬塔玩法进入日志
+    PLAYER_ACTION_TOWER_SETTLE = 2421;                          // 爬塔玩法结算日志
+    PLAYER_ACTION_TOWER_UNLOCK_FLOOR = 2422;                    // 爬塔玩法层数解锁日志
+    PLAYER_ACTION_TOWER_FIRST_PASS_REWARD = 2423;               // 爬塔首通奖励
+    PLAYER_ACTION_TOWER_DAILY_REWARD = 2424;                    // 爬塔每日奖励
+    PLAYER_ACTION_TOWER_FLOOR_STAR_REWARD = 2425;               // 爬塔每层的星数奖励
+    PLAYER_ACTION_TOWER_SCHEDULE_REWARD = 2426;                 // 爬塔排期奖励
+
+    // 体力
+    PLAYER_ACTION_RESIN_CHANGE = 2500;                          // 树脂改变进入日志
+    PLAYER_ACTION_WORLD_RESIN_CHANGE = 2501;                    // 大世界体力改变进入日志
+
+    // 产出监控/产出控制
+    PLAYER_ACTION_ADD_DROP = 2600;                              // 记录玩家获得DropID的行为
+    PLAYER_ACTION_ADD_REWARD = 2601;                            // 记录玩家获得RewardID的行为
+    PLAYER_ACTION_ITEM_LIMIT_TYPE_LIMIT = 2602;                 // 记录有产出次数限制的产出来源的累计产出次数
+
+    // 社交
+    PLAYER_ACTION_OPERATE_FRIEND = 2700;                                // 好友增删日志
+
+    // 循环营地
+    PLAYER_ACTION_BLOSSOM_CIRCLE_CAMP_REFRESH = 2710;          // 循环营地刷新
+}
+
+enum AntiCheatLogType
+{
+    ANTI_CHEAT_INVALID = 0;
+    ANTI_CHEAT_MOVE_TOO_FAST = 1001;                             // 移动过快
+    ANTI_CHEAT_SKILL_CD_WRONG = 1002;                           // 技能CD错误
+}

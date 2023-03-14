@@ -1,0 +1,70 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file player_body_ext.proto
+ * @作者 yifan.fang(yifan.fang@mihoyo.com)
+ * @日期 2019/01/28 16:06:58
+ * @brief 
+ *      定义玩家日志body_ext
+ **/
+
+syntax = "proto3";
+import "server_only/log/player/player_body_custom.proto";
+package proto_log;
+
+message PlayerLogBodyExtRegister
+{
+}
+
+message PlayerLogBodyExtLogin
+{
+}
+
+message PlayerLogBodyExtLogout
+{
+}
+
+message PlayerLogBodyExtLevelUp
+{
+    repeated AvatarLog avatar_list = 5; // 玩家升级时当前队伍中的所有角色
+}
+
+// 世界交互的日志后接这条，表示交互的物件
+message PlayerLogBodyExtGadget
+{
+    uint32 group_id = 1;
+    uint32 config_id = 2;
+    uint32 entity_id = 3;
+    int32 x_coordinate = 4;         // 物件当前X坐标
+    int32 y_coordinate = 5;         // 物件当前Y坐标
+    int32 z_coordinate = 6;         // 物件当前Z坐标
+}
+
+// 任务相关的日志后接这条，表示任务类型
+message PlayerLogBodyExtMissionType
+{
+    uint32 quest_type = 1;          // 任务类型
+}
+
+// 玩家资源产出消耗日志的原因
+message PlayerLogBodyExtAddMaterial
+{
+    uint32 reason_type = 1;          // define.proto proto::ActionReasonType
+    uint32 item_limit_type = 2;      // 产出来源类型 ItemLimitData.xml data::ItemLimitType
+    uint32 refresh_type = 3;         // 刷新类型 ItemLimitData.xml data::ItemLimitRefreshType
+    uint32 total_add_num = 4;        // 当日或历史累计产出数量
+    string add_num_limit = 5;        // 当日或历史累计产出数量上限（0：禁止产出；空：不做限制）
+}
+
+// 玩家货币产出消耗日志的原因
+message PlayerLogBodyExtAddCoin
+{
+    uint32 reason_type = 1;          // define.proto proto::ActionReasonType
+    uint32 item_limit_type = 2;      // 产出来源类型 ItemLimitData.xml ItemLimitType
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

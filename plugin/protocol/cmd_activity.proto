@@ -1,0 +1,340 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2019 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file cmd_activity.proto
+ * @author peng.huang(peng.huang@mihoyo.com)
+ * @date 2019/11/13 21:28:48
+ * @brief 运营活动相关的协议 [2001-2200]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+package proto;
+
+// 通用活动协议 [2001, 2011)
+// 获取当前开放以及将要开放的活动排期
+message GetActivityScheduleReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2001;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+}
+
+message ActivityScheduleInfo
+{
+    uint32 activity_id = 1;
+    bool is_open = 2;
+    uint32 schedule_id = 3;
+    uint32 begin_time = 4;
+    uint32 end_time = 5;
+}
+message GetActivityScheduleRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2002;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    repeated ActivityScheduleInfo activity_schedule_list = 2;
+    uint32 remain_fly_sea_lamp_num = 3; // 今天剩余放花灯数量
+}
+
+// 获取各个活动的详细数据
+message GetActivityInfoReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2003;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated uint32 activity_id_list = 1;
+}
+
+message ActivityInfo
+{
+    uint32 activity_id = 1;
+    uint32 schedule_id = 2;
+    uint32 begin_time = 3;
+    uint32 end_time = 4;
+    uint32 activity_type = 5;
+    bool is_play_open_anim = 6;         // 是否已经播放过开始效果
+    bool is_finished = 7;               // 结束时会主动同步给客户端
+    bool is_starting = 8;               // 标识是不是活动开始时的通知包
+
+    oneof detail
+    {
+        SeaLampActivityDetailInfo sam_lamp_info = 11;
+    }
+}
+message GetActivityInfoRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2004;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    repeated ActivityInfo activity_info_list = 2;
+}
+
+// 客户端已经播放过开始动画或是效果
+message ActivityPlayOpenAnimNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2005;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 activity_id = 1;
+}
+
+// 服务端主动推送活动数据给客户端
+message ActivityInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2006;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    ActivityInfo activity_info = 1;
+}
+
+// 登入时服务端主动推送排期信息给客户端
+message ActivityScheduleInfoNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2007;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated ActivityScheduleInfo activity_schedule_list = 1;
+    uint32 remain_fly_sea_lamp_num = 2; // 今天剩余放花灯数量
+}
+
+
+///////////////////////// 海灯节活动相关协议 [2011, )
+// 海灯节活动和玩家数据
+message SeaLampActivityDetailInfo
+{
+    uint32 phase_id = 1;                    // 阶段编号
+    uint32 progress = 2;                    // 进度值
+    uint32 days = 3;                        // 当前第几天，0表示海灯节开放的当天
+    uint32 contribution = 4;                // 玩家当前总的贡献值
+    repeated uint32 taken_contribution_reward_list = 5; // 已经领取的贡献奖励
+    repeated uint32 taken_phase_reward_list = 6;        // 已经领取的阶段奖励
+    uint32 factor = 7;                      // 区服进度系数（百分比格式）
+}
+
+// 玩家放飞花灯请求
+message SeaLampFlyLampReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2014;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 item_id = 1;                 // 限制数量为1
+    string wish_text = 2;               // 许愿内容
+    uint32 item_num = 3;                // 花灯数量
+}
+
+message SeaLampFlyLampRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2015;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 total_contribution = 2;      // 当前玩家的贡献值
+    uint32 remain_fly_num = 3;          // 剩余放飞次数
+    uint32 add_contribution = 4;        // 增加的贡献值
+    uint32 add_progress = 5;            // 增加的进度值
+    uint32 item_num = 6;                // 花灯数量
+}
+
+// 领取贡献值对应的奖励
+message SeaLampTakeContributionRewardReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2016;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 config_id = 1;                   // 奖励编号
+}
+
+message SeaLampTakeContributionRewardRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2017;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 config_id = 2;                   // 奖励编号
+}
+
+// 领取阶段结束对应的奖励
+message SeaLampTakePhaseRewardReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2018;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 phase_id = 1;                    // 阶段编号
+}
+
+message SeaLampTakePhaseRewardRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2019;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 phase_id = 2;                    // 阶段编号
+}
+
+// 海灯节贡献材料
+message SeaLampContributeItemReq
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2020;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    repeated ItemParam item_list = 1;
+}
+
+message SeaLampContributeItemRsp
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2021;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+    int32 retcode = 1;
+    uint32 total_contribution = 2;      // 当前玩家的贡献值
+    uint32 add_contribution = 3;         // 增加的贡献值
+    uint32 add_progress = 4;            // 增加的进度值
+}
+
+message AnnounceData
+{
+    uint32 config_id = 1;               // sql表ID
+    uint32 begin_time = 2;              // 起始时间
+    uint32 end_time = 3;                // 结束时间
+    string center_system_text = 4;      // 屏幕中央弹出提示
+    string count_down_text = 5;         // 倒计时提示文本
+    string dungeon_confirm_text = 6;    // 地下城确认框文本
+    uint32 center_system_frequency = 7; // 屏幕中央提示频率
+    uint32 count_down_frequency = 8;    // 倒计时提示频率
+}
+
+// 客户端准备切换地形(因为活动开启)
+message LoadActivityTerrainNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2024;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+    uint32 activity_id = 1;
+}
+
+message ServerAnnounceNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2022;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated AnnounceData announce_data_list = 1;
+}
+
+message ServerAnnounceRevokeNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 2023;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+    }
+
+    repeated uint32 config_id_list = 1;
+}
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

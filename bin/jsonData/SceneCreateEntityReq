@@ -1,0 +1,4 @@
+{
+  "is_destroy_when_disconnect": false, 
+  "reason": "CREATE_NONE"
+}

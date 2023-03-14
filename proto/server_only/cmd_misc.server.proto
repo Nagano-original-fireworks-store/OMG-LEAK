@@ -1,0 +1,152 @@
+/***************************************************************************
+ * 
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ * 
+ **************************************************************************/
+ 
+/**
+ * @file basic.server.proto
+ * @author jingyuan.wang(jingyuan.wang@mihoyo.com)
+ * @date 2017/08/04 15:55:33
+ * @brief 服务器杂项协议[10001 - 10100]
+ **/
+
+syntax = "proto3";
+package proto;
+
+import "define.proto";
+import "server_only/config.server.proto";
+
+// 进程检测到配置了停服维护信息
+message StopServerConfigNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10001;
+    }
+}
+
+// 连接上nodeserver后需要通知工作线程
+message NodeserverConnectedAndRegisteredNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10002;
+    }
+    uint32 nodeserver_id = 1;
+}
+
+// 一个协议发送给多个玩家，服务器内部发送一条协议即可，在gameserver上对每个玩家发送一条
+message MultiPlayerMsg
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10003;
+    }
+
+    repeated uint32 uid_list = 1;  // UID列表
+    bytes proto_bin = 2;    // 需要发送的协议
+}
+
+// gateserver向dispatch注册
+message AddGateserverNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10004;
+    }
+    uint32 listen_port = 1; // 监听端口
+    uint32 outer_ip = 2;    // 外网端口
+}
+
+// 服务注册
+message RegisterServiceNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10005;
+    }
+    repeated ServiceType service_type_list = 1;     // 当前机器上运行的服务
+}
+
+// Game->Gate 玩家迁移
+message PlayerTransferNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10006;
+    }
+    uint32 transfer_uid = 1;                        // 迁移玩家
+    uint32 target_uid = 2;                          // 目标玩家
+}
+
+// 包数量信息
+message PacketCountInfo
+{
+	uint32 cmd_id = 1;
+	uint32 count = 2;
+}
+
+// 客户端发包频率超限通知
+message PacketFreqencyExceedNotify
+{
+	enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10007;
+    }
+	uint32 packet_count = 1;	// 包数量
+	uint32 interval = 2;		// 时间段(毫秒)
+	repeated PacketCountInfo packet_count_list = 3;	// 每个包的数量
+}
+
+// 场景Group批量异步加载
+message SceneAsyncLoadGroupBatchNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10008;
+    }
+}
+
+// gameserver往nodeserver同步数值和资源版本
+message ClientVersionSyncNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10009;
+    }
+    DataVersionConfig data_version_config = 1;
+    map<uint32, ResVersionConfig> res_version_config_map = 2;
+}
+
+// 服务成功返回
+message RegisterServiceSuccessNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10010;
+    }
+}
+
+// 主线程成功加载数值
+message ReloadConfigNotify
+{
+    enum CmdId
+    {
+        NONE = 0;
+        CMD_ID = 10011;
+    }
+}
+
+
+/* vim: set expandtab ts=4 sw=4 sts=4 tw=100: */

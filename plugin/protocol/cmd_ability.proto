@@ -1,0 +1,519 @@
+/***************************************************************************
+ *
+ * Copyright (c) 2017 miHoYo.com, Inc. All Rights Reserved
+ *
+ **************************************************************************/
+
+/**
+ * @file ability.proto
+ * @author yilai.xu(yilai.xu@mihoyo.com)
+ * @date 2018/9/3 18:47:22
+ * @brief 技能协议[1101 - 1200]
+ **/
+
+syntax = "proto3";
+import "define.proto";
+import "cmd/cmd_fight.proto";
+package proto;
+
+// Ability Head, 记录当前的ability类别，argumenttype是none时候，head中的localid一定不是INVOCATION_META_LOCALID(255)，表示要做action或者是mixin(每个mixin自己startrecordmixin相关的东西放过去)
+// 有的argumenttype情况下还需要格外的参数定义，就定义在abilityinvoke的abilitydata中
+enum AbilityInvokeArgument
+{
+	ABILITY_NONE = 0;
+	ABILITY_META_MODIFIER_CHANGE = 1;				    // 操作modifier
+	ABILITY_META_COMMAND_MODIFIER_CHANGE_REQUEST = 2;	// remote请求操作其他单位上的modifier
+	ABILITY_META_SPECIAL_FLOAT_ARGUMENT = 3;			// 设置ability上的special float
+	ABILITY_META_OVERRIDE_PARAM = 4;					// 设置ability的overridemap的键值对
+	ABILITY_META_CLEAR_OVERRIDE_PARAM = 5;				// 清理ability的overridemap的指定键
+	ABILITY_META_REINIT_OVERRIDEMAP = 6;				// 重置ability的overridemap
+	ABILITY_META_GLOBAL_FLOAT_VALUE = 7;				// 设置ability的globalvalue
+	ABILITY_META_CLEAR_GLOBAL_FLOAT_VALUE = 8;			// 清除ability的globalvalue
+	ABILITY_META_ABILITY_ELEMENT_STRENGTH = 9;			// 设置ability的元素强度
+	ABILITY_META_ADD_OR_GET_ABILITY_AND_TRIGGER = 10;	// remote请求authority添加或者触发技能
+	ABILITY_META_SET_KILLED_SETATE = 11;				// 设置技能进入失效的状态
+	ABILITY_META_SET_ABILITY_TRIGGER = 12;				// 设置ability的trigger
+	ABILITY_META_ADD_NEW_ABILITY = 13;					// 添加ability
+	ABILITY_META_REMOVE_ABILITY = 14;					// 移除ability
+	ABILITY_META_SET_MODIFIER_APPLY_ENTITY = 15;		// 设置modifier的applymodifierentityid
+	ABILITY_META_MODIFIER_DURABILITY_CHANGE = 16;       //modifier的ElementDurablity变化
+
+	// 需要override实现remote action操作定义
+	ABILITY_ACTION_TRIGGER_ABILITY = 50;				// 技能action的trigger ability
+	ABILITY_ACTION_SET_CRASH_DAMAGE = 51;			 	// 技能action的set crash damage
+	ABILITY_ACTION_EFFECT = 52;			 				// 技能action的fire或者attach effect
+	ABILITY_ACTION_SUMMON = 53;			 				// 技能action的召唤
+	ABILITY_ACTION_BLINK = 54;			 				// 技能action的blink
+	ABILITY_ACTION_CREATE_GADGET = 55;					// 技能action的CreateGadget
+	ABILITY_ACTION_APPLY_LEVEL_MODIFIER = 56;			// 技能action的ApplyLevelModifier
+    ABILITY_ACTION_GENERATE_ELEM_BALL = 57;             // 技能action的GenerateElemBall
+
+	// 需要override实现remote mixin的操作定义
+	ABILITY_MIXIN_AVATAR_STEER_BY_CAMERA = 100;			// 技能水激流mixin
+	ABILITY_MIXIN_MONSTER_DEFEND = 101;					// 对应MonsterDefendMixin
+	ABILITY_MIXIN_WIND_ZONE = 102;					    // 对应WindZoneMixin
+	ABILITY_MIXIN_COST_STAMINA = 103;					// 对应CostStaminaMixin
+	ABILITY_MIXIN_ELITE_SHIELD = 104;					// 对应EliteShieldMixin
+	ABILITY_MIXIN_ELEMENT_SHIELD = 105;					// 对应ElementShieldMixin
+	ABILITY_MIXIN_GLOBAL_SHIELD = 106;					// 对应GlobalShieldMixin
+	ABILITY_MIXIN_SHIELD_BAR = 107;						// 对应ShieldBarMixin
+    ABILITY_MIXIN_WIND_SEED_SPAWNER = 108;              // 对应WindSeedSpawnerMixin
+}
+
+// Ability Head
+message AbilityInvokeEntryHead
+{
+	uint32 instanced_ability_id = 1;	// instanced ability id
+	uint32 instanced_modifier_id = 2;	// instanced modifier id
+	int32 local_id = 3;					// action 或者 mixin的config local id，从0开始, 两种情况，如果localid是INVOCATION_META_LOCALID（255），表示要做AbilityInvokeArgument中已有的事情，如果是非255，表示要做对应localid的action或者是mixin
+	int32 modifier_config_local_id = 4;	// ability中modifiers的index 从0开始
+	uint32 target_id = 5;				// 当targetid是0，则表示当前消息的entity，否则代表instancedability要从该target上得到
+}
+
+// Ability Entry
+message AbilityInvokeEntry
+{
+	AbilityInvokeEntryHead head = 1;			// head记录通用的ability信息
+	AbilityInvokeArgument argument_type = 2;	// 记录当前的ability类别，argumenttype是none时候，head中的localid一定不是INVOCATION_META_LOCALID（255），表示要做action或者是mixin(每个mixin自己startrecordmixin相关的东西放过去)
+	bytes ability_data = 3;						// 因为要通用消息，所以把argumenttype非none时候的ability消息都放在这里转成protobuf的二进制
+    uint32 entity_id = 4;                       // 发起Invoke的Entity Runtime Id
+	ForwardType forward_type = 5;				// 如果是authority同步给其他客户端的话，填充ForwardToAllExceptCur，否则从remote同步到authority，填充的是ForwardToPeer
+	uint32 forward_peer = 6;					// 当forward_type是FORWARD_TO_PEER，填充的是peer id
+}
+
+// Ability的一条消息定义，为了省gcalloc，所以invoke1st....就没用直接用repeated
+message AbilityInvocationFixedNotify
+{
+	enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1101;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+		IS_ALLOW_CLIENT = 1;
+	}
+	
+	AbilityInvokeEntry invoke1st = 1;
+	AbilityInvokeEntry invoke2nd = 2;
+	AbilityInvokeEntry invoke3rd = 3;
+	AbilityInvokeEntry invoke4th = 4;
+	AbilityInvokeEntry invoke5th = 5;
+	AbilityInvokeEntry invoke6th = 6;
+}
+
+// Ability的一条消息定义, entry超过6的时候使用repeated
+message AbilityInvocationsNotify
+{
+	enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1102;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+		IS_ALLOW_CLIENT = 1;
+	}
+	
+	repeated AbilityInvokeEntry invokes = 1;
+}
+
+// Ability重置overridemap
+message AbilityMetaReInitOverrideMap
+{
+    repeated AbilityScalarValueEntry override_map = 1;     // 技能override map
+}
+
+// 对应AbilityInvokeArgument的ABILITY_META_ADD_ABILITY
+message AbilityMetaAddAbility
+{
+	AbilityAppliedAbility ability = 1;
+}
+
+// AbilityMetaModifierChange中的modifier操作定义
+enum ModifierAction
+{
+	ADDED = 0;
+	REMOVED = 1;
+}
+
+// Modifier的属性
+message ModifierProperty
+{
+    AbilityString key = 1;     // 属性名，应该用int编码
+    float value = 2;    // 属性值
+}
+
+// 对应AbilityInvokeArgument的ABILITY_META_MODIFIER_CHANGE
+message AbilityMetaModifierChange
+{
+	ModifierAction action = 1;
+	AbilityString parent_ability_name = 2;         // parent技能名字，防止parent ability的caster不存在或者没有准备好使用的，应该用int编码
+	AbilityString parent_ability_override = 3;     // parent技能override，防止parent ability的caster不存在或者没有准备好使用的，应该用int编码
+	AbilityAttachedModifier attached_instanced_modifier = 4;	// 标识被attached的modifier
+	repeated ModifierProperty properties = 5;      // 当上modifier时候 parentability可能是null，所以将properties带上
+	int32 modifier_local_id = 6;            // modifier的config local id，请参考abilityentryhead中的定义
+	bool is_mute_remote = 7;                // 是否不发给remote
+	uint32 apply_entity_id = 8;				// modifier来源的entityid, 如果和当前单位id相同置0，省流量
+	bool is_attached_parent_ability = 9;	//是否attach到parentAbility上
+	uint32 server_buff_uid = 10;			// 非0时表示modifier由某个sbuff加上，断线重连时会放在ServerBuff里还给客户端
+}
+
+// 对应AbilityInvokeArgument的ABILITY_META_SPECIAL_FLOAT_ARGUMENT 设置actorability上的special float
+message AbilityMetaSpecialFloatArgument
+{
+	float argument_value = 1;	// 值
+	bool is_on = 2;				// 是否是设置还是重置
+}
+
+// 对应AbilityInvokeArgument的ABILITY_META_ADD_OR_GET_ABILITY_AND_TRIGGER
+message AbilityMetaAddOrGetAbilityAndTrigger
+{
+	AbilityString ability_name = 1;		// 技能名字 应该用int编码
+	AbilityString ability_override = 2;	// 技能override 应该用int编码
+	float trigger_argument = 3;		// 附带的参数
+}
+
+// 对应AbilityInvokeArgument的ABILITY_META_SET_KILLED_SETATE
+message AbilityMetaSetKilledState
+{
+	bool killed = 1;		// 是否被killed掉
+}
+
+// 对应AbilityInvokeArgument的ABILITY_META_SET_ABILITY_TRIGGER
+message AbilityMetaSetAbilityTrigger
+{
+	uint32 trigger_ability_entity_id = 1;		// trigger的entity id
+}
+
+// 对应AbilityInvokeArgument的ABILITY_META_SET_MODIFIER_APPLY_ENTITY
+message AbilityMetaSetModifierApplyEntityId
+{
+	uint32 apply_entity_id = 1;		// modifer的apply_entity id
+}
+// 对应AbilityInvokeArgument的ABILITY_META_MODIFIER_DURABILITY_CHANGE
+message AbilityMetaModifierDurabilityChange
+{
+	float reduce_durability = 1;
+	float remain_durability = 2;
+}
+
+// 对应AbilityInvokeArgument的ABILITY_ACTION_TRIGGER_ABILITY
+message AbilityActionTriggerAbility
+{
+	uint32 other_id = 1;		// evt的otherid
+}
+
+// 对应AbilityInvokeArgument的ABILITY_ACTION_SET_CRASH_DAMAGE
+message AbilityActionSetCrashDamage
+{
+	float damage = 1;
+	Vector hit_pos = 2;
+}
+
+// 用来同步ability的borntype
+message AbilityBornType
+{
+	Vector pos = 1;		// 位置
+	Vector rot = 2;		// 朝向
+}
+
+// 对应AbilityInvokeArgument的ABILITY_ACTION_SUMMON
+message AbilityActionSummon
+{
+	Vector pos = 1;		// 位置
+	Vector rot = 2;		// 朝向
+}
+
+// 对应AbilityInvokeArgument的ABILITY_ACTION_BLINK
+message AbilityActionBlink
+{
+	Vector pos = 1;		// 位置
+	Vector rot = 2;		// 朝向
+}
+
+// 对应AbilityInvokeArgument的ABILITY_ACTION_CREATE_GADGET
+message AbilityActionCreateGadget
+{
+	Vector pos = 1;		// 位置
+	Vector rot = 2;		// 朝向
+    uint32 room_id = 3;
+}
+
+// 对应AbilityInvokeArgument的ABILITY_ACTION_APPLY_LEVEL_MODIFIER
+message AbilityApplyLevelModifier
+{
+	uint32 apply_entity_id = 1;		// modifier的apply entity id
+}
+
+// 对应AbilityInvokeArgument的ABILITY_ACTION_GENERATE_ELEM_BALL
+message AbilityActionGenerateElemBall
+{
+	Vector pos = 1;		// 位置
+	Vector rot = 2;		// 朝向
+    uint32 room_id = 3;
+}
+
+// 空Mixin消息
+message AbilityMixinEmpty
+{
+}
+
+//  对应AbilityInvokeArgument的ABILITY_MIXIN_AVATAR_STEER_BY_CAMERA
+message AbilityMixinAvatarSteerByCamera
+{
+	Vector target_pos = 1; 	// steer的目标pos
+	Vector target_dir = 2;	// steer的目标方向
+}
+
+// 对应AbilityInvokeArgument的ABILITY_MIXIN_WIND_ZONE
+message AbilityMixinWindZone
+{
+	repeated uint32 entity_ids = 1;
+}
+
+// 对应AbilityInvokeArgument的ABILITY_MIXIN_COST_STAMINA
+message AbilityMixinCostStamina
+{
+	bool is_swim = 1;   // 是否在游泳状态
+}
+
+// 对应AbilityInvokeArgument的ABILITY_MIXIN_ELITE_SHIELD
+message AbilityMixinEliteShield
+{
+	float sub_shield = 1;   // 减少的盾护甲值
+}
+
+// 对应AbilityInvokeArgument的ABILITY_MIXIN_ELEMENT_SHIELD
+message AbilityMixinElementShield
+{
+	float sub_shield = 1;   // 减少的盾护甲值
+	bool is_shield_broken = 2;	// 盾是否已坏掉
+	float shield = 3; //当前护甲值
+	float max_shield = 4; //最大护甲值
+	uint32 absorb_type = 5; // 1：普通 2：元素
+}
+
+// 对应AbilityInvokeArgument的ABILITY_MIXIN_GLOBAL_SHIELD
+message AbilityMixinGlobalShield
+{
+	float sub_shield = 1;   // 减少的盾护甲值 0
+	uint32 avatar_id = 2;   //应用的avatarId
+	string shield_effect_name = 3;  //应用的特效
+	float height_offset = 4; //特效的高度偏移
+}
+
+// 对应AbilityInvokeArgument的ABILITY_MIXIN_GLOBAL_SHIELD
+message AbilityMixinShieldBar
+{
+	uint32 element_type = 1; //元素类型
+	float shield = 2; //当前护甲值
+	float max_shield = 3; //最大护甲值
+}
+
+// 对应AbilityInvokeArgument的ABILITY_MIXIN_WIND_SEED_SPAWNER
+message AbilityMixinWindSeedSpawner
+{
+    message AddSignal
+    {
+    }
+    message RefreshSeed
+    {
+        repeated Vector pos_list = 1;
+    }
+    message CatchSeed
+    {
+        uint32 entity_id = 1;
+    }
+    oneof cmd
+    {
+        AddSignal add_signal = 1;
+        RefreshSeed refresh_seed = 2;
+        CatchSeed catch_seed = 3;
+    }
+}
+
+// 客户端技能系统开始初始化通知(C->S)
+message ClientAbilityInitBeginNotify
+{
+    enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1103;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+		IS_ALLOW_CLIENT = 1;
+	}
+
+    uint32 entity_id = 1;   // 实体ID
+}
+
+// 客户端技能系统初始化完成通知(C->S)
+message ClientAbilityInitFinishNotify
+{
+    enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1104;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+		IS_ALLOW_CLIENT = 1;
+	}
+
+    uint32 entity_id = 1;   // 实体ID
+    repeated AbilityInvokeEntry invokes = 2;    // 初始化前需要完成的invoke
+}
+
+// 服务器的技能调用失败通知(S->C)
+message AbilityInvocationFailNotify
+{
+    enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1105;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+	}
+
+    uint32 entity_id = 1;   // 实体ID
+    AbilityInvokeEntry invoke = 2;  // 调用
+    string reason = 3; // 失败原因
+}
+
+// ability reset的原因类别
+enum AbilityResetReasonType
+{
+    ABILITY_CHANGE_SKILL_DEPOT = 0;		// 切换技能库
+    ABILITY_UNLOCK_TALENT = 1;			// 解锁天赋
+    ABILITY_CHANGE_EQUIP = 2;			// 切换武器，武器技能变化
+    ABILITY_PROUD_SKILL = 3;            // 固有得意技发生改变
+    ABILITY_AVATAR_SKILL = 4;           // 主动技能发生改变
+    ABILITY_CORE_PROUD_SKILL = 5;       // 核心得意技发生改变
+    ABILITY_TALENT_EXTRA_LEVEL = 6;     // 得意技额外等级变化
+}
+
+// ability reset原因
+message AbilityResetReason
+{
+	AbilityResetReasonType reason_type = 1;     // 原因
+    uint32 param = 2;     // 参数，如果type是0的话，代表old_skill_depot_id
+}
+
+// 角色技能重置通知(S->C)
+message AvatarAbilityResetNotify
+{
+    enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1106;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+	}
+
+    uint32 entity_id = 1;   // 实体ID
+    AbilityResetReason reset_reason = 2;
+}
+
+message EntityAbilityInvokeEntry
+{
+	uint32 entity_id = 1;   // 实体ID
+    repeated AbilityInvokeEntry invokes = 2;    // 初始化前需要完成的invoke
+}
+
+// 客户端技能系统初始化完成通知(合包）(C->S)
+message ClientAbilitiesInitFinishCombineNotify
+{
+    enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1107;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+		IS_ALLOW_CLIENT = 1;
+	}
+
+    repeated EntityAbilityInvokeEntry entity_invoke_list = 1;
+}
+
+message ElementReactionLog
+{
+    uint32 source_id = 1;
+    uint32 target_id = 2;
+    string ability_name = 3;
+	string modifier_name = 4;
+	string anim_event_id = 5;
+    string attack_tag = 6;
+	uint32 reaction_type = 7; //元素反应类型
+	uint32 count = 8; //聚合次数，其他字段都相同的情况下合并为一条
+	uint32 source_lv = 9;
+	uint32 target_lv = 10;
+	Vector pos = 11; //此反应发生的位置
+	uint32 time = 12; //此反应发生的时间戳，单位是秒
+}
+
+// 元素反应上报日志
+message ElementReactionLogNotify
+{
+    enum CmdId
+    {
+        option allow_alias = true;
+        NONE = 0;
+        CMD_ID = 1108;
+        ENET_CHANNEL_ID = 0;
+        ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+    }
+
+    repeated ElementReactionLog log_list = 1;
+}
+
+// 通知服务器角色技能重置完毕(C->S)
+message AvatarAbilityResetFinishNotify
+{
+    enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1109;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+        IS_ALLOW_CLIENT = 1;
+	}
+
+    uint32 entity_id = 1;   // 实体ID
+    AbilityResetReason reset_reason = 2;
+}
+
+// 风种子相关的客户端通知
+message WindSeedClientNotify
+{
+    enum CmdId
+	{
+		option allow_alias = true;
+		NONE = 0;
+		CMD_ID = 1110;
+		ENET_CHANNEL_ID = 0;
+		ENET_IS_RELIABLE = 1;
+	}
+    // 通知玩家进行刷新
+    message RefreshNotify
+    {
+        uint32 refresh_num = 1;       
+    }
+    message AddWindBulletNotify
+    {
+        uint32 seed_entity_id = 1;
+        Vector seed_pos = 2;
+        uint32 catch_player_uid = 3;
+    }
+    oneof notify
+    {
+        RefreshNotify refresh_notify = 1;
+        AddWindBulletNotify add_wind_bullet_notify = 2;
+    }
+}
